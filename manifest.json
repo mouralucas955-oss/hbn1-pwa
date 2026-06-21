@@ -1,0 +1,25 @@
+{
+  "name": "HBN1 - Nazária Distribuidora Farmacêutica",
+  "short_name": "HBN1",
+  "description": "Catálogo de pedidos HBN1 - Nazária Distribuidora Farmacêutica",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#FF6B00",
+  "theme_color": "#FF6B00",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

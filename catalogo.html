@@ -1,0 +1,2284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo Pedidos HBN1</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FF6B00">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="api.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Letreiro de avisos */
+    .letreiro-container { overflow: hidden; white-space: nowrap; display: flex; align-items: center; }
+    .letreiro-conteudo { display: inline-block; padding-left: 100%; animation: marqueeInfinita 30s linear infinite; }
+    .letreiro-conteudo:hover { animation-play-state: paused; }
+    @keyframes marqueeInfinita {
+      0%   { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+    .aviso-item::after { content: "•"; margin-left: 2.5rem; margin-right: 2.5rem; color: #fdba74; font-weight: bold; }
+    .aviso-item:last-child::after { content: "•"; }
+
+    /* Badge OL ativo */
+    .ol-btn-ativo { background: #FF6B00 !important; color: #fff !important; border-color: #e55300 !important; box-shadow: 0 2px 8px rgba(255,107,0,0.35); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col relative pb-32 md:pb-4">
+
+  <!-- =====================================================================
+       TOPO FIXO
+       ===================================================================== -->
+  <div class="sticky top-0 z-50 shadow-md">
+
+    <!-- Header principal -->
+    <header class="bg-[#FF6B00] text-white border-b border-orange-700">
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex flex-col md:flex-row items-center justify-between gap-4 py-3 md:py-0">
+        <div class="flex items-center gap-3">
+          <a href="index.html" title="Voltar à Página Inicial">
+            <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazária Logo" class="h-10 w-auto object-contain bg-white p-1 rounded-lg shadow-sm">
+          </a>
+          <div>
+            <h1 class="text-xl font-black tracking-tight leading-none">Catálogo de Produtos HBN1 <span id="ufBadgeTitulo"></span></h1>
+            <p class="text-[10px] text-orange-100 font-medium mt-0.5">Qualquer dúvida tratar com Lucas Adm HBN1 NZR</p>
+          </div>
+        </div>
+        <div class="w-full md:w-96 relative">
+          <input type="text" id="barraPesquisa" oninput="executarFiltrosGerais()" placeholder="Pesquise por ID, EAN, descrição, marca, tag..."
+            class="w-full h-10 pl-10 pr-4 bg-orange-800/40 border border-orange-400/30 rounded-xl text-white placeholder-orange-200 text-sm focus:outline-none focus:ring-2 focus:ring-white transition-all shadow-inner">
+          <svg class="w-4 h-4 text-orange-200 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mural de avisos -->
+    <div class="bg-orange-950 border-b border-orange-900 text-orange-100 text-xs py-1.5 px-4 flex items-center shadow-inner">
+      <div class="bg-orange-600 text-white font-black px-2 py-0.5 rounded text-[10px] uppercase tracking-wider mr-3 shrink-0 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 bg-red-400 rounded-full animate-ping"></span>
+        Mural:
+      </div>
+      <div class="letreiro-container flex-grow">
+        <div id="containerAvisosLetreiro" class="letreiro-conteudo font-bold tracking-wide">
+          Carregando informativos do painel de controle...
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de cliente + OL Danone -->
+    <div class="bg-slate-900 border-b border-slate-800 px-4 py-2 flex flex-col gap-2 shadow-md">
+
+      <!-- Linha 1: busca e info do cliente -->
+      <div class="flex flex-col md:flex-row md:items-center gap-3">
+        <div class="relative w-full md:w-80 shrink-0">
+          <input type="text" id="buscaClienteInput" oninput="filtrarClientesDropdown()"
+            placeholder="🔍 Buscar Cliente (Razão, CNPJ ou ID)..."
+            class="w-full h-8 px-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all">
+          <div id="dropdownClientes" class="absolute left-0 right-0 mt-1 max-h-56 bg-white text-slate-800 rounded-lg shadow-2xl border border-slate-200 overflow-y-auto hidden z-50"></div>
+        </div>
+
+        <div id="faixaClienteSelecionado" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-300 flex-grow">
+          <span class="font-bold text-orange-400 flex items-center gap-1 shrink-0">👤 CLIENTE ATIVO:</span>
+          <span id="cliInfoRazao" class="font-bold text-white tracking-wide truncate max-w-xs md:max-w-md">NENHUM CLIENTE SELECIONADO</span>
+          <span class="text-slate-500 shrink-0">|</span>
+          <span id="cliInfoCNPJ" class="text-slate-400 font-mono shrink-0">CNPJ: --.---.---/----.--</span>
+          <span class="text-slate-500 shrink-0">|</span>
+          <span id="cliInfoID" class="text-slate-400 font-mono shrink-0">ID: ----</span>
+          <span id="cliInfoGrupoUni" class="hidden text-slate-500 shrink-0">|</span>
+          <span id="cliInfoGrupoUniVal" class="hidden text-blue-300 font-bold font-mono shrink-0"></span>
+          <span id="cliInfoPerfilDan" class="hidden text-slate-500 shrink-0">|</span>
+          <span id="cliInfoPerfilDanVal" class="hidden text-purple-300 font-bold font-mono shrink-0"></span>
+          <span id="cliInfoTransfer" class="hidden text-slate-500 shrink-0">|</span>
+          <span id="cliInfoTransferVal" class="hidden text-amber-300 font-bold font-mono shrink-0"></span>
+          <button onclick="limparClienteSelecionado()" id="btnLimparCliente"
+            class="hidden text-red-400 hover:text-red-300 hover:bg-red-950/50 font-bold px-2 py-0.5 rounded-md transition-all ml-auto">✖ Remover</button>
+        </div>
+      </div>
+
+      <!-- Linha 2: Botões OL Danone (aparecem só quando cliente tem perfil Danone) -->
+      <div id="painelOL" class="hidden flex flex-wrap items-center gap-2">
+        <span class="text-[10px] font-black text-purple-300 uppercase tracking-widest shrink-0">OL Danone:</span>
+        <button id="btnOL250"  onclick="selecionarOL(250)"  class="ol-btn px-3 py-1 text-[10px] font-black rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all">OL 250</button>
+        <button id="btnOL500"  onclick="selecionarOL(500)"  class="ol-btn px-3 py-1 text-[10px] font-black rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all">OL 500</button>
+        <button id="btnOL1000" onclick="selecionarOL(1000)" class="ol-btn px-3 py-1 text-[10px] font-black rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all">OL 1000</button>
+        <button onclick="selecionarOL(0)" class="px-3 py-1 text-[10px] font-bold rounded-lg border border-slate-700 bg-transparent text-slate-400 hover:text-red-300 transition-all">✖ Sem OL</button>
+        <span id="labelOLAtivo" class="hidden text-[10px] text-purple-200 font-bold ml-1"></span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       CONTEÚDO PRINCIPAL
+       ===================================================================== -->
+  <main class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 flex-grow py-6 flex flex-col lg:flex-row gap-6 items-start">
+
+    <!-- SIDEBAR -->
+    <aside class="w-full lg:w-64 bg-slate-100/50 p-4 rounded-2xl border border-slate-200/60 shrink-0 sticky lg:top-36 flex flex-col gap-5">
+      <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm">
+        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Itens com Estoque?</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" id="btnEstoqueSim" onclick="definirFiltroEstoque(true)"
+            class="py-1.5 px-3 text-xs font-bold rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition-all text-center">Sim</button>
+          <button type="button" id="btnEstoqueNao" onclick="definirFiltroEstoque(false)"
+            class="py-1.5 px-3 text-xs font-bold rounded-lg border bg-orange-600 text-white border-orange-600 shadow-sm transition-all text-center">Não</button>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Filtrar Fornecedor</h2>
+        <div id="listaFiltroFornecedores" class="space-y-2 max-h-[300px] lg:max-h-[calc(100vh-320px)] overflow-y-auto pr-1 no-scrollbar">
+          <div class="animate-pulse space-y-2">
+            <div class="h-10 bg-slate-200 rounded-xl"></div>
+            <div class="h-10 bg-slate-200 rounded-xl"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- GRID DE PRODUTOS -->
+    <section class="flex-grow w-full">
+      <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-slate-200/60 shadow-sm gap-2 flex-wrap">
+        <div class="text-xs font-bold text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span>Mostrando <span id="contadorProdutos" class="text-slate-800 font-black">0</span> itens listados</span>
+          <span id="textoUltimaAtualizacao" class="text-[10px] font-semibold text-slate-400 normal-case flex items-center gap-1"></span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnLimparPedidoFora" onclick="limparPedidoCompleto()"
+            class="hidden px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl border border-red-200 transition-all flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Limpar Pedido
+          </button>
+          <button id="btnAbrirImportacao" onclick="abrirModalImportarPedido()"
+            class="px-4 py-2 bg-white text-slate-700 font-black text-xs rounded-xl hover:bg-slate-50 transition-all shadow-sm border border-slate-200 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Ver Valor do Pedido
+          </button>
+          <button id="btnAbrirCarrinhoFixo" onclick="abrirModalCarrinho()"
+            class="px-4 py-2 bg-slate-900 text-white font-black text-xs rounded-xl hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 relative">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
+            </svg>
+            Ver Meu Pedido
+            <span id="badgeContadorFlutuante" class="absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white hidden">0</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div class="col-span-full text-center py-20 text-slate-400 font-medium">Carregando catálogo de produtos ativos...</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER MOBILE -->
+  <footer class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 px-4 py-2 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] flex flex-col gap-2">
+    <div class="flex items-center justify-between">
+      <div onclick="abrirModalCarrinho()" class="flex items-center gap-2.5 cursor-pointer">
+        <div class="bg-slate-100 p-2 rounded-xl text-slate-700 relative">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
+          </svg>
+          <span id="badgeContadorInferior" class="absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+        </div>
+        <div>
+          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Total do Pedido</p>
+          <p id="totalLiquidoInferior" class="text-sm font-black text-slate-900 mt-0.5">R$ 0,00</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnAbrirImportacaoMobile" onclick="abrirModalImportarPedido()" class="p-2.5 bg-white text-slate-700 rounded-xl border border-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </button>
+        <button id="btnLimparPedidoMobile" onclick="limparPedidoCompleto()" class="hidden p-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+        <button onclick="abrirModalCarrinho()" class="px-4 py-2.5 bg-[#FF6B00] hover:bg-orange-600 text-white font-black text-xs rounded-xl shadow-md uppercase tracking-wider transition-colors">
+          Fechar Pedido
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <button id="btnVoltarTopo" onclick="voltarAoTopo()"
+    class="hidden fixed bottom-24 right-6 z-40 bg-[#FF6B00] hover:bg-orange-600 text-white p-3 rounded-full shadow-xl transition-all duration-300 flex items-center justify-center">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"/>
+    </svg>
+  </button>
+
+  <!-- =====================================================================
+       MODAL DETALHES DO PRODUTO
+       ===================================================================== -->
+  <div id="modalDetalhes" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="fecharModalDetalhesNoBackdrop(event)">
+    <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl relative border border-slate-100">
+      <button onclick="fecharModalDetalhes()" class="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-full flex items-center justify-center transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+      <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-center relative min-h-[240px]">
+        <span id="modalTagBadge" class="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm tracking-wider hidden">TAG</span>
+        <img id="modalImagem" src="" class="h-48 w-48 object-contain mix-blend-multiply">
+        <span id="modalEstoqueBadge" class="absolute bottom-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm">Estoque</span>
+      </div>
+      <div class="p-6">
+        <span id="modalMarca" class="text-[10px] font-black text-[#FF6B00] uppercase tracking-wider block">MARCA</span>
+        <h3 id="modalDescricao" class="text-base font-bold text-slate-800 mt-1 leading-snug">Descrição do Produto</h3>
+        <div class="grid grid-cols-2 gap-4 my-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+          <div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Código Interno</span>
+            <span id="modalId" class="text-xs font-mono font-bold text-slate-700">000000</span>
+          </div>
+          <div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Código EAN</span>
+            <span id="modalEan" class="text-xs font-mono font-bold text-slate-700">0000000000000</span>
+          </div>
+          <div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Distribuidora / Fornecedor</span>
+            <span id="modalFornecedor" class="text-xs font-bold text-slate-700 uppercase bg-slate-200/70 px-1.5 py-0.5 rounded">GERAL</span>
+          </div>
+          <div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Embalagem Padrão</span>
+            <span id="modalEmbalagem" class="text-xs font-bold text-slate-700">1 un</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Divisão / Franquia</span>
+            <span id="modalDivisaoFranquia" class="text-xs font-medium text-slate-600">-</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
+          <div>
+            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Valor Unitário</span>
+            <div id="modalBlocoPrecos" class="flex items-baseline gap-2 mt-0.5">
+              <span id="modalPrecoFinal" class="text-xl font-black text-slate-900">R$ 0,00</span>
+              <span id="modalPrecoOriginal" class="text-xs text-slate-400 line-through font-medium"></span>
+            </div>
+          </div>
+          <div id="modalBadgeDescontoCont" class="hidden">
+            <span id="modalBadgeDesconto" class="bg-red-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm">0% OFF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL CARRINHO
+       ===================================================================== -->
+  <div id="modalCarrinho" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="fecharModalCarrinhoNoBackdrop(event)">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+      <header class="p-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+          <svg class="w-5 h-5 text-orange-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
+          </svg>
+          <h3 class="font-black text-sm sm:text-base tracking-tight truncate">Meu Pedido</h3>
+          <span id="totalVariedadesCarrinho" class="bg-slate-800 text-slate-400 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">0 produtos</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btnLimparPedidoDentro" onclick="limparPedidoCompleto()"
+            class="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-900 text-red-400 hover:text-red-300 border border-red-900/50 rounded-xl text-xs font-bold transition-all flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <span class="hidden sm:inline">Limpar Tudo</span>
+          </button>
+          <button onclick="fecharModalCarrinho()" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div id="corpoCarrinho" class="p-6 flex-grow overflow-y-auto space-y-4 no-scrollbar bg-slate-50/50"></div>
+
+      <div id="blocoResumoFinanceiro" class="p-4 bg-slate-100 border-t border-slate-200 shrink-0 hidden">
+        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+          <div class="bg-white p-2 rounded-xl border shadow-sm">
+            <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider block">Total Bruto</span>
+            <span id="resumoTotalBruto" class="text-xs font-bold text-slate-500">R$ 0,00</span>
+          </div>
+          <div class="bg-white p-2 rounded-xl border shadow-sm">
+            <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider block">Qtd Volume</span>
+            <span id="resumoTotalUnidades" class="text-xs font-black text-slate-800">0 un</span>
+          </div>
+          <div class="bg-white p-2 rounded-xl border-2 border-emerald-200 bg-emerald-50/20 shadow-sm">
+            <span class="text-[8px] font-black text-emerald-600 uppercase tracking-wider block">Total Líquido</span>
+            <span id="resumoTotalLiquido" class="text-sm font-black text-emerald-700">R$ 0,00</span>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center justify-end gap-2">
+          <button onclick="fecharModalCarrinho()"
+            class="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-all uppercase tracking-wider">Continuar Comprando</button>
+          <button id="btnBaixarExcel" onclick="fazerDownloadExcel()"
+            class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Fechar &amp; Baixar Pedido
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL: IMPORTAR PEDIDO (EXCEL/PDF) DO CLIENTE
+       ===================================================================== -->
+  <div id="modalImportarPedido" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="fecharModalImportarPedidoNoBackdrop(event)">
+    <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+
+      <!-- Cabeçalho -->
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-900 text-white">
+        <div>
+          <h2 class="text-base font-black">Ver Valor do Pedido</h2>
+          <p class="text-xs text-slate-300 mt-0.5">Importe o arquivo Excel ou PDF enviado pelo cliente para calcular o pedido</p>
+        </div>
+        <button onclick="fecharModalImportarPedido()" class="p-2 hover:bg-white/10 rounded-xl transition-colors text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto no-scrollbar flex-grow p-6 space-y-5">
+
+        <!-- ESTADO 1: ÁREA DE UPLOAD -->
+        <div id="importEstadoUpload">
+          <label for="inputArquivoImportado"
+            class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-2xl p-10 cursor-pointer hover:border-[#FF6B00] hover:bg-orange-50/30 transition-all text-center">
+            <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <span class="text-sm font-bold text-slate-700">Clique para selecionar o arquivo</span>
+            <span class="text-xs text-slate-400">Formatos aceitos: .xlsx, .xls, .pdf</span>
+            <input type="file" id="inputArquivoImportado" accept=".xlsx,.xls,.pdf" class="hidden" onchange="aoSelecionarArquivoImportado(event)">
+          </label>
+          <p class="text-[11px] text-slate-400 mt-3 leading-relaxed">
+            O sistema procura o <strong>CNPJ do cliente</strong> no arquivo, identifica sua UF e aplica automaticamente os preços e descontos corretos.
+            Para PDFs, funciona melhor com arquivos gerados digitalmente (não fotos/scans).
+          </p>
+        </div>
+
+        <!-- ESTADO 2: PROCESSANDO -->
+        <div id="importEstadoProcessando" class="hidden flex-col items-center justify-center gap-3 py-16 text-center">
+          <svg class="w-8 h-8 text-[#FF6B00] animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <p id="importTextoProcessando" class="text-sm font-bold text-slate-600">Lendo o arquivo...</p>
+        </div>
+
+        <!-- ESTADO 3: ERRO -->
+        <div id="importEstadoErro" class="hidden bg-red-50 border border-red-200 rounded-2xl p-5 text-center">
+          <p id="importTextoErro" class="text-sm font-bold text-red-600">Ocorreu um erro.</p>
+          <button onclick="resetarModalImportacao()" class="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-all">Tentar Novamente</button>
+        </div>
+
+        <!-- ESTADO 4: RESULTADO -->
+        <div id="importEstadoResultado" class="hidden space-y-5">
+
+          <!-- Resumo geral consolidado (todos os CNPJs do arquivo) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">CNPJs Identificados</span>
+              <span id="importTotalCnpjsOk" class="text-sm font-black text-slate-800">0</span>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Unidades</span>
+              <span id="importTotalUnidades" class="text-sm font-black text-slate-800">0</span>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
+              <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Total Bruto</span>
+              <span id="importTotalBruto" class="text-sm font-bold text-slate-500">R$ 0,00</span>
+            </div>
+            <div class="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
+              <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block">Total Líquido</span>
+              <span id="importTotalLiquido" class="text-sm font-black text-emerald-700">R$ 0,00</span>
+            </div>
+          </div>
+
+          <!-- Resumo de verificação de estoque (valor/qtd atendida x não atendida) -->
+          <div>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">📦 Verificação de Estoque</p>
+            <div id="importBlocoResumoEstoque" class="grid grid-cols-2 gap-2"></div>
+          </div>
+
+          <!-- Blocos individuais, um por CNPJ identificado -->
+          <div id="importBlocosClientes" class="space-y-4"></div>
+
+          <!-- Relatório de CNPJs não encontrados -->
+          <div id="importBlocoCnpjNaoEncontrados" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4">
+            <p class="text-xs font-black text-red-700 uppercase tracking-wider mb-2">⚠️ CNPJ Não Encontrados</p>
+            <p class="text-[11px] text-red-600 mb-2">Estes CNPJs apareceram no arquivo mas não estão cadastrados na aba CLIENTES — não foi possível calcular preço/desconto para eles.</p>
+            <div id="importTabelaCnpjNaoEncontrados" class="space-y-1"></div>
+          </div>
+
+          <!-- Códigos/EAN não localizados no catálogo -->
+          <div id="importBlocoCodigoNaoEncontrados" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <p class="text-xs font-black text-amber-700 uppercase tracking-wider mb-1">⚠️ Códigos não localizados no catálogo</p>
+            <p id="importTextoCodigoNaoEncontrados" class="text-xs text-amber-700 leading-relaxed"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Rodapé com ações -->
+      <div id="importRodapeAcoes" class="hidden p-4 border-t border-slate-100 shrink-0 flex flex-col sm:flex-row gap-2 justify-end">
+        <button onclick="resetarModalImportacao()"
+          class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-all uppercase tracking-wider">Importar Outro Arquivo</button>
+        <button id="btnBaixarExcelImportado" onclick="baixarExcelPedidoImportado()"
+          class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Baixar Excel do Pedido
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       JAVASCRIPT
+       ===================================================================== -->
+  <script>
+    // -----------------------------------------------------------------------
+    // ESTADO GLOBAL
+    // -----------------------------------------------------------------------
+    let BD_PRODUTOS         = [];
+    let PRODUTOS_FILTRADOS  = [];
+    let CARRINHO            = {};
+    let filtroFornecedorAtual = "TODOS";
+    let BD_CLIENTES         = [];
+    let CLIENTE_SELECIONADO = null;
+    let FILTRO_APENAS_COM_ESTOQUE = false;
+
+    // UF do usuário logado: vem da URL (?uf=...) ou do localStorage (login feito em index.html)
+    const params = new URLSearchParams(window.location.search);
+    const UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+
+    // Sem usuário logado? manda de volta para o login
+    if (!localStorage.getItem('hbn1_usuario')) {
+      window.location.href = 'index.html';
+    }
+    document.getElementById('ufBadgeTitulo').innerText = '(' + UF_USUARIO + ')';
+
+
+    // Controle de OL Danone: 0 = sem OL, 250 | 500 | 1000
+    let OL_ATIVO = 0;
+
+    // -----------------------------------------------------------------------
+    // CÁLCULO DE PREÇO COM DESCONTO DINÂMICO (versão genérica)
+    // Aceita cliente e OL explícitos — usada tanto pelo catálogo (globais)
+    // quanto pela importação de pedidos (cliente identificado pelo CNPJ)
+    // Retorna { precoFinal, precoOriginal, percentualDesconto }
+    // -----------------------------------------------------------------------
+    function calcularPrecosPara(p, cliente, olAtivo) {
+      const precoBruto = converterPrecoValido(p.preco);
+      if (precoBruto === 0) return { precoFinal: 0, precoOriginal: 0, percentual: 0 };
+
+      const forn    = String(p.fornecedor || '').toUpperCase().trim();
+      const isDanone   = forn.includes('DANONE');
+      const isUnilever = forn.includes('UNILEVER');
+      const isKenvue   = forn.includes('KENVUE');
+
+      let percentual = 0;
+
+      if (isDanone) {
+        // Danone só recebe desconto quando há cliente selecionado E uma OL ativa.
+        // Se a OL não foi clicada, o percentual permanece 0 (não cai no desconto padrão).
+        if (cliente && olAtivo > 0) {
+          const perfil = String(cliente.perfilDanone || '').toUpperCase().trim();
+          if (perfil === 'ASSOCIATIVISMO') {
+            if      (olAtivo === 250)  percentual = converterPercentual(p.olAssoc250);
+            else if (olAtivo === 500)  percentual = converterPercentual(p.olAssoc500);
+            else if (olAtivo === 1000) percentual = converterPercentual(p.olAssoc1000);
+          } else if (perfil === 'PNV') {
+            if      (olAtivo === 250)  percentual = converterPercentual(p.olPnv250);
+            else if (olAtivo === 500)  percentual = converterPercentual(p.olPnv500);
+            else if (olAtivo === 1000) percentual = converterPercentual(p.olPnv1000);
+          }
+        }
+      } else if (isUnilever) {
+        if (cliente) {
+          const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
+          if      (grupo === 'GRUPO1' || grupo === '1') percentual = converterPercentual(p.descUniG1);
+          else if (grupo === 'GRUPO2' || grupo === '2') percentual = converterPercentual(p.descUniG2);
+          else if (grupo === 'GRUPO3' || grupo === '3') percentual = converterPercentual(p.descUniG3);
+        }
+      } else if (isKenvue) {
+        if (cliente && String(cliente.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE') {
+          percentual = converterPercentual(p.descTransfer);
+        }
+      } else if (cliente) {
+        percentual = converterPercentual(p.descontoPadrao);
+      }
+
+      const precoFinal = percentual > 0 ? precoBruto * (1 - percentual / 100) : precoBruto;
+      return { precoFinal, precoOriginal: precoBruto, percentual };
+    }
+
+    // Wrapper usado em todo o catálogo: usa o cliente/OL selecionados na tela
+    function calcularPrecos(p) {
+      return calcularPrecosPara(p, CLIENTE_SELECIONADO, OL_ATIVO);
+    }
+
+    // Converte "15%", "15", 15, "15,5%" etc. → número float
+    function converterPercentual(texto) {
+      if (!texto && texto !== 0) return 0;
+      let s = String(texto).replace('%', '').replace(',', '.').trim();
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function converterPrecoValido(textoMoeda) {
+      if (!textoMoeda) return 0;
+      let str = String(textoMoeda).replace('R$', '').replace(/\s/g, '').trim();
+      if (str.includes(',') && str.includes('.')) {
+        str = str.replace(/\./g, '').replace(',', '.');
+      } else if (str.includes(',')) {
+        str = str.replace(',', '.');
+      }
+      const resultado = parseFloat(str);
+      return isNaN(resultado) ? 0 : resultado;
+    }
+
+    function formatarParaReal(numero) {
+      return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // -----------------------------------------------------------------------
+    // TEXTO DE ÚLTIMA ATUALIZAÇÃO DOS DADOS (produtos/preços/estoque)
+    // -----------------------------------------------------------------------
+    function atualizarTextoUltimaSincronizacao() {
+      const el = document.getElementById('textoUltimaAtualizacao');
+      if (!el) return;
+      const agora = new Date();
+      const dataFormatada = agora.toLocaleDateString('pt-BR');
+      const horaFormatada  = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      el.innerText = `🕐 Dados atualizados em ${dataFormatada} às ${horaFormatada}`;
+    }
+
+    // -----------------------------------------------------------------------
+    // SELEÇÃO DE OL DANONE
+    // -----------------------------------------------------------------------
+    function selecionarOL(valor) {
+      OL_ATIVO = valor;
+      ['btnOL250', 'btnOL500', 'btnOL1000'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('ol-btn-ativo');
+      });
+      const labelOL = document.getElementById('labelOLAtivo');
+      if (valor === 0) {
+        if (labelOL) { labelOL.innerText = ''; labelOL.classList.add('hidden'); }
+      } else {
+        const mapa = { 250: 'btnOL250', 500: 'btnOL500', 1000: 'btnOL1000' };
+        const btnId = mapa[valor];
+        if (btnId) document.getElementById(btnId).classList.add('ol-btn-ativo');
+        if (labelOL) { labelOL.innerText = `OL ${valor} cx ativo`; labelOL.classList.remove('hidden'); }
+      }
+      // Recalcula cards e totais
+      executarFiltrosGerais();
+      atualizarIndicadoresFinanceirosGlobais();
+    }
+
+    // -----------------------------------------------------------------------
+    // CLIENTES
+    // -----------------------------------------------------------------------
+    function filtrarClientesDropdown() {
+      const input    = document.getElementById('buscaClienteInput');
+      const dropdown = document.getElementById('dropdownClientes');
+      const termo    = input.value.trim().toLowerCase();
+      if (!termo) { dropdown.innerHTML = ''; dropdown.classList.add('hidden'); return; }
+
+      const filtrados = BD_CLIENTES.filter(c =>
+        String(c.id).toLowerCase().includes(termo) ||
+        String(c.cnpj).replace(/\D/g, '').includes(termo) ||
+        String(c.razao).toLowerCase().includes(termo)
+      );
+
+      if (filtrados.length === 0) {
+        dropdown.innerHTML = '<div class="p-3 text-xs text-slate-400 italic">Nenhum cliente encontrado</div>';
+        dropdown.classList.remove('hidden');
+        return;
+      }
+
+      let html = '';
+      filtrados.slice(0, 10).forEach(c => {
+        html += `
+          <div onclick="selecionarCliente('${c.id}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b border-slate-100 last:border-none transition-colors">
+            <div class="font-bold text-xs text-slate-900">${c.razao.toUpperCase()}</div>
+            <div class="text-[10px] text-slate-500 flex justify-between mt-1 font-mono">
+              <span>ID: ${c.id}</span>
+              <span>CNPJ: ${c.cnpj}</span>
+            </div>
+          </div>`;
+      });
+      dropdown.innerHTML = html;
+      dropdown.classList.remove('hidden');
+    }
+
+    function selecionarCliente(id) {
+      const cliente = BD_CLIENTES.find(c => String(c.id) === String(id));
+      if (!cliente) return;
+
+      CLIENTE_SELECIONADO = cliente;
+
+      document.getElementById('cliInfoRazao').innerText = cliente.razao.toUpperCase();
+      document.getElementById('cliInfoCNPJ').innerText  = `CNPJ: ${cliente.cnpj}`;
+      document.getElementById('cliInfoID').innerText    = `ID: ${cliente.id}`;
+      document.getElementById('btnLimparCliente').classList.remove('hidden');
+
+      // Exibe grupo Unilever se preenchido
+      const grupoUni = String(cliente.grupoUnilever || '').trim();
+      const elSepUni = document.getElementById('cliInfoGrupoUni');
+      const elGruUni = document.getElementById('cliInfoGrupoUniVal');
+      if (grupoUni) {
+        elSepUni.classList.remove('hidden');
+        elGruUni.innerText = '🔵 UNI: ' + grupoUni;
+        elGruUni.classList.remove('hidden');
+      } else {
+        elSepUni.classList.add('hidden');
+        elGruUni.classList.add('hidden');
+      }
+
+      // Exibe perfil Danone e painel OL se preenchido
+      const perfDan = String(cliente.perfilDanone || '').trim();
+      const elSepDan = document.getElementById('cliInfoPerfilDan');
+      const elPerDan = document.getElementById('cliInfoPerfilDanVal');
+      const painelOL = document.getElementById('painelOL');
+      if (perfDan) {
+        elSepDan.classList.remove('hidden');
+        elPerDan.innerText = '🟣 DAN: ' + perfDan;
+        elPerDan.classList.remove('hidden');
+        painelOL.classList.remove('hidden');
+      } else {
+        elSepDan.classList.add('hidden');
+        elPerDan.classList.add('hidden');
+        painelOL.classList.add('hidden');
+        OL_ATIVO = 0;
+      }
+
+      // Exibe selo Transfer Kenvue se preenchido
+      const painelTransfer = String(cliente.painelTransfer || '').trim();
+      const elSepTransfer = document.getElementById('cliInfoTransfer');
+      const elValTransfer = document.getElementById('cliInfoTransferVal');
+      if (painelTransfer.toUpperCase() === 'TRANSFER KENVUE') {
+        elSepTransfer.classList.remove('hidden');
+        elValTransfer.innerText = '🟠 KEN: TRANSFER';
+        elValTransfer.classList.remove('hidden');
+      } else {
+        elSepTransfer.classList.add('hidden');
+        elValTransfer.classList.add('hidden');
+      }
+
+      document.getElementById('dropdownClientes').innerHTML = '';
+      document.getElementById('dropdownClientes').classList.add('hidden');
+      document.getElementById('buscaClienteInput').value = '';
+
+      // Recalcula preços com novo cliente
+      executarFiltrosGerais();
+      atualizarIndicadoresFinanceirosGlobais();
+    }
+
+    function limparClienteSelecionado() {
+      CLIENTE_SELECIONADO = null;
+      OL_ATIVO = 0;
+      document.getElementById('cliInfoRazao').innerText = "NENHUM CLIENTE SELECIONADO";
+      document.getElementById('cliInfoCNPJ').innerText  = "CNPJ: --.---.---/----.--";
+      document.getElementById('cliInfoID').innerText    = "ID: ----";
+      document.getElementById('btnLimparCliente').classList.add('hidden');
+      document.getElementById('cliInfoGrupoUni').classList.add('hidden');
+      document.getElementById('cliInfoGrupoUniVal').classList.add('hidden');
+      document.getElementById('cliInfoPerfilDan').classList.add('hidden');
+      document.getElementById('cliInfoPerfilDanVal').classList.add('hidden');
+      document.getElementById('cliInfoTransfer').classList.add('hidden');
+      document.getElementById('cliInfoTransferVal').classList.add('hidden');
+      document.getElementById('painelOL').classList.add('hidden');
+      ['btnOL250','btnOL500','btnOL1000'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('ol-btn-ativo');
+      });
+      executarFiltrosGerais();
+      atualizarIndicadoresFinanceirosGlobais();
+    }
+
+    document.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('dropdownClientes');
+      const input    = document.getElementById('buscaClienteInput');
+      if (dropdown && input && e.target !== dropdown && e.target !== input) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // -----------------------------------------------------------------------
+    // FILTROS
+    // -----------------------------------------------------------------------
+    function definirFiltroEstoque(apenasComEstoque) {
+      FILTRO_APENAS_COM_ESTOQUE = apenasComEstoque;
+      const btnSim = document.getElementById('btnEstoqueSim');
+      const btnNao = document.getElementById('btnEstoqueNao');
+      const ativo  = "py-1.5 px-3 text-xs font-bold rounded-lg border bg-orange-600 text-white border-orange-600 shadow-sm transition-all text-center";
+      const inativo= "py-1.5 px-3 text-xs font-bold rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition-all text-center";
+      btnSim.className = apenasComEstoque ? ativo : inativo;
+      btnNao.className = apenasComEstoque ? inativo : ativo;
+      executarFiltrosGerais();
+    }
+
+    function executarFiltrosGerais() {
+      const busca = document.getElementById('barraPesquisa').value.toLowerCase().trim();
+      PRODUTOS_FILTRADOS = BD_PRODUTOS.filter(p => {
+        const condForn = filtroFornecedorAtual === "TODOS" || (p.fornecedor && String(p.fornecedor).trim().toUpperCase() === filtroFornecedorAtual);
+        if (FILTRO_APENAS_COM_ESTOQUE && (parseInt(p.estoque) || 0) <= 0) return false;
+        const condBusca = !busca ||
+          (p.id        && String(p.id).toLowerCase().includes(busca))        ||
+          (p.ean       && String(p.ean).toLowerCase().includes(busca))       ||
+          (p.descricao && String(p.descricao).toLowerCase().includes(busca)) ||
+          (p.marca     && String(p.marca).toLowerCase().includes(busca))     ||
+          (p.divisao   && String(p.divisao).toLowerCase().includes(busca))   ||
+          (p.franquia  && String(p.franquia).toLowerCase().includes(busca))  ||
+          (p.tag       && String(p.tag).toLowerCase().includes(busca));
+        return condForn && condBusca;
+      });
+      renderizarInterfaceGrafica(PRODUTOS_FILTRADOS);
+    }
+
+    function renderizarInterfaceGrafica(lista) {
+      const grid     = document.getElementById('gridProdutos');
+      const contador = document.getElementById('contadorProdutos');
+      grid.innerHTML = '';
+      contador.innerText = lista.length;
+      if (lista.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400 font-medium bg-white rounded-2xl border border-dashed p-8">Nenhum produto localizado para os filtros informados.</div>`;
+        return;
+      }
+      lista.forEach(p => { grid.appendChild(criarCardProduto(p)); });
+    }
+
+    // -----------------------------------------------------------------------
+    // SIDEBAR DE FORNECEDORES
+    // -----------------------------------------------------------------------
+    function renderizarFiltrosLaterais() {
+      const container = document.getElementById('listaFiltroFornecedores');
+      container.innerHTML = '';
+      const fornecedoresUnicos = [...new Set(BD_PRODUTOS.map(p => p.fornecedor).filter(Boolean))];
+      fornecedoresUnicos.sort((a, b) => String(a).localeCompare(String(b)));
+      const listaFinal = ["TODOS", ...fornecedoresUnicos];
+      listaFinal.forEach(forn => {
+        const nomeBotao = String(forn).trim().toUpperCase();
+        const isActive  = filtroFornecedorAtual === nomeBotao;
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all flex flex-col gap-1.5 border ${
+          isActive
+            ? 'bg-orange-600 text-white border-orange-700 shadow-md scale-[1.02]'
+            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+        }`;
+        btn.onclick = () => { filtroFornecedorAtual = nomeBotao; renderizarFiltrosLaterais(); executarFiltrosGerais(); };
+        let urlLogo = "";
+        if      (nomeBotao.includes("UNILEVER"))  urlLogo = "https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png";
+        else if (nomeBotao.includes("KENVUE"))    urlLogo = "https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp";
+        else if (nomeBotao.includes("DANONE"))    urlLogo = "https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png";
+        else if (nomeBotao.includes("KIMBERLY"))  urlLogo = "https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg";
+        else if (nomeBotao.includes("OMRON"))     urlLogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png";
+        else if (nomeBotao === "TODOS" || nomeBotao.includes("NAZARIA")) urlLogo = "https://epedidos.nazaria.com.br/img/logo-nazaria-white.png";
+        else urlLogo = "https://via.placeholder.com/120x40/f8fafc/64748b?text=" + encodeURIComponent(nomeBotao);
+        btn.innerHTML = `
+          <span class="truncate uppercase tracking-wider">${nomeBotao === 'TODOS' ? '✨ TODOS OS FORNECEDORES' : nomeBotao}</span>
+          <div class="w-full flex items-center justify-start mt-0.5">
+            <img src="${urlLogo}" alt="${nomeBotao}" class="h-7 w-auto object-contain bg-white p-1 rounded-md border border-slate-100 shadow-sm">
+          </div>`;
+        container.appendChild(btn);
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // CARD DE PRODUTO
+    // -----------------------------------------------------------------------
+    function criarCardProduto(p) {
+      const card = document.createElement('div');
+      card.className = "bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative group text-[11px]";
+      card.id = `card-item-${p.id}`;
+
+      const qtdNoCarrinho = CARRINHO[p.id] || 0;
+      const estoque       = Number(p.estoque || 0);
+      const isEsgotado    = estoque <= 0;
+
+      const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+      const temDesconto = percentual > 0;
+
+      let badgeTagHtml = p.tag && p.tag.trim() !== ''
+        ? `<span class="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm tracking-wider">${p.tag}</span>`
+        : '';
+
+      const blocoPrecoHtml = temDesconto
+        ? `<div class="flex flex-col mt-0.5">
+             <span class="text-sm font-black text-slate-900">${formatarParaReal(precoFinal)}</span>
+             <span class="text-[10px] text-slate-400 line-through font-medium">${formatarParaReal(precoOriginal)}</span>
+           </div>`
+        : `<div class="flex flex-col mt-0.5">
+             <span class="text-sm font-black text-slate-900">${precoOriginal > 0 ? formatarParaReal(precoOriginal) : '-'}</span>
+           </div>`;
+
+      card.innerHTML = `
+        ${badgeTagHtml}
+        <div class="p-2 flex flex-col items-center bg-slate-50 border-b border-slate-100 relative cursor-pointer" onclick="abrirModalDetalhes('${p.id}')">
+          <img src="${p.imagens}" class="h-24 w-24 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-200" loading="lazy">
+          <span class="absolute bottom-1 right-1 text-[8px] font-bold border ${isEsgotado ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'} px-1 py-0.5 rounded uppercase shadow-sm">
+            Est: ${p.estoque || 0}
+          </span>
+        </div>
+        <div class="p-2 flex flex-col flex-grow justify-between gap-1.5">
+          <div>
+            <span class="text-[8px] font-black text-[#FF6B00] uppercase tracking-wider block">${p.marca || 'OUTROS'}</span>
+            <h2 class="text-[11px] font-bold text-slate-800 line-clamp-2 leading-tight mt-0.5 min-h-[28px] hover:text-orange-600 cursor-pointer" onclick="abrirModalDetalhes('${p.id}')">
+              ${p.descricao || 'Sem descrição cadastrada'}
+            </h2>
+          </div>
+          <div class="pt-1.5 border-t border-dashed border-slate-100 flex flex-col gap-0.5 text-[9px]">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400 font-medium">Forn:</span>
+              <span class="font-bold text-slate-700 uppercase bg-slate-100 px-1 rounded truncate max-w-[70px] text-right">${p.fornecedor || 'GERAL'}</span>
+            </div>
+            <div class="flex justify-between items-center text-[8.5px]">
+              <span class="text-slate-400">Emb. Padrão:</span>
+              <span class="font-bold text-slate-600">${p.embalagem ? p.embalagem + ' un' : '-'}</span>
+            </div>
+            <div class="flex justify-between items-center font-mono">
+              <span class="text-slate-400">ID:</span>
+              <span class="text-slate-500 font-medium">${p.id}</span>
+            </div>
+          </div>
+          <div class="pt-1">
+            <div class="flex items-center justify-between mb-1.5">
+              ${blocoPrecoHtml}
+              ${temDesconto ? `<span class="bg-red-500 text-white text-[8px] font-black px-1 py-0.5 rounded shadow-sm shrink-0">-${percentual}%</span>` : ''}
+            </div>
+            <div id="card-btn-${p.id}">
+              ${obterHtmlBotaoAcao(p.id, qtdNoCarrinho, estoque, isEsgotado)}
+            </div>
+          </div>
+        </div>`;
+      return card;
+    }
+
+    function obterHtmlBotaoAcao(idProd, qtd, estoque, isEsgotado) {
+      if (isEsgotado) return `<button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded-lg cursor-not-allowed uppercase tracking-wider">Esgotado</button>`;
+      if (qtd > 0) return `
+        <div class="flex items-center justify-between bg-orange-50 border border-orange-200 p-0.5 rounded-xl w-full">
+          <button onclick="alterarQtd('${idProd}', -1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-xs text-[#FF6B00] flex items-center justify-center shadow-sm border border-orange-100 transition-colors shrink-0">-</button>
+          <input type="number" value="${qtd}" min="1" max="${estoque}" onchange="atualizarQtdDigitada('${idProd}', this.value, ${estoque})" onkeydown="if(event.key==='Enter') this.blur();"
+            class="w-full text-center font-black text-xs text-[#FF6B00] bg-transparent focus:outline-none min-w-0 p-0 border-0 focus:ring-0">
+          <button onclick="alterarQtd('${idProd}', 1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-xs text-[#FF6B00] flex items-center justify-center shadow-sm border border-orange-100 transition-colors shrink-0">+</button>
+        </div>`;
+      return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-2 bg-[#FF6B00] hover:bg-orange-600 text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>Adicionar</button>`;
+    }
+
+    function atualizarQtdDigitada(idProd, valor, estoqueMax) {
+      let novaQtd = parseInt(valor);
+      if (isNaN(novaQtd) || novaQtd <= 0) { delete CARRINHO[idProd]; novaQtd = 0; }
+      else {
+        if (novaQtd > estoqueMax) { alert(`Atenção: Quantidade máxima em estoque atingida (${estoqueMax} un).`); novaQtd = estoqueMax; }
+        CARRINHO[idProd] = novaQtd;
+      }
+      const c = document.getElementById(`card-btn-${idProd}`);
+      if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
+      atualizarIndicadoresFinanceirosGlobais();
+    }
+
+    function alterarQtd(idProd, mudanca) {
+      const p = BD_PRODUTOS.find(item => item.id === idProd);
+      if (!p) return;
+      const estoqueMax = Number(p.estoque || 0);
+      let qtdAtual = CARRINHO[idProd] || 0;
+      let novaQtd  = qtdAtual + mudanca;
+      if (novaQtd > estoqueMax) { alert(`Atenção: Quantidade máxima em estoque atingida (${estoqueMax} un).`); novaQtd = estoqueMax; }
+      if (novaQtd <= 0) { delete CARRINHO[idProd]; novaQtd = 0; }
+      else CARRINHO[idProd] = novaQtd;
+      const c = document.getElementById(`card-btn-${idProd}`);
+      if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
+      atualizarIndicadoresFinanceirosGlobais();
+    }
+
+    // -----------------------------------------------------------------------
+    // TOTALIZADORES
+    // -----------------------------------------------------------------------
+    function recalcularTotaisGerais() { atualizarIndicadoresFinanceirosGlobais(); }
+
+    function atualizarIndicadoresFinanceirosGlobais() {
+      let somaLiquida = 0;
+      let totalItens  = 0;
+      Object.keys(CARRINHO).forEach(idProd => {
+        const p = BD_PRODUTOS.find(item => item.id === idProd);
+        if (!p) return;
+        const qtd = CARRINHO[idProd];
+        totalItens += qtd;
+        const { precoFinal } = calcularPrecos(p);
+        somaLiquida += precoFinal * qtd;
+      });
+      document.getElementById('totalLiquidoInferior').innerText = formatarParaReal(somaLiquida);
+      document.getElementById('badgeContadorInferior').innerText = totalItens;
+      const badge = document.getElementById('badgeContadorFlutuante');
+      if (badge) {
+        badge.innerText = totalItens;
+        totalItens > 0 ? badge.classList.remove('hidden') : badge.classList.add('hidden');
+      }
+      const btnFora   = document.getElementById('btnLimparPedidoFora');
+      const btnMobile = document.getElementById('btnLimparPedidoMobile');
+      if (totalItens > 0) {
+        if (btnFora)   btnFora.classList.remove('hidden');
+        if (btnMobile) btnMobile.classList.remove('hidden');
+      } else {
+        if (btnFora)   btnFora.classList.add('hidden');
+        if (btnMobile) btnMobile.classList.add('hidden');
+      }
+    }
+
+    function limparPedidoCompleto() {
+      if (!confirm("Tem certeza que deseja limpar todos os produtos selecionados do seu pedido?")) return;
+      CARRINHO = {};
+      BD_PRODUTOS.forEach(p => {
+        const c = document.getElementById(`card-btn-${p.id}`);
+        const est = Number(p.estoque || 0);
+        if (c) c.innerHTML = obterHtmlBotaoAcao(p.id, 0, est, est <= 0);
+      });
+      atualizarIndicadoresFinanceirosGlobais();
+      if (!document.getElementById('modalCarrinho').classList.contains('hidden')) abrirModalCarrinho();
+    }
+
+    // -----------------------------------------------------------------------
+    // MODAL CARRINHO
+    // -----------------------------------------------------------------------
+    function abrirModalCarrinho() {
+      const boxCorpo    = document.getElementById('corpoCarrinho');
+      const blocoResumo = document.getElementById('blocoResumoFinanceiro');
+      boxCorpo.innerHTML = '';
+      const chaves = Object.keys(CARRINHO);
+      document.getElementById('totalVariedadesCarrinho').innerText = `${chaves.length} ${chaves.length === 1 ? 'produto' : 'produtos'}`;
+
+      if (chaves.length === 0) {
+        boxCorpo.innerHTML = `<div class="text-center py-12 text-slate-400 font-medium"><p class="text-base font-bold">Seu pedido está vazio.</p><p class="text-xs mt-1">Adicione quantidades nos itens do catálogo acima.</p></div>`;
+        document.getElementById('btnBaixarExcel').disabled = true;
+        document.getElementById('btnBaixarExcel').className = "w-full sm:w-auto px-6 py-2.5 bg-slate-300 text-slate-500 text-sm font-bold rounded-xl cursor-not-allowed flex items-center justify-center gap-2";
+        blocoResumo.classList.add('hidden');
+        document.getElementById('modalCarrinho').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('btnBaixarExcel').disabled = false;
+      document.getElementById('btnBaixarExcel').className = "w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider";
+
+      let acumuladorBruto   = 0;
+      let acumuladorLiquido = 0;
+      let acumuladorUnidades= 0;
+      let totaisPorFornecedor = {};
+
+      chaves.forEach(idProd => {
+        const p = BD_PRODUTOS.find(item => item.id === idProd);
+        if (!p) return;
+        const qtd = CARRINHO[idProd];
+        acumuladorUnidades += qtd;
+        const { precoFinal, precoOriginal } = calcularPrecos(p);
+        acumuladorBruto   += precoOriginal * qtd;
+        acumuladorLiquido += precoFinal    * qtd;
+
+        const fornNome   = p.fornecedor ? String(p.fornecedor).trim().toUpperCase() : 'GERAL';
+        const divisaoNome= p.divisao    ? String(p.divisao).trim().toUpperCase()    : '';
+
+        if (fornNome.includes('UNILEVER')) {
+          const chT = 'UNILEVER TOTAL';
+          if (!totaisPorFornecedor[chT]) totaisPorFornecedor[chT] = { unidades: 0, bruto: 0, liquido: 0, destaque: true };
+          totaisPorFornecedor[chT].unidades += qtd;
+          totaisPorFornecedor[chT].bruto    += precoOriginal * qtd;
+          totaisPorFornecedor[chT].liquido  += precoFinal    * qtd;
+          const chD = divisaoNome ? `UNILEVER - ${divisaoNome}` : 'UNILEVER - OUTROS';
+          if (!totaisPorFornecedor[chD]) totaisPorFornecedor[chD] = { unidades: 0, bruto: 0, liquido: 0, subItem: true };
+          totaisPorFornecedor[chD].unidades += qtd;
+          totaisPorFornecedor[chD].bruto    += precoOriginal * qtd;
+          totaisPorFornecedor[chD].liquido  += precoFinal    * qtd;
+        } else {
+          if (!totaisPorFornecedor[fornNome]) totaisPorFornecedor[fornNome] = { unidades: 0, bruto: 0, liquido: 0 };
+          totaisPorFornecedor[fornNome].unidades += qtd;
+          totaisPorFornecedor[fornNome].bruto    += precoOriginal * qtd;
+          totaisPorFornecedor[fornNome].liquido  += precoFinal    * qtd;
+        }
+      });
+
+      // Resumo por fornecedor
+      const divFornecedores = document.createElement('div');
+      divFornecedores.className = "mb-6 p-4 bg-blue-50/50 border border-blue-100 rounded-xl space-y-2";
+      const chavesOrdenadas = Object.keys(totaisPorFornecedor).sort((a, b) => {
+        if (a.includes('UNILEVER') && b.includes('UNILEVER')) {
+          if (a === 'UNILEVER TOTAL') return -1;
+          if (b === 'UNILEVER TOTAL') return 1;
+          return a.localeCompare(b);
+        }
+        if (a.includes('UNILEVER')) return -1;
+        if (b.includes('UNILEVER')) return 1;
+        return a.localeCompare(b);
+      });
+      let htmlForn = `
+        <div class="flex justify-between items-center mb-2 border-b border-blue-200 pb-1">
+          <h3 class="text-xs font-black text-blue-700 uppercase tracking-wider">Resumo por Fornecedor</h3>
+          <div class="flex gap-4 text-[10px] font-bold text-blue-400 uppercase tracking-wider text-right pr-1">
+            <span class="w-16">Qtd</span><span class="w-20">Bruto</span><span class="w-20">Líquido</span>
+          </div>
+        </div>`;
+      chavesOrdenadas.forEach(forn => {
+        const d = totaisPorFornecedor[forn];
+        const estiloLinha = "flex justify-between items-center text-xs border-b border-blue-100/50 pb-1.5 last:border-0 last:pb-0" + (d.subItem ? " pl-4 bg-slate-50/40" : "");
+        const estiloNome  = d.subItem ? "font-medium text-slate-500 italic text-[11px]" : d.destaque ? "font-black text-blue-900 tracking-tight" : "font-bold text-slate-700 truncate max-w-[180px] sm:max-w-[280px]";
+        htmlForn += `
+          <div class="${estiloLinha}">
+            <span class="${estiloNome}">${forn}</span>
+            <div class="flex gap-4 text-right shrink-0 font-mono">
+              <span class="text-slate-400 font-medium w-16">${d.unidades} un</span>
+              <span class="text-slate-500 text-[11px] w-20">${formatarParaReal(d.bruto)}</span>
+              <span class="${d.destaque ? 'font-black text-blue-600' : 'font-black text-slate-950'} w-20">${formatarParaReal(d.liquido)}</span>
+            </div>
+          </div>`;
+      });
+      divFornecedores.innerHTML = htmlForn;
+      boxCorpo.appendChild(divFornecedores);
+
+      // Lista de itens
+      const tituloItens = document.createElement('h3');
+      tituloItens.className = "text-xs font-black text-slate-400 uppercase tracking-wider mb-3";
+      tituloItens.innerText = "Itens do Pedido";
+      boxCorpo.appendChild(tituloItens);
+
+      chaves.forEach(idProd => {
+        const p = BD_PRODUTOS.find(item => item.id === idProd);
+        if (!p) return;
+        const qtd = CARRINHO[idProd];
+        const estoqueMax = Number(p.estoque || 0);
+        const { precoFinal } = calcularPrecos(p);
+
+        const itemLinha = document.createElement('div');
+        itemLinha.className = "flex items-center justify-between border-b border-slate-100 pb-3 gap-4 last:border-0";
+        itemLinha.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <img src="${p.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0">
+            <div class="min-w-0">
+              <h4 class="text-sm font-bold text-slate-900 truncate">${p.id}</h4>
+              <p class="text-xs text-slate-500 truncate">${p.descricao || 'Sem descrição'}</p>
+              <div class="flex flex-wrap gap-2 text-[10px] text-slate-400 font-medium">
+                <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold text-[8px] uppercase">${p.fornecedor}</span>
+                ${p.divisao ? `<span class="bg-blue-50 text-blue-600 px-1 rounded font-bold text-[8px] uppercase">${p.divisao}</span>` : ''}
+                <span>${p.embalagem ? 'Emb: ' + p.embalagem + ' un' : ''}</span>
+                <span>EAN: ${p.ean}</span>
+                <span class="text-[9px] text-slate-400 font-bold">(${formatarParaReal(precoFinal)} und)</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center bg-slate-100 p-1 rounded-lg shrink-0">
+            <button onclick="alterarQtdNoModal('${p.id}', -1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">-</button>
+            <input type="number" value="${qtd}" min="1" max="${estoqueMax}" onchange="atualizarQtdNoModalDigitada('${p.id}', this.value, ${estoqueMax})" onkeydown="if(event.key==='Enter') this.blur();" class="w-10 text-center font-black text-xs text-slate-800 bg-transparent focus:outline-none p-0 border-0 focus:ring-0">
+            <button onclick="alterarQtdNoModal('${p.id}', 1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">+</button>
+          </div>`;
+        boxCorpo.appendChild(itemLinha);
+      });
+
+      document.getElementById('resumoTotalBruto').innerText   = formatarParaReal(acumuladorBruto);
+      document.getElementById('resumoTotalUnidades').innerText= `${acumuladorUnidades} un`;
+      document.getElementById('resumoTotalLiquido').innerText = formatarParaReal(acumuladorLiquido);
+      blocoResumo.classList.remove('hidden');
+      document.getElementById('modalCarrinho').classList.remove('hidden');
+    }
+
+    function alterarQtdNoModal(idProd, mudanca)               { alterarQtd(idProd, mudanca); abrirModalCarrinho(); }
+    function atualizarQtdNoModalDigitada(idProd, valor, max)  { atualizarQtdDigitada(idProd, valor, max); abrirModalCarrinho(); }
+    function fecharModalCarrinho()                            { document.getElementById('modalCarrinho').classList.add('hidden'); }
+    function fecharModalCarrinhoNoBackdrop(event)             { if (event.target.id === 'modalCarrinho') fecharModalCarrinho(); }
+
+    // -----------------------------------------------------------------------
+    // MODAL DETALHES
+    // -----------------------------------------------------------------------
+    function abrirModalDetalhes(idProd) {
+      const p = BD_PRODUTOS.find(item => item.id === idProd);
+      if (!p) return;
+
+      document.getElementById('modalImagem').src      = p.imagens;
+      document.getElementById('modalMarca').innerText = p.marca || 'OUTROS';
+      document.getElementById('modalDescricao').innerText = p.descricao || 'Sem descrição cadastrada';
+      document.getElementById('modalId').innerText    = p.id;
+      document.getElementById('modalEan').innerText   = p.ean || 'N/A';
+      document.getElementById('modalFornecedor').innerText = p.fornecedor || 'GERAL';
+      document.getElementById('modalEmbalagem').innerText  = p.embalagem ? `${p.embalagem} un` : '-';
+
+      const divi = p.divisao && p.divisao !== '-'      ? p.divisao  : '';
+      const fran = p.franquia && p.franquia !== 'GERAL' ? p.franquia : '';
+      document.getElementById('modalDivisaoFranquia').innerText = (divi && fran) ? `${divi} / ${fran}` : (divi || fran || '-');
+
+      const badgeTag = document.getElementById('modalTagBadge');
+      if (p.tag && p.tag.trim() !== '') { badgeTag.innerText = p.tag; badgeTag.classList.remove('hidden'); }
+      else badgeTag.classList.add('hidden');
+
+      const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+      const temDesconto = percentual > 0;
+
+      document.getElementById('modalPrecoFinal').innerText   = precoOriginal > 0 ? formatarParaReal(precoFinal) : '-';
+      document.getElementById('modalPrecoOriginal').innerText = temDesconto ? formatarParaReal(precoOriginal) : '';
+
+      const badgeDescCont = document.getElementById('modalBadgeDescontoCont');
+      if (temDesconto) {
+        document.getElementById('modalBadgeDesconto').innerText = `-${percentual}% OFF`;
+        badgeDescCont.classList.remove('hidden');
+      } else {
+        badgeDescCont.classList.add('hidden');
+      }
+
+      const estoque = Number(p.estoque || 0);
+      const badge = document.getElementById('modalEstoqueBadge');
+      if (estoque > 0) {
+        badge.innerText = `Disponível: ${estoque} un`;
+        badge.className = "absolute bottom-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm bg-emerald-100 text-emerald-800 border border-emerald-200";
+      } else {
+        badge.innerText = "Item Esgotado";
+        badge.className = "absolute bottom-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm bg-red-100 text-red-800 border border-red-200";
+      }
+      document.getElementById('modalDetalhes').classList.remove('hidden');
+    }
+
+    function fecharModalDetalhes()              { document.getElementById('modalDetalhes').classList.add('hidden'); }
+    function fecharModalDetalhesNoBackdrop(evt) { if (evt.target.id === 'modalDetalhes') fecharModalDetalhes(); }
+
+    // -----------------------------------------------------------------------
+    // DOWNLOAD CSV
+    // -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
+    // CONSTRÓI O WORKBOOK FORMATADO (compartilhado pelo carrinho normal
+    // e pela tela de importação de pedido por Excel/PDF)
+    // dados = { itensPorFornecedor, clienteInfo, ufExibicao, olAtivo,
+    //           acBruto, acLiquido, acUnidades, totalVariedades, subtitulo,
+    //           acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido } <- opcionais (só importação)
+    // -----------------------------------------------------------------------
+    async function construirWorkbookPedido(dados) {
+      const { itensPorFornecedor, clienteInfo, ufExibicao, olAtivo,
+              acBruto, acLiquido, acUnidades, totalVariedades, subtitulo,
+              acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido } = dados;
+      const temResumoEstoque = acQtdNaoAtendida !== undefined;
+
+      const fornecedoresOrdenados = Object.keys(itensPorFornecedor).sort((a, b) => a.localeCompare(b));
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'HBN1 - Nazária Distribuidora Farmacêutica';
+      workbook.created = new Date();
+
+      const ws = workbook.addWorksheet('Pedido HBN1', { views: [{ showGridLines: false }] });
+
+      ws.columns = [
+        { key: 'cod',   width: 11 },
+        { key: 'ean',   width: 16 },
+        { key: 'desc',  width: 42 },
+        { key: 'preco', width: 12 },
+        { key: 'desc%', width: 9  },
+        { key: 'final', width: 12 },
+        { key: 'qt',    width: 7  },
+        { key: 'sub',   width: 13 },
+        { key: 'status',width: 16 }
+      ];
+
+      const LARANJA       = 'FFFF6B00';
+      const LARANJA_ESC   = 'FFE55300';
+      const CINZA_CLARO   = 'FFF4F4F4';
+      const VERDE_OK      = 'FF15803D';
+      const VERMELHO_SEM  = 'FFDC2626';
+      const BORDA_CINZA   = { style: 'thin', color: { argb: 'FFE2E2E2' } };
+
+      const mesclarEEstilizar = (linha, texto, opts = {}) => {
+        ws.mergeCells(`A${linha}:I${linha}`);
+        const cel = ws.getCell(`A${linha}`);
+        cel.value = texto;
+        cel.font = { bold: true, color: { argb: opts.corTexto || 'FFFFFFFF' }, size: opts.tamanho || 11, name: 'Calibri' };
+        cel.alignment = { horizontal: opts.alinhamento || 'center', vertical: 'middle' };
+        cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: opts.corFundo || LARANJA } };
+        ws.getRow(linha).height = opts.altura || 20;
+        return cel;
+      };
+
+      // --- Cabeçalho principal (banner laranja) ---
+      ws.mergeCells('A1:I3');
+      const cabecalho = ws.getCell('A1');
+      const dataHoraAgora = new Date().toLocaleString('pt-BR');
+      cabecalho.value = {
+        richText: [
+          { font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Calibri' }, text: 'VENDAS HBN1\n' },
+          { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: (subtitulo || 'COMPROVANTE DE PEDIDO — CATÁLOGO HBN1') + '\n' },
+          { font: { size: 9, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: `UF: ${ufExibicao} • ${dataHoraAgora} • ${totalVariedades} variedade(s)` }
+        ]
+      };
+      cabecalho.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cabecalho.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA } };
+      ws.getRow(1).height = 18; ws.getRow(2).height = 16; ws.getRow(3).height = 16;
+
+      let linhaAtual = 5;
+
+      // --- Dados do cliente ---
+      mesclarEEstilizar(linhaAtual, 'DADOS DO CLIENTE', { corFundo: LARANJA });
+      linhaAtual++;
+
+      const adicionarLinhaInfo = (rotulo, valor) => {
+        if (!valor) return;
+        const lblCel = ws.getCell(`A${linhaAtual}`);
+        lblCel.value = rotulo;
+        lblCel.font = { bold: true, size: 10, color: { argb: 'FF555555' } };
+        ws.mergeCells(`B${linhaAtual}:I${linhaAtual}`);
+        const valCel = ws.getCell(`B${linhaAtual}`);
+        valCel.value = valor;
+        valCel.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+        ws.getRow(linhaAtual).height = 16;
+        linhaAtual++;
+      };
+
+      if (clienteInfo) {
+        adicionarLinhaInfo('Nome', clienteInfo.razao ? clienteInfo.razao.toUpperCase() : '');
+        adicionarLinhaInfo('CNPJ/CPF', clienteInfo.cnpj || '');
+        adicionarLinhaInfo('ID Cliente', clienteInfo.id || '');
+        adicionarLinhaInfo('UF', clienteInfo.uf || ufExibicao);
+        if (clienteInfo.grupoUnilever)  adicionarLinhaInfo('Grupo Unilever', clienteInfo.grupoUnilever);
+        if (clienteInfo.perfilDanone)   adicionarLinhaInfo('Perfil Danone', clienteInfo.perfilDanone);
+        if (clienteInfo.painelTransfer) adicionarLinhaInfo('Painel Transfer', clienteInfo.painelTransfer);
+        if (olAtivo > 0)                adicionarLinhaInfo('OL Danone Ativo', `${olAtivo} caixas`);
+      } else {
+        adicionarLinhaInfo('Cliente', 'NENHUM CLIENTE SELECIONADO / NÃO IDENTIFICADO');
+      }
+      linhaAtual++;
+
+      // --- Resumo geral ---
+      mesclarEEstilizar(linhaAtual, 'RESUMO GERAL DO PEDIDO', { corFundo: LARANJA });
+      linhaAtual++;
+      adicionarLinhaInfo('Total de Variedades', totalVariedades);
+      adicionarLinhaInfo('Volume Total de Unidades', acUnidades);
+      adicionarLinhaInfo('Valor Total Bruto', formatarParaReal(acBruto));
+      adicionarLinhaInfo('Valor Total Líquido', formatarParaReal(acLiquido));
+      linhaAtual++;
+
+      // --- Resumo de verificação de estoque (somente quando vindo da importação) ---
+      if (temResumoEstoque) {
+        mesclarEEstilizar(linhaAtual, 'VERIFICAÇÃO DE ESTOQUE', { corFundo: LARANJA });
+        linhaAtual++;
+        adicionarLinhaInfo('✅ Atendido (qtd / valor)', `${acQtdAtendida} un  —  ${formatarParaReal(acValorAtendido)}`);
+        if (acQtdNaoAtendida > 0) {
+          const lblCel = ws.getCell(`A${linhaAtual}`);
+          lblCel.value = '⚠️ Não Atendido (qtd / valor)';
+          lblCel.font = { bold: true, size: 10, color: { argb: VERMELHO_SEM } };
+          ws.mergeCells(`B${linhaAtual}:I${linhaAtual}`);
+          const valCel = ws.getCell(`B${linhaAtual}`);
+          valCel.value = `${acQtdNaoAtendida} un  —  ${formatarParaReal(acValorNaoAtendido)}`;
+          valCel.font = { bold: true, size: 10, color: { argb: VERMELHO_SEM } };
+          ws.getRow(linhaAtual).height = 16;
+          linhaAtual++;
+        }
+        linhaAtual++;
+      }
+
+      // --- Tabela de itens, agrupada por fornecedor ---
+      const cabecalhosColunas = ['COD.', 'EAN', 'DESCRIÇÃO', 'PREÇO', 'DESC%', 'PR.FINAL', 'QT', 'SUBTOTAL', 'STATUS'];
+
+      fornecedoresOrdenados.forEach(forn => {
+        mesclarEEstilizar(linhaAtual, `FABRICANTE: ${forn}`, { corFundo: LARANJA_ESC, tamanho: 10.5 });
+        linhaAtual++;
+
+        const linhaCab = ws.getRow(linhaAtual);
+        cabecalhosColunas.forEach((titulo, i) => {
+          const cel = linhaCab.getCell(i + 1);
+          cel.value = titulo;
+          cel.font = { bold: true, size: 9.5, color: { argb: 'FFFFFFFF' } };
+          cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA } };
+          cel.alignment = { horizontal: 'center', vertical: 'middle' };
+          cel.border = { top: BORDA_CINZA, bottom: BORDA_CINZA, left: BORDA_CINZA, right: BORDA_CINZA };
+        });
+        linhaCab.height = 17;
+        linhaAtual++;
+
+        const itens = itensPorFornecedor[forn].sort((a, b) =>
+          String(a.p.descricao || '').localeCompare(String(b.p.descricao || ''))
+        );
+
+        itens.forEach((item, idx) => {
+          const { p, qtd, precoFinal, precoOriginal, percentual, qtdAtendida, qtdNaoAtendida } = item;
+          let status;
+          if (qtdNaoAtendida !== undefined) {
+            // Vem do fluxo de importação: status reflete o atendimento real (total, parcial ou nenhum)
+            status = qtdNaoAtendida === 0 ? 'OK' : (qtdAtendida > 0 ? `PARCIAL (${qtdAtendida}/${qtd})` : 'SEM ESTOQUE');
+          } else {
+            const estoqueDisponivel = Number(p.estoque) || 0;
+            status = qtd <= estoqueDisponivel ? 'OK' : 'Sem estoque';
+          }
+          const linha = ws.getRow(linhaAtual);
+          const corFundoLinha = (idx % 2 === 0) ? 'FFFFFFFF' : CINZA_CLARO;
+
+          const valores = [
+            p.id || '', p.ean || 'N/A', p.descricao || '',
+            precoOriginal, percentual / 100, precoFinal, qtd, precoFinal * qtd, status
+          ];
+
+          valores.forEach((val, i) => {
+            const cel = linha.getCell(i + 1);
+            cel.value = val;
+            cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corFundoLinha } };
+            cel.border = { top: BORDA_CINZA, bottom: BORDA_CINZA, left: BORDA_CINZA, right: BORDA_CINZA };
+            cel.font = { size: 9.5, color: { argb: 'FF1E1E1E' } };
+            cel.alignment = { vertical: 'middle', horizontal: (i === 2) ? 'left' : 'center', wrapText: (i === 2) };
+
+            if (i === 3 || i === 5 || i === 7) cel.numFmt = '"R$" #,##0.00';
+            if (i === 4) cel.numFmt = '0%';
+            if (i === 8) cel.font = { bold: true, size: 9.5, color: { argb: status === 'OK' ? VERDE_OK : VERMELHO_SEM } };
+          });
+          linha.height = 16;
+          linhaAtual++;
+        });
+
+        linhaAtual++;
+      });
+
+      // --- Rodapé ---
+      const rodapeCel = ws.getCell(`A${linhaAtual}`);
+      ws.mergeCells(`A${linhaAtual}:I${linhaAtual}`);
+      rodapeCel.value = `HBN1 - Nazária Distribuidora Farmacêutica  •  Gerado em ${dataHoraAgora}`;
+      rodapeCel.font = { italic: true, size: 8, color: { argb: 'FF9CA3AF' } };
+      rodapeCel.alignment = { horizontal: 'center' };
+
+      return workbook;
+    }
+
+    // Aciona o download de um workbook já pronto
+    async function baixarWorkbook(workbook, nomeArquivo) {
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", nomeArquivo);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function limparNomeArquivo(txt) {
+      return String(txt || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[\/\\:*?"<>|]/g, '')
+        .trim();
+    }
+
+    // =========================================================================
+    // IMPORTAÇÃO DE PEDIDO POR ARQUIVO (EXCEL/PDF) — MÚLTIPLOS CNPJs NO MESMO ARQUIVO
+    // =========================================================================
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    let IMPORT_RESULTADO = null; // { pedidos: [...], naoEncontrados: [...], codigosNaoEncontrados: [...] }
+    const CACHE_PRODUTOS_POR_UF = {}; // evita buscar 2x a mesma UF
+
+    function normalizarSoDigitos(v) {
+      return String(v || '').replace(/[^0-9]/g, '');
+    }
+
+    function abrirModalImportarPedido() {
+      document.getElementById('modalImportarPedido').classList.remove('hidden');
+      resetarModalImportacao();
+    }
+    function fecharModalImportarPedido() {
+      document.getElementById('modalImportarPedido').classList.add('hidden');
+    }
+    function fecharModalImportarPedidoNoBackdrop(event) {
+      if (event.target.id === 'modalImportarPedido') fecharModalImportarPedido();
+    }
+
+    function mostrarEstadoImportacao(estado) {
+      ['Upload', 'Processando', 'Erro', 'Resultado'].forEach(s => {
+        const el = document.getElementById('importEstado' + s);
+        if (!el) return;
+        if (s.toLowerCase() === estado) {
+          el.classList.remove('hidden');
+          if (s === 'Processando') el.classList.add('flex');
+        } else {
+          el.classList.add('hidden');
+          if (s === 'Processando') el.classList.remove('flex');
+        }
+      });
+      document.getElementById('importRodapeAcoes').classList.toggle('hidden', estado !== 'resultado');
+    }
+
+    function resetarModalImportacao() {
+      IMPORT_RESULTADO = null;
+      document.getElementById('inputArquivoImportado').value = '';
+      mostrarEstadoImportacao('upload');
+    }
+
+    function mostrarErroImportacao(msg) {
+      document.getElementById('importTextoErro').innerText = msg;
+      mostrarEstadoImportacao('erro');
+    }
+
+    function atualizarTextoProcessando(msg) {
+      const el = document.getElementById('importTextoProcessando');
+      if (el) el.innerText = msg;
+    }
+
+    // -------------------------------------------------------------------
+    // 1) DISPARO AO SELECIONAR ARQUIVO
+    // -------------------------------------------------------------------
+    async function aoSelecionarArquivoImportado(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      mostrarEstadoImportacao('processando');
+      atualizarTextoProcessando('Lendo o arquivo...');
+
+      try {
+        const ext = file.name.split('.').pop().toLowerCase();
+        let linhas = [];
+
+        if (ext === 'xlsx' || ext === 'xls') {
+          linhas = await extrairLinhasDeExcel(file);
+        } else if (ext === 'pdf') {
+          linhas = await extrairLinhasDePdf(file);
+        } else {
+          throw new Error('Formato de arquivo não suportado. Envie um .xlsx, .xls ou .pdf.');
+        }
+
+        atualizarTextoProcessando('Identificando CNPJs e itens...');
+        const itensBrutos = extrairItensDeLinhas(linhas);
+
+        if (itensBrutos.length === 0) {
+          throw new Error('Não foi possível localizar nenhum CNPJ com itens no arquivo. Verifique se o arquivo contém o CNPJ e os códigos/EAN dos produtos.');
+        }
+
+        await processarItensImportados(itensBrutos);
+      } catch (erro) {
+        console.error('Erro ao importar pedido:', erro);
+        mostrarErroImportacao(erro.message || 'Ocorreu um erro ao ler o arquivo. Tente novamente.');
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // 2) LEITURA DE EXCEL (.xlsx/.xls) → array de linhas (cada linha = array de células)
+    // -------------------------------------------------------------------
+    function extrairLinhasDeExcel(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const dados = new Uint8Array(e.target.result);
+            const wb = XLSX.read(dados, { type: 'array' });
+            let todasLinhas = [];
+            wb.SheetNames.forEach(nomeAba => {
+              const ws = wb.Sheets[nomeAba];
+              const linhasAba = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+              todasLinhas = todasLinhas.concat(linhasAba.map(l => l.map(c => String(c == null ? '' : c).trim())));
+            });
+            resolve(todasLinhas);
+          } catch (erro) { reject(new Error('Não foi possível ler o arquivo Excel. Ele pode estar corrompido.')); }
+        };
+        reader.onerror = () => reject(new Error('Falha ao carregar o arquivo Excel.'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    // -------------------------------------------------------------------
+    // 3) LEITURA DE PDF → array de linhas de texto (agrupadas por posição vertical)
+    // -------------------------------------------------------------------
+    async function extrairLinhasDePdf(file) {
+      const buffer = await file.arrayBuffer();
+      const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
+      const todasLinhas = [];
+
+      for (let pagina = 1; pagina <= doc.numPages; pagina++) {
+        const page = await doc.getPage(pagina);
+        const conteudo = await page.getTextContent();
+        const itens = conteudo.items.map(it => ({ texto: it.str, x: it.transform[4], y: it.transform[5] }));
+        itens.sort((a, b) => (b.y - a.y) || (a.x - b.x));
+
+        let linhaAtualY = null;
+        let linhaAtualTokens = [];
+        itens.forEach(it => {
+          if (!it.texto || !it.texto.trim()) return;
+          if (linhaAtualY === null || Math.abs(it.y - linhaAtualY) > 3) {
+            if (linhaAtualTokens.length) todasLinhas.push(linhaAtualTokens);
+            linhaAtualTokens = [];
+            linhaAtualY = it.y;
+          }
+          it.texto.split(/\s+/).filter(Boolean).forEach(tok => linhaAtualTokens.push(tok));
+        });
+        if (linhaAtualTokens.length) todasLinhas.push(linhaAtualTokens);
+      }
+      return todasLinhas;
+    }
+
+    // -------------------------------------------------------------------
+    // 4) EXTRAÇÃO DE ITENS (CNPJ + CÓDIGO/EAN + QTD) A PARTIR DAS LINHAS
+    //    Funciona tanto para linhas do Excel (células) quanto do PDF (tokens)
+    // -------------------------------------------------------------------
+    const REGEX_CNPJ = /^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/;
+
+    // CNPJ da própria Nazária (distribuidora) — nunca deve ser tratado como CNPJ
+    // do cliente, mesmo que apareça no meio do arquivo (ex: linha "Fornecedor ...").
+    const CNPJS_IGNORAR_COMO_CLIENTE = ['07224991002189'];
+
+    // Identifica a quantidade correta de uma linha cruzando com os valores
+    // decimais (preço unitário x quantidade ≈ total). Mais confiável que pegar
+    // "o último número curto da linha", já que layouts de pedido costumam ter
+    // várias colunas numéricas curtas (código do fabricante, giro de estoque,
+    // qtd por caixa etc.) que não são a quantidade pedida.
+    //
+    // IMPORTANTE: não assume qual decimal vem primeiro/depois no texto extraído
+    // (a ordem dos tokens lidos do PDF pode não seguir a ordem visual da tabela).
+    // Em vez disso usa o MENOR decimal como preço e o MAIOR como total — isso é
+    // sempre verdade matematicamente (total = preço × qtd, e qtd ≥ 1), então
+    // funciona independente da ordem em que o PDF entregou os tokens.
+    function extrairQuantidadeConfiavel(tokens, candidatosQtd) {
+      // Coleta todos os valores decimais da linha (formato brasileiro: 9,40 / 13,523500 / 162,28).
+      // O valor "0,00" (desconto percentual nos pedidos Kenvue/A7) é excluído pois nunca é
+      // preço nem total — assim não "envenena" o cálculo min/max que determina a quantidade.
+      const decimais = tokens
+        .filter(t => /^\d{1,3}(\.\d{3})*,\d+$/.test(t))
+        .map(t => parseFloat(t.replace(/\./g, '').replace(',', '.')))
+        .filter(n => !isNaN(n) && n > 0.009); // exclui 0,00 (desconto) mas mantém valores reais
+
+      if (decimais.length >= 2) {
+        const preco = Math.min(...decimais);
+        const total = Math.max(...decimais);
+        if (preco > 0 && total > preco) {
+          const qtdCalculada = total / preco;
+          // Tenta achar um candidato curto (1-9999) que bata com o cálculo (tolerância ±0.6)
+          const candidatoValido = candidatosQtd.find(c => Math.abs(parseInt(c, 10) - qtdCalculada) < 0.6);
+          if (candidatoValido) return parseInt(candidatoValido, 10);
+          // Se nenhum candidato bateu mas o resultado é inteiro plausível, usa direto
+          if (Math.abs(qtdCalculada - Math.round(qtdCalculada)) < 0.05 && qtdCalculada >= 1 && qtdCalculada < 100000) {
+            return Math.round(qtdCalculada);
+          }
+        }
+      }
+      // Fallback: sem cruzamento confiável — usa o último número curto da linha.
+      // IMPORTANTE: exclui candidatos que parecem código interno NAZARIA (aparecem logo
+      // após o EAN, antes de qualquer decimal na linha) para não confundir com quantidade.
+      const idxPrimeiroDecimal = tokens.findIndex(t => /^\d{1,3}(\.\d{3})*,\d+$/.test(t));
+      const candidatosFiltrados = idxPrimeiroDecimal > 0
+        ? candidatosQtd.filter((_, i) => {
+            // Remove candidatos que aparecem nos tokens ANTES do primeiro decimal —
+            // esses são tipicamente código interno ou giro de estoque, não quantidade pedida
+            const idxNoTokens = tokens.indexOf(candidatosQtd[i]);
+            return idxNoTokens < 0 || idxNoTokens >= idxPrimeiroDecimal;
+          })
+        : candidatosQtd;
+      return candidatosFiltrados.length
+        ? parseInt(candidatosFiltrados[candidatosFiltrados.length - 1], 10)
+        : (candidatosQtd.length ? parseInt(candidatosQtd[candidatosQtd.length - 1], 10) : NaN);
+    }
+
+    // ===================================================================
+    // CONFIGURAÇÃO DE COLUNAS POR FORMATO DE PDF
+    // -------------------------------------------------------------------
+    // PDF_TIPO_1 → PDFs "bem estruturados" onde o pdf.js entrega cada
+    //   linha como um array de células já separadas (ex: planilha NAZARIA).
+    //   A quantidade é lida diretamente da coluna cujo cabeçalho bate com
+    //   PDF1_COL_QTD (busca por palavras, não sensível a maiúsculas).
+    //
+    // PDF_TIPO_2 → PDFs onde o pdf.js junta tudo numa mesma linha de texto
+    //   (ex: A7 Pharma / Kenvue). Nesses casos não há separação por coluna;
+    //   a quantidade é localizada como o primeiro número curto que aparece
+    //   APÓS o token marcador PDF2_TOKEN_APOS_QTD (que, no padrão Kenvue,
+    //   é o símbolo "%" do campo "Desc. (%)").
+    //
+    // ➜ Se receber um PDF de outro sistema, basta trocar:
+    //      PDF1_COL_QTD  → nome (ou parte do nome) do cabeçalho da coluna
+    //      PDF2_TOKEN_APOS_QTD → token que aparece IMEDIATAMENTE antes da
+    //                            quantidade na linha concatenada do pdf.js
+    // ===================================================================
+
+    // --- Formato 1 (NAZARIA / planilha estruturada) ---
+    // Palavras aceitas no cabeçalho da coluna de quantidade.
+    // A busca é por inclusão, não por igualdade exata.
+    const PDF1_COL_CODIGO = ['CODBARRAS', 'EAN', 'BARRAS', 'CÓD.', 'COD.'];
+    const PDF1_COL_QTD    = ['PEDIDA', 'QT PEDIDA', 'QTD', 'QTDE', 'QUANTIDADE', 'QUANT'];
+    // Obs.: 'PEDIDA' captura "QT Pedida" sem precisar de match exato.
+
+    // --- Formato 2 (A7 Pharma / Kenvue — texto concatenado) ---
+    // Token que aparece LOGO ANTES da quantidade na linha.
+    // No padrão Kenvue a ordem é: ... PREÇO  0,00  %  QTD  TOTAL  FABRICANTE
+    // → o "%" separa o desconto da quantidade.
+    const PDF2_TOKEN_APOS_QTD = '%';
+
+    // -------------------------------------------------------------------
+    // Detecta se o PDF é do Tipo 1 (cabeçalho de tabela identificável).
+    // Retorna { linhaCab, idxCodigo, idxQtd } ou null.
+    //
+    // IMPORTANTE: NÃO exige que CNPJ esteja na mesma linha do cabeçalho.
+    // No NAZARIA o cabeçalho da tabela é:
+    //   "Cód.Fáb. | Codbarras | Código | Descrição | ... | QT Pedida | ..."
+    // e o CNPJ do cliente aparece em linhas separadas do cabeçalho do pedido.
+    // O CNPJ é lido linha a linha dentro de extrairItensTipo1.
+    //
+    // O pdf.js às vezes divide o cabeçalho em 2 linhas (ex: "QT" numa linha
+    // e "Pedida" na seguinte). Por isso a busca olha também a linha seguinte
+    // ao índice corrente ao procurar pela coluna de quantidade.
+    // -------------------------------------------------------------------
+    function detectarCabecalho(linhas) {
+      for (let i = 0; i < Math.min(linhas.length, 40); i++) {
+        const linha = linhas[i].map(c => String(c).toUpperCase().trim());
+
+        const idxCodigo = linha.findIndex(c =>
+          PDF1_COL_CODIGO.some(p => c === p || c.includes(p)) && !c.includes('CNPJ')
+        );
+        if (idxCodigo === -1) continue; // sem coluna de código, próxima linha
+
+        // Procura coluna QTD na linha atual OU na imediatamente seguinte
+        // (o pdf.js às vezes parte "QT" e "Pedida" em linhas distintas)
+        const linhasSeguintes = [linha];
+        if (linhas[i + 1]) linhasSeguintes.push(linhas[i + 1].map(c => String(c).toUpperCase().trim()));
+
+        for (const linhaBusca of linhasSeguintes) {
+          const idxQtd = linhaBusca.findIndex(c =>
+            PDF1_COL_QTD.some(p => c.includes(p))
+          );
+          if (idxQtd !== -1) {
+            return { linhaCab: i, idxCodigo, idxQtd };
+          }
+        }
+      }
+      return null; // não encontrou → cai no Tipo 2
+    }
+
+    // -------------------------------------------------------------------
+    // TIPO 1 — PDF estruturado (ex: NAZARIA)
+    // Lê a quantidade diretamente da célula na coluna PDF1_COL_QTD.
+    // O CNPJ do cliente aparece nas linhas de cabeçalho de cada pedido,
+    // ANTES da linha de itens. Por isso fazemos dois passes:
+    //   1) Pré-carrega o CNPJ do primeiro cliente varrendo as linhas
+    //      anteriores ao cabeçalho da tabela.
+    //   2) Loop principal: a cada nova linha atualiza o CNPJ se encontrar
+    //      um novo (troca de pedido / cliente dentro do mesmo arquivo).
+    // -------------------------------------------------------------------
+    function extrairItensTipo1(linhas, cabecalho) {
+      const itens = [];
+      let ultimoCnpjValido = '';
+
+      // Passo 1: pré-carrega CNPJ lendo as linhas ANTES do cabeçalho
+      for (let i = 0; i < cabecalho.linhaCab; i++) {
+        const linha = linhas[i];
+        if (!linha || linha.length === 0) continue;
+        const tokensLinha = linha.map(t => String(t).trim());
+        const linhaTextoUp = tokensLinha.join(' ').toUpperCase();
+        if (!linhaTextoUp.includes('FORNECEDOR')) {
+          const tokenCnpj = tokensLinha.find(t => {
+            const d = normalizarSoDigitos(t);
+            return (REGEX_CNPJ.test(t) || d.length === 14) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(d);
+          });
+          if (tokenCnpj) ultimoCnpjValido = normalizarSoDigitos(tokenCnpj);
+        }
+      }
+
+      // Passo 2: percorre as linhas de dados após o cabeçalho
+      for (let i = cabecalho.linhaCab + 1; i < linhas.length; i++) {
+        const linha = linhas[i];
+        if (!linha || linha.length === 0) continue;
+
+        // Atualiza CNPJ se a linha trouxer um novo (mudança de pedido/cliente)
+        const tokensLinha = linha.map(t => String(t).trim());
+        const linhaTextoUp = tokensLinha.join(' ').toUpperCase();
+        if (!linhaTextoUp.includes('FORNECEDOR')) {
+          const tokenCnpj = tokensLinha.find(t => {
+            const d = normalizarSoDigitos(t);
+            return (REGEX_CNPJ.test(t) || d.length === 14) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(d);
+          });
+          if (tokenCnpj) ultimoCnpjValido = normalizarSoDigitos(tokenCnpj);
+        }
+
+        // Lê o código pela posição da coluna detectada (token de código costuma
+        // ser estável mesmo quando a linha desalinha um pouco).
+        const codigo = String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, '');
+
+        // QUANTIDADE: a leitura POSICIONAL (linha[idxQtd]) não é confiável em PDFs.
+        // O pdf.js não preserva colunas reais — só agrupa texto por posição vertical (Y).
+        // Quando uma linha tem mais (ou menos) tokens que o esperado (ex: descrição de
+        // produto com mais palavras), TODAS as colunas seguintes daquela linha desalinham,
+        // e o índice acaba pegando outro número qualquer (pedaço de código, etc.),
+        // gerando quantidades absurdas. Por isso cruza preço × qtd ≈ total primeiro
+        // (matematicamente confiável, independe de posição) e só usa a leitura
+        // posicional como último recurso, caso o cruzamento não seja possível.
+        const candidatosQtd = tokensLinha.filter(t => /^\d{1,4}$/.test(t));
+        let qtd = extrairQuantidadeConfiavel(tokensLinha, candidatosQtd);
+        if (isNaN(qtd) || qtd <= 0) {
+          const qtdPosicional = parseInt(String(linha[cabecalho.idxQtd] || '').replace(/[^\d]/g, ''), 10);
+          // Sanidade: uma quantidade pedida realista não passa de 99.999 un.
+          // Se o fallback posicional vier maior que isso, é sinal de coluna
+          // desalinhada (pegou pedaço de código/EAN) — descarta em vez de aceitar.
+          qtd = (!isNaN(qtdPosicional) && qtdPosicional > 0 && qtdPosicional < 100000) ? qtdPosicional : NaN;
+        }
+
+        if (ultimoCnpjValido && codigo && /^\d{6,13}$/.test(codigo) && qtd > 0) {
+          itens.push({ cnpjDigits: ultimoCnpjValido, codigo, qtd });
+        }
+      }
+      return itens;
+    }
+
+    // -------------------------------------------------------------------
+    // TIPO 2 — PDF de texto concatenado (ex: A7 Pharma / Kenvue)
+    // O pdf.js junta vários campos numa só linha de tokens.
+    // Estratégia:
+    //   • CNPJ do cliente: primeiro CNPJ encontrado na linha (ignora
+    //     linhas com a palavra "FORNECEDOR")
+    //   • Código (EAN): primeiro token com 7-13 dígitos
+    //   • Quantidade: primeiro número curto (1-4 dígitos) que aparece
+    //     APÓS o token PDF2_TOKEN_APOS_QTD (padrão: "%")
+    // -------------------------------------------------------------------
+    function extrairItensTipo2(linhas) {
+      const itens = [];
+      let ultimoCnpjValido = '';
+
+      linhas.forEach(linha => {
+        if (!linha || linha.length === 0) return;
+        const tokens = linha.map(t => String(t).trim()).filter(Boolean);
+        const linhaTextoUpper = tokens.join(' ').toUpperCase();
+
+        // Atualiza CNPJ ativo (ignora linhas do fornecedor)
+        if (!linhaTextoUpper.includes('FORNECEDOR')) {
+          const tokenCnpj = tokens.find(t => {
+            const d = normalizarSoDigitos(t);
+            return (REGEX_CNPJ.test(t) || d.length === 14) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(d);
+          });
+          if (tokenCnpj) ultimoCnpjValido = normalizarSoDigitos(tokenCnpj);
+        }
+
+        // Precisa de EAN e do token marcador para tentar extrair item
+        const candidatosCodigo = tokens.filter(t => /^\d{7,13}$/.test(t));
+        const idxMarcador = tokens.indexOf(PDF2_TOKEN_APOS_QTD);
+
+        if (ultimoCnpjValido && candidatosCodigo.length > 0 && idxMarcador !== -1) {
+          const codigo = candidatosCodigo[0];
+          // Quantidade = primeiro número curto (1-4 dígitos) após o marcador
+          const tokensAposMarcador = tokens.slice(idxMarcador + 1);
+          const qtdToken = tokensAposMarcador.find(t => /^\d{1,4}$/.test(t));
+          if (qtdToken) {
+            const qtd = parseInt(qtdToken, 10);
+            if (qtd > 0 && qtd < 100000) {
+              itens.push({ cnpjDigits: ultimoCnpjValido, codigo, qtd });
+            }
+          }
+        }
+      });
+
+      return itens;
+    }
+
+    // -------------------------------------------------------------------
+    // Ponto de entrada: decide automaticamente Tipo 1 ou Tipo 2
+    // -------------------------------------------------------------------
+    function extrairItensDeLinhas(linhas) {
+      const cabecalho = detectarCabecalho(linhas);
+      if (cabecalho) {
+        // PDF Tipo 1 — cabeçalho de tabela identificado
+        return extrairItensTipo1(linhas, cabecalho);
+      } else {
+        // PDF Tipo 2 — texto concatenado, usa token marcador
+        return extrairItensTipo2(linhas);
+      }
+    }
+
+    // -------------------------------------------------------------------
+    // 5) PROCESSAMENTO: identifica clientes por CNPJ (cross-UF), busca produtos
+    //    da UF de cada cliente, casa itens e calcula preços
+    // -------------------------------------------------------------------
+    function buscarClientePorCNPJAsync(cnpjDigits) {
+      return chamarApi('clientePorCnpj', { cnpj: cnpjDigits }).catch(() => null);
+    }
+
+    function buscarProdutosAsync(uf) {
+      if (CACHE_PRODUTOS_POR_UF[uf]) return Promise.resolve(CACHE_PRODUTOS_POR_UF[uf]);
+      return chamarApi('produtos', { uf: uf })
+        .then(produtos => {
+          CACHE_PRODUTOS_POR_UF[uf] = produtos;
+          return produtos;
+        })
+        .catch(() => []);
+    }
+
+    async function processarItensImportados(itensBrutos) {
+      atualizarTextoProcessando('Identificando clientes pelos CNPJs...');
+
+      const gruposPorCnpj = {};
+      itensBrutos.forEach(it => {
+        if (!gruposPorCnpj[it.cnpjDigits]) gruposPorCnpj[it.cnpjDigits] = [];
+        gruposPorCnpj[it.cnpjDigits].push(it);
+      });
+      const cnpjsUnicos = Object.keys(gruposPorCnpj);
+
+      const clientesEncontrados = await Promise.all(cnpjsUnicos.map(buscarClientePorCNPJAsync));
+
+      const pedidos = [];
+      const naoEncontrados = [];
+      const codigosNaoEncontradosSet = new Set();
+
+      for (let i = 0; i < cnpjsUnicos.length; i++) {
+        const cnpjDigits = cnpjsUnicos[i];
+        const cliente = clientesEncontrados[i];
+        const itensDoGrupo = gruposPorCnpj[cnpjDigits];
+
+        if (!cliente) {
+          const totalQtd = itensDoGrupo.reduce((s, it) => s + it.qtd, 0);
+          naoEncontrados.push({ cnpjDigits, cnpjFormatado: formatarCNPJ(cnpjDigits), linhas: itensDoGrupo.length, unidades: totalQtd });
+          continue;
+        }
+
+        atualizarTextoProcessando(`Calculando pedido de ${cliente.razao || cliente.cnpj}...`);
+        const produtosDaUF = await buscarProdutosAsync(cliente.uf || 'PI');
+
+        let totalDanoneQtd = 0;
+        const itensCasados = [];
+        itensDoGrupo.forEach(it => {
+          const codigoDigits = normalizarSoDigitos(it.codigo);
+          let p = produtosDaUF.find(prod => normalizarSoDigitos(prod.ean) === codigoDigits && codigoDigits !== '');
+          if (!p) p = produtosDaUF.find(prod => String(prod.id).trim() === String(it.codigo).trim());
+          if (!p) { codigosNaoEncontradosSet.add(it.codigo); return; }
+
+          itensCasados.push({ p, qtd: it.qtd });
+          if (String(p.fornecedor || '').toUpperCase().includes('DANONE')) totalDanoneQtd += it.qtd;
+        });
+
+        if (itensCasados.length === 0) continue;
+
+        let olDetectado = 0;
+        if (totalDanoneQtd >= 1000) olDetectado = 1000;
+        else if (totalDanoneQtd >= 500) olDetectado = 500;
+        else if (totalDanoneQtd >= 250) olDetectado = 250;
+
+        let acBruto = 0, acLiquido = 0, acUnidades = 0;
+        let acQtdAtendida = 0, acValorAtendido = 0, acQtdNaoAtendida = 0, acValorNaoAtendido = 0;
+        const estoqueRestantePorProduto = {}; // controla consumo de estoque entre linhas repetidas do mesmo cliente
+        const itensPorFornecedor = {};
+        itensCasados.forEach(({ p, qtd }) => {
+          const { precoFinal, precoOriginal, percentual } = calcularPrecosPara(p, cliente, olDetectado);
+          acBruto   += precoOriginal * qtd;
+          acLiquido += precoFinal * qtd;
+          acUnidades += qtd;
+
+          // Verificação de estoque: quanto desta linha o estoque atual do catálogo consegue atender
+          if (estoqueRestantePorProduto[p.id] === undefined) estoqueRestantePorProduto[p.id] = Number(p.estoque || 0);
+          const estoqueRestante = estoqueRestantePorProduto[p.id];
+          const qtdAtendida    = Math.max(0, Math.min(qtd, estoqueRestante));
+          const qtdNaoAtendida = qtd - qtdAtendida;
+          estoqueRestantePorProduto[p.id] = estoqueRestante - qtdAtendida;
+
+          acQtdAtendida      += qtdAtendida;
+          acValorAtendido    += precoFinal * qtdAtendida;
+          acQtdNaoAtendida   += qtdNaoAtendida;
+          acValorNaoAtendido += precoFinal * qtdNaoAtendida;
+
+          const forn = p.fornecedor ? String(p.fornecedor).trim().toUpperCase() : 'GERAL';
+          if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+          itensPorFornecedor[forn].push({ p, qtd, precoFinal, precoOriginal, percentual, qtdAtendida, qtdNaoAtendida });
+        });
+
+        pedidos.push({
+          cliente, olDetectado, itensPorFornecedor,
+          acBruto, acLiquido, acUnidades,
+          acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido,
+          totalVariedades: itensCasados.length
+        });
+      }
+
+      IMPORT_RESULTADO = {
+        pedidos,
+        naoEncontrados,
+        codigosNaoEncontrados: Array.from(codigosNaoEncontradosSet)
+      };
+
+      renderizarResultadoImportacao();
+    }
+
+    function formatarCNPJ(digits) {
+      if (digits.length !== 14) return digits;
+      return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    }
+
+    // -------------------------------------------------------------------
+    // 6) RENDERIZAÇÃO DO RESULTADO NA TELA
+    // -------------------------------------------------------------------
+    function renderizarResultadoImportacao() {
+      const { pedidos, naoEncontrados, codigosNaoEncontrados } = IMPORT_RESULTADO;
+
+      if (pedidos.length === 0 && naoEncontrados.length === 0) {
+        mostrarErroImportacao('Nenhum item pôde ser processado. Verifique o arquivo e tente novamente.');
+        return;
+      }
+
+      let acBrutoGeral = 0, acLiquidoGeral = 0, acUnidadesGeral = 0;
+      let acQtdAtendidaGeral = 0, acValorAtendidoGeral = 0, acQtdNaoAtendidaGeral = 0, acValorNaoAtendidoGeral = 0;
+
+      const blocosHtml = pedidos.map(pedido => {
+        const { cliente, olDetectado, itensPorFornecedor, acBruto, acLiquido, acUnidades, totalVariedades,
+                acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido } = pedido;
+        acBrutoGeral += acBruto; acLiquidoGeral += acLiquido; acUnidadesGeral += acUnidades;
+        acQtdAtendidaGeral += acQtdAtendida; acValorAtendidoGeral += acValorAtendido;
+        acQtdNaoAtendidaGeral += acQtdNaoAtendida; acValorNaoAtendidoGeral += acValorNaoAtendido;
+
+        const linhasItens = Object.keys(itensPorFornecedor).sort().map(forn =>
+          itensPorFornecedor[forn].map(({ p, qtd, precoFinal, qtdAtendida, qtdNaoAtendida }) => `
+            <tr class="border-t border-slate-100">
+              <td class="p-1.5 text-slate-500 font-mono text-[10px]">${p.ean || 'N/A'}</td>
+              <td class="p-1.5 text-slate-700">${p.descricao || ''}</td>
+              <td class="p-1.5 text-center font-bold ${qtdNaoAtendida > 0 ? 'text-red-600' : ''}">
+                ${qtd}
+                ${qtdNaoAtendida > 0 ? `<div class="text-[9px] font-normal text-red-500 leading-tight">(${qtdAtendida} disp.)</div>` : ''}
+              </td>
+              <td class="p-1.5 text-right font-bold text-emerald-700">${formatarParaReal(precoFinal * qtd)}</td>
+            </tr>`).join('')
+        ).join('');
+
+        const blocoEstoqueClienteHtml = acQtdNaoAtendida > 0 ? `
+            <div class="bg-white px-3 py-2 border-t border-emerald-100 flex flex-wrap gap-x-5 gap-y-1 text-[11px]">
+              <span class="font-bold text-emerald-700">✅ Atendido: ${acQtdAtendida} un • ${formatarParaReal(acValorAtendido)}</span>
+              <span class="font-bold text-red-600">⚠️ Não atendido: ${acQtdNaoAtendida} un • ${formatarParaReal(acValorNaoAtendido)}</span>
+            </div>` : '';
+
+        return `
+          <div class="border border-emerald-200 rounded-2xl overflow-hidden">
+            <div class="bg-emerald-50 p-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p class="text-sm font-black text-emerald-900">${(cliente.razao || 'CLIENTE').toUpperCase()}</p>
+                <p class="text-[11px] text-emerald-700 font-mono">${formatarCNPJ(cliente.cnpj ? normalizarSoDigitos(cliente.cnpj) : '')} • UF: ${cliente.uf || '-'}${olDetectado > 0 ? ' • OL Danone: ' + olDetectado : ''}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-[9px] font-black text-emerald-600 uppercase tracking-wider">Total Líquido</p>
+                <p class="text-sm font-black text-emerald-800">${formatarParaReal(acLiquido)}</p>
+                <p class="text-[10px] text-emerald-600">${totalVariedades} itens • ${acUnidades} un</p>
+              </div>
+            </div>
+            ${blocoEstoqueClienteHtml}
+            <table class="w-full text-xs">
+              <tbody>${linhasItens}</tbody>
+            </table>
+          </div>`;
+      }).join('');
+
+      document.getElementById('importBlocosClientes').innerHTML = blocosHtml || '<p class="text-xs text-slate-400 text-center py-4">Nenhum cliente identificado.</p>';
+      document.getElementById('importTotalCnpjsOk').innerText = pedidos.length;
+      document.getElementById('importTotalUnidades').innerText = acUnidadesGeral;
+      document.getElementById('importTotalBruto').innerText = formatarParaReal(acBrutoGeral);
+      document.getElementById('importTotalLiquido').innerText = formatarParaReal(acLiquidoGeral);
+
+      const blocoResumoEstoque = document.getElementById('importBlocoResumoEstoque');
+      if (acQtdNaoAtendidaGeral > 0) {
+        blocoResumoEstoque.innerHTML = `
+          <div class="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
+            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block">✅ Valor Atendido</span>
+            <span class="text-sm font-black text-emerald-800 block">${formatarParaReal(acValorAtendidoGeral)}</span>
+            <span class="text-[10px] text-emerald-600">${acQtdAtendidaGeral} un</span>
+          </div>
+          <div class="bg-red-50 rounded-xl p-3 border-2 border-red-200 text-center">
+            <span class="text-[9px] font-black text-red-600 uppercase tracking-wider block">⚠️ Valor Não Atendido</span>
+            <span class="text-sm font-black text-red-700 block">${formatarParaReal(acValorNaoAtendidoGeral)}</span>
+            <span class="text-[10px] text-red-600">${acQtdNaoAtendidaGeral} un</span>
+          </div>`;
+      } else {
+        blocoResumoEstoque.innerHTML = `
+          <div class="col-span-2 bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
+            <span class="text-xs font-black text-emerald-700">✅ Estoque suficiente para atender 100% do pedido (${acQtdAtendidaGeral} un)</span>
+          </div>`;
+      }
+
+      const blocoCnpjNaoEnc = document.getElementById('importBlocoCnpjNaoEncontrados');
+      if (naoEncontrados.length > 0) {
+        document.getElementById('importTabelaCnpjNaoEncontrados').innerHTML = naoEncontrados.map(n => `
+          <div class="flex justify-between items-center bg-white rounded-lg px-3 py-2 border border-red-100 text-xs">
+            <span class="font-mono font-bold text-red-700">${n.cnpjFormatado}</span>
+            <span class="text-red-500">${n.linhas} linha(s) • ${n.unidades} un não calculadas</span>
+          </div>`).join('');
+        blocoCnpjNaoEnc.classList.remove('hidden');
+      } else {
+        blocoCnpjNaoEnc.classList.add('hidden');
+      }
+
+      const blocoCodNaoEnc = document.getElementById('importBlocoCodigoNaoEncontrados');
+      if (codigosNaoEncontrados.length > 0) {
+        document.getElementById('importTextoCodigoNaoEncontrados').innerText = codigosNaoEncontrados.join(', ');
+        blocoCodNaoEnc.classList.remove('hidden');
+      } else {
+        blocoCodNaoEnc.classList.add('hidden');
+      }
+
+      mostrarEstadoImportacao('resultado');
+    }
+
+    // -------------------------------------------------------------------
+    // 7) EXPORTAÇÃO EM EXCEL DO PEDIDO IMPORTADO (todos os CNPJs no mesmo arquivo)
+    // -------------------------------------------------------------------
+
+    // O Excel não permite duas abas com o mesmo nome no mesmo arquivo. Como é comum
+    // que dois CNPJs diferentes pertençam à mesma razão social (filiais de uma rede,
+    // ou nomes que ficam iguais após o corte de caracteres), esta função garante que
+    // cada aba tenha um nome único, acrescentando " (2)", " (3)" etc. quando necessário.
+    function gerarNomeAbaUnico(nomeBase, nomesJaUsados) {
+      const limite = 31; // limite máximo de caracteres permitido pelo Excel para nomes de aba
+      let base = (nomeBase || 'CLIENTE').substring(0, limite) || 'CLIENTE';
+      let nomeFinal = base;
+      let contador = 2;
+      while (nomesJaUsados.has(nomeFinal.toUpperCase())) {
+        const sufixo = ` (${contador})`;
+        nomeFinal = base.substring(0, limite - sufixo.length) + sufixo;
+        contador++;
+      }
+      nomesJaUsados.add(nomeFinal.toUpperCase());
+      return nomeFinal;
+    }
+
+    async function baixarExcelPedidoImportado() {
+      if (!IMPORT_RESULTADO || IMPORT_RESULTADO.pedidos.length === 0) return;
+
+      const btn = document.getElementById('btnBaixarExcelImportado');
+      const textoOriginal = btn.innerHTML;
+      btn.disabled = true; btn.style.opacity = '0.6'; btn.style.cursor = 'wait';
+
+      try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'HBN1 - Nazária Distribuidora Farmacêutica';
+        workbook.created = new Date();
+
+        const nomesAbasUsados = new Set();
+
+        for (const pedido of IMPORT_RESULTADO.pedidos) {
+          const { cliente, olDetectado, itensPorFornecedor, acBruto, acLiquido, acUnidades, totalVariedades,
+                  acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido } = pedido;
+
+          const wbTemp = await construirWorkbookPedido({
+            itensPorFornecedor,
+            clienteInfo: cliente,
+            ufExibicao: cliente.uf || 'PI',
+            olAtivo: olDetectado,
+            acBruto, acLiquido, acUnidades,
+            acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido,
+            totalVariedades,
+            subtitulo: 'PEDIDO IMPORTADO — ARQUIVO DO CLIENTE'
+          });
+
+          const wsOrigem = wbTemp.worksheets[0];
+          const nomeBaseAba = limparNomeArquivo(cliente.razao || cliente.cnpj || 'CLIENTE');
+          const nomeAba = gerarNomeAbaUnico(nomeBaseAba, nomesAbasUsados);
+          const wsDestino = workbook.addWorksheet(nomeAba, { views: [{ showGridLines: false }] });
+          wsDestino.columns = wsOrigem.columns;
+          wsOrigem.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+            const novaLinha = wsDestino.getRow(rowNumber);
+            novaLinha.height = row.height;
+            row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+              const novaCel = novaLinha.getCell(colNumber);
+              novaCel.value = cell.value;
+              novaCel.style = cell.style;
+            });
+          });
+          wsOrigem.model.merges.forEach(faixa => wsDestino.mergeCells(faixa));
+        }
+
+        if (IMPORT_RESULTADO.naoEncontrados.length > 0) {
+          const wsNaoEnc = workbook.addWorksheet('CNPJ Não Encontrados', { views: [{ showGridLines: false }] });
+          wsNaoEnc.columns = [{ width: 22 }, { width: 14 }, { width: 14 }];
+          wsNaoEnc.mergeCells('A1:C1');
+          const titulo = wsNaoEnc.getCell('A1');
+          titulo.value = 'CNPJs NÃO ENCONTRADOS NA BASE DE CLIENTES';
+          titulo.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+          titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } };
+          titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+          wsNaoEnc.getRow(1).height = 22;
+
+          const cabecalho = wsNaoEnc.getRow(3);
+          ['CNPJ', 'Linhas no Arquivo', 'Unidades'].forEach((t, i) => {
+            const c = cabecalho.getCell(i + 1);
+            c.value = t; c.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+            c.alignment = { horizontal: 'center' };
+          });
+
+          IMPORT_RESULTADO.naoEncontrados.forEach((n, idx) => {
+            const linha = wsNaoEnc.getRow(4 + idx);
+            linha.getCell(1).value = n.cnpjFormatado;
+            linha.getCell(2).value = n.linhas;
+            linha.getCell(3).value = n.unidades;
+            linha.eachCell(c => { c.alignment = { horizontal: 'center' }; c.font = { color: { argb: 'FFDC2626' }, bold: true }; });
+          });
+        }
+
+        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+        await baixarWorkbook(workbook, `Pedidos_Importados_HBN1_${dataHoje}.xlsx`);
+      } catch (erro) {
+        console.error('Erro ao gerar Excel do pedido importado:', erro);
+        alert('Ocorreu um erro ao gerar o arquivo Excel: ' + (erro && erro.message ? erro.message : 'Tente novamente.'));
+      } finally {
+        btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; btn.innerHTML = textoOriginal;
+      }
+    }
+
+
+    // -----------------------------------------------------------------------
+    // EXPORTAÇÃO DO CARRINHO ATUAL (botão "Fechar & Baixar Pedido")
+    // -----------------------------------------------------------------------
+    async function fazerDownloadExcel() {
+      const chaves = Object.keys(CARRINHO);
+      if (chaves.length === 0) return;
+
+      const btnExcel = document.getElementById('btnBaixarExcel');
+      const textoOriginalBtn = btnExcel ? btnExcel.innerHTML : null;
+      if (btnExcel) { btnExcel.disabled = true; btnExcel.style.opacity = '0.6'; btnExcel.style.cursor = 'wait'; }
+
+      try {
+        let acBruto = 0, acLiquido = 0, acUnidades = 0;
+        const itensPorFornecedor = {};
+
+        chaves.forEach(idProd => {
+          const p = BD_PRODUTOS.find(item => item.id === idProd);
+          if (!p) return;
+          const qtd = CARRINHO[idProd];
+          acUnidades += qtd;
+          const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+          acBruto   += precoOriginal * qtd;
+          acLiquido += precoFinal    * qtd;
+
+          const forn = p.fornecedor ? String(p.fornecedor).trim().toUpperCase() : 'GERAL';
+          if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+          itensPorFornecedor[forn].push({ p, qtd, precoFinal, precoOriginal, percentual });
+        });
+
+        const nomeUFExibicao = (typeof UF_USUARIO !== 'undefined' && UF_USUARIO) ? UF_USUARIO : 'PI';
+
+        const workbook = await construirWorkbookPedido({
+          itensPorFornecedor,
+          clienteInfo: CLIENTE_SELECIONADO,
+          ufExibicao: nomeUFExibicao,
+          olAtivo: OL_ATIVO,
+          acBruto, acLiquido, acUnidades,
+          totalVariedades: chaves.length,
+          subtitulo: 'COMPROVANTE DE PEDIDO — CATÁLOGO HBN1'
+        });
+
+        const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+        let nomeArquivo;
+        if (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.razao) {
+          const razaoLimpa = limparNomeArquivo(CLIENTE_SELECIONADO.razao.toUpperCase());
+          const cnpjLimpo  = limparNomeArquivo(CLIENTE_SELECIONADO.cnpj);
+          nomeArquivo = `${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataHoje}.xlsx`;
+        } else {
+          nomeArquivo = `Pedido_HBN1_${dataHoje}.xlsx`;
+        }
+
+        await baixarWorkbook(workbook, nomeArquivo);
+      } catch (erro) {
+        console.error('Erro ao gerar o Excel do pedido:', erro);
+        alert('Ocorreu um erro ao gerar o arquivo Excel. Tente novamente.');
+      } finally {
+        if (btnExcel) { btnExcel.disabled = false; btnExcel.style.opacity = ''; btnExcel.style.cursor = ''; if (textoOriginalBtn !== null) btnExcel.innerHTML = textoOriginalBtn; }
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // SCROLL
+    // -----------------------------------------------------------------------
+    window.onscroll = function() {
+      const btn = document.getElementById("btnVoltarTopo");
+      if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) btn.classList.remove("hidden");
+      else btn.classList.add("hidden");
+    };
+    function voltarAoTopo() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+    // -----------------------------------------------------------------------
+    // AVISO AO SAIR COM CARRINHO PREENCHIDO
+    // -----------------------------------------------------------------------
+    window.addEventListener('beforeunload', function(e) {
+      if (Object.keys(CARRINHO).length > 0) {
+        e.preventDefault();
+        e.returnValue = 'Você tem itens no seu pedido. Se sair ou atualizar a página, seu progresso será perdido!';
+        return e.returnValue;
+      }
+    });
+
+    // -----------------------------------------------------------------------
+    // INICIALIZAÇÃO
+    // -----------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+
+      function atualizarMuralInvisivel() {
+        chamarApi('avisos')
+          .then(lista => {
+            const c = document.getElementById('containerAvisosLetreiro');
+            if (!lista || lista.length === 0) {
+              c.innerHTML = "<span class='aviso-item text-orange-300/70 font-medium'>Nenhum aviso cadastrado para hoje. Boas compras!</span>";
+              return;
+            }
+            c.innerHTML = lista.map(a => `<span class="aviso-item">${a}</span>`).join('');
+          })
+          .catch(e => console.error("Erro nos avisos:", e));
+      }
+
+      function atualizarProdutosInvisivel(isPrimeiraCarga) {
+        chamarApi('produtos', { uf: UF_USUARIO })
+          .then(dados => {
+            dados.sort((a, b) => {
+              let fA = String(a.franquia || '').trim().toUpperCase();
+              let fB = String(b.franquia || '').trim().toUpperCase();
+              if (fA !== fB) return fA.localeCompare(fB);
+              return String(a.descricao || '').localeCompare(String(b.descricao || ''));
+            });
+            const qtdAnt = BD_PRODUTOS.length;
+            BD_PRODUTOS = dados;
+            if (isPrimeiraCarga || qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
+            executarFiltrosGerais();
+            recalcularTotaisGerais();
+            atualizarTextoUltimaSincronizacao();
+          })
+          .catch(erro => {
+            console.error("Erro na busca de produtos:", erro);
+            const elAtualizacao = document.getElementById('textoUltimaAtualizacao');
+            if (elAtualizacao) elAtualizacao.innerHTML = `<span class="text-red-500">⚠ Falha ao sincronizar dados</span>`;
+            if (isPrimeiraCarga) {
+              document.getElementById('gridProdutos').innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-bold">Erro ao conectar com o Google Sheets. Tente atualizar a página.</div>`;
+            }
+          });
+      }
+
+      function atualizarClientesInvisivel() {
+        chamarApi('clientes', { uf: UF_USUARIO })
+          .then(lista => {
+            BD_CLIENTES = lista;
+            console.log("Clientes sincronizados: " + BD_CLIENTES.length);
+          })
+          .catch(e => console.error("Erro nos clientes:", e));
+      }
+
+      atualizarMuralInvisivel();
+      atualizarProdutosInvisivel(true);
+      atualizarClientesInvisivel();
+
+      setInterval(atualizarMuralInvisivel,     60000);   // 1 min
+      setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
+      setInterval(atualizarClientesInvisivel, 300000);  // 5 min
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+    }
+  </script>
+</body>
+</html>
