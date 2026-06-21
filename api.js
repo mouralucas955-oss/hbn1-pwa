@@ -5,7 +5,7 @@
 //  > Quem pode acessar: Qualquer pessoa).
 // A URL termina em /exec
 // ==========================================================================
-const API_URL = "COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzuDKL1ML4oQk1-qDVadToviO1nsEG47_KMhNco2ZL53n5_BvDKY2Udzj0qWnUxACNMEQ/exec";
 
 // --------------------------------------------------------------------------
 // chamarApi(action, params)
