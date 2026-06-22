@@ -594,7 +594,7 @@
         const mapa = { 250: 'btnOL250', 500: 'btnOL500', 1000: 'btnOL1000' };
         const btnId = mapa[valor];
         if (btnId) document.getElementById(btnId).classList.add('ol-btn-ativo');
-        if (labelOL) { labelOL.innerText = `OL ${valor} cx ativo`; labelOL.classList.remove('hidden'); }
+        if (labelOL) { labelOL.innerText = `OL ${valor} OL ativa`; labelOL.classList.remove('hidden'); }
       }
       // Recalcula cards e totais
       executarFiltrosGerais();
