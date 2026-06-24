@@ -172,6 +172,14 @@
             </svg>
             Ver Valor do Pedido
           </button>
+          <button id="btnAbrirPedidosSalvos" onclick="abrirModalPedidosSalvos()"
+            class="px-4 py-2 bg-blue-50 text-blue-700 font-black text-xs rounded-xl hover:bg-blue-100 transition-all shadow-sm border border-blue-200 flex items-center gap-2 relative">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+            Pedidos Salvos
+            <span id="badgePedidosSalvos" class="hidden absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+          </button>
           <button id="btnAbrirCarrinhoFixo" onclick="abrirModalCarrinho()"
             class="px-4 py-2 bg-slate-900 text-white font-black text-xs rounded-xl hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 relative">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,6 +218,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </button>
+        <button onclick="abrirModalPedidosSalvos()" class="p-2.5 bg-blue-50 text-blue-600 rounded-xl border border-blue-200 relative">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+          </svg>
+          <span id="badgePedidosSalvosMobile" class="hidden absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+        </button>
         <button id="btnLimparPedidoMobile" onclick="limparPedidoCompleto()" class="hidden p-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -228,6 +242,36 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7"/>
     </svg>
   </button>
+
+  <!-- =====================================================================
+       MODAL PEDIDOS SALVOS
+       ===================================================================== -->
+  <div id="modalPedidosSalvos" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+      <header class="p-4 bg-blue-700 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+          </svg>
+          <h3 class="font-black text-sm sm:text-base tracking-tight">Pedidos Salvos</h3>
+          <span id="labelQtdPedidosSalvos" class="bg-blue-600 text-blue-100 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">0 pedidos</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnBaixarTodosSalvos" onclick="baixarTodosPedidosSalvos()"
+            class="hidden px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Baixar Todos
+          </button>
+          <button onclick="fecharModalPedidosSalvos()" class="w-8 h-8 bg-blue-600 hover:bg-blue-500 text-blue-100 hover:text-white rounded-full flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </header>
+      <div id="corpoPedidosSalvos" class="p-4 flex-grow overflow-y-auto space-y-3 no-scrollbar"></div>
+    </div>
+  </div>
 
   <!-- =====================================================================
        MODAL DETALHES DO PRODUTO
@@ -330,6 +374,13 @@
         <div class="flex flex-col sm:flex-row items-center justify-end gap-2">
           <button onclick="fecharModalCarrinho()"
             class="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-all uppercase tracking-wider">Continuar Comprando</button>
+          <button id="btnSalvarPedido" onclick="salvarPedidoAtual()"
+            class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+            </svg>
+            Salvar Pedido
+          </button>
           <button id="btnBaixarExcel" onclick="fazerDownloadExcel()"
             class="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -594,7 +645,7 @@
         const mapa = { 250: 'btnOL250', 500: 'btnOL500', 1000: 'btnOL1000' };
         const btnId = mapa[valor];
         if (btnId) document.getElementById(btnId).classList.add('ol-btn-ativo');
-        if (labelOL) { labelOL.innerText = `OL ${valor} OL ativa`; labelOL.classList.remove('hidden'); }
+        if (labelOL) { labelOL.innerText = `OL ${valor} cx ativo`; labelOL.classList.remove('hidden'); }
       }
       // Recalcula cards e totais
       executarFiltrosGerais();
@@ -2204,6 +2255,218 @@
     function voltarAoTopo() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
     // -----------------------------------------------------------------------
+    // PEDIDOS SALVOS — localStorage
+    // Chave: 'hbn1_pedidos_salvos'
+    // Estrutura: Array de { id, data, timestamp, cliente, uf, itens[], totais{} }
+    // -----------------------------------------------------------------------
+    const CHAVE_PEDIDOS_SALVOS = 'hbn1_pedidos_salvos';
+
+    function carregarPedidosSalvos() {
+      try { return JSON.parse(localStorage.getItem(CHAVE_PEDIDOS_SALVOS) || '[]'); }
+      catch { return []; }
+    }
+
+    function persistirPedidosSalvos(lista) {
+      localStorage.setItem(CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista));
+    }
+
+    function atualizarBadgesPedidosSalvos() {
+      const n = carregarPedidosSalvos().length;
+      const mostrar = n > 0;
+      ['badgePedidosSalvos', 'badgePedidosSalvosMobile'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = n;
+        el.classList.toggle('hidden', !mostrar);
+      });
+    }
+
+    function salvarPedidoAtual() {
+      const chaves = Object.keys(CARRINHO);
+      if (chaves.length === 0) { alert('Seu carrinho está vazio. Adicione produtos antes de salvar.'); return; }
+
+      const itens = [];
+      let acBruto = 0, acLiquido = 0, acUnidades = 0;
+
+      chaves.forEach(idProd => {
+        const p = BD_PRODUTOS.find(x => x.id === idProd);
+        if (!p) return;
+        const qtd = CARRINHO[idProd];
+        const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+        acBruto   += precoOriginal * qtd;
+        acLiquido += precoFinal    * qtd;
+        acUnidades += qtd;
+        itens.push({ id: p.id, descricao: p.descricao, marca: p.marca, fornecedor: p.fornecedor,
+          embalagem: p.embalagem, qtd, precoFinal, precoOriginal, percentual });
+      });
+
+      const agora = new Date();
+      const pedido = {
+        id: 'PED_' + agora.getTime(),
+        timestamp: agora.getTime(),
+        data: agora.toLocaleString('pt-BR'),
+        uf: UF_USUARIO,
+        cliente: CLIENTE_SELECIONADO ? { ...CLIENTE_SELECIONADO } : null,
+        olAtivo: OL_ATIVO,
+        itens,
+        totais: { bruto: acBruto, liquido: acLiquido, unidades: acUnidades, variedades: chaves.length }
+      };
+
+      const lista = carregarPedidosSalvos();
+      lista.unshift(pedido); // mais recente primeiro
+      persistirPedidosSalvos(lista);
+      atualizarBadgesPedidosSalvos();
+
+      // Feedback visual no botão
+      const btn = document.getElementById('btnSalvarPedido');
+      const htmlOriginal = btn.innerHTML;
+      btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Salvo!';
+      btn.classList.replace('bg-blue-600','bg-blue-800');
+      setTimeout(() => { btn.innerHTML = htmlOriginal; btn.classList.replace('bg-blue-800','bg-blue-600'); }, 2000);
+    }
+
+    function abrirModalPedidosSalvos() {
+      renderizarListaPedidosSalvos();
+      document.getElementById('modalPedidosSalvos').classList.remove('hidden');
+    }
+
+    function fecharModalPedidosSalvos() {
+      document.getElementById('modalPedidosSalvos').classList.add('hidden');
+    }
+
+    function renderizarListaPedidosSalvos() {
+      const lista = carregarPedidosSalvos();
+      const corpo = document.getElementById('corpoPedidosSalvos');
+      const label = document.getElementById('labelQtdPedidosSalvos');
+      const btnTodos = document.getElementById('btnBaixarTodosSalvos');
+
+      label.innerText = lista.length + (lista.length === 1 ? ' pedido' : ' pedidos');
+      btnTodos.classList.toggle('hidden', lista.length === 0);
+
+      if (lista.length === 0) {
+        corpo.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-16 text-center gap-3">
+            <svg class="w-14 h-14 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+            <p class="text-slate-400 font-bold text-sm">Nenhum pedido salvo ainda.</p>
+            <p class="text-slate-400 text-xs">Monte seu pedido e clique em <strong>"Salvar Pedido"</strong> no carrinho.</p>
+          </div>`;
+        return;
+      }
+
+      corpo.innerHTML = lista.map(p => {
+        const cliente = p.cliente ? p.cliente.razao : 'Sem cliente selecionado';
+        const cnpj    = p.cliente ? p.cliente.cnpj  : '';
+        const liquido = p.totais.liquido.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return `
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm">
+            <div class="flex-grow min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.uf}</span>
+                <span class="text-[9px] text-slate-400 font-medium">${p.data}</span>
+              </div>
+              <p class="font-bold text-slate-800 text-sm mt-1 truncate" title="${cliente}">${cliente}</p>
+              ${cnpj ? `<p class="text-[10px] text-slate-400 font-mono">${cnpj}</p>` : ''}
+              <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                <span class="text-[10px] text-slate-500">${p.totais.variedades} produto${p.totais.variedades !== 1 ? 's' : ''}</span>
+                <span class="text-[10px] text-slate-400">·</span>
+                <span class="text-[10px] text-slate-500">${p.totais.unidades} unid.</span>
+                <span class="text-[10px] text-slate-400">·</span>
+                <span class="text-xs font-black text-emerald-700">${liquido}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="baixarPedidoSalvo('${p.id}')"
+                class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Baixar
+              </button>
+              <button onclick="excluirPedidoSalvo('${p.id}')"
+                class="p-2 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl border border-red-100 transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function excluirPedidoSalvo(pedidoId) {
+      if (!confirm('Remover este pedido dos salvos?')) return;
+      const lista = carregarPedidosSalvos().filter(p => p.id !== pedidoId);
+      persistirPedidosSalvos(lista);
+      atualizarBadgesPedidosSalvos();
+      renderizarListaPedidosSalvos();
+    }
+
+    async function baixarPedidoSalvo(pedidoId) {
+      const pedido = carregarPedidosSalvos().find(p => p.id === pedidoId);
+      if (!pedido) return;
+      await _gerarExcelDePedidoSalvo(pedido);
+    }
+
+    async function baixarTodosPedidosSalvos() {
+      const lista = carregarPedidosSalvos();
+      if (lista.length === 0) return;
+      const btn = document.getElementById('btnBaixarTodosSalvos');
+      btn.disabled = true; btn.style.opacity = '0.6';
+      try {
+        for (const pedido of lista) { await _gerarExcelDePedidoSalvo(pedido); }
+      } finally {
+        btn.disabled = false; btn.style.opacity = '';
+      }
+    }
+
+    async function _gerarExcelDePedidoSalvo(pedido) {
+      try {
+        const itensPorFornecedor = {};
+        let acBruto = 0, acLiquido = 0, acUnidades = 0;
+
+        pedido.itens.forEach(item => {
+          acBruto    += item.precoOriginal * item.qtd;
+          acLiquido  += item.precoFinal    * item.qtd;
+          acUnidades += item.qtd;
+          // Reconstruímos o objeto "p" mínimo que construirWorkbookPedido espera
+          const pFake = {
+            id: item.id, descricao: item.descricao, marca: item.marca,
+            fornecedor: item.fornecedor, embalagem: item.embalagem
+          };
+          const forn = (item.fornecedor || 'GERAL').trim().toUpperCase();
+          if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+          itensPorFornecedor[forn].push({
+            p: pFake, qtd: item.qtd,
+            precoFinal: item.precoFinal, precoOriginal: item.precoOriginal,
+            percentual: item.percentual
+          });
+        });
+
+        const workbook = await construirWorkbookPedido({
+          itensPorFornecedor,
+          clienteInfo: pedido.cliente,
+          ufExibicao: pedido.uf,
+          olAtivo: pedido.olAtivo || 0,
+          acBruto, acLiquido, acUnidades,
+          totalVariedades: pedido.itens.length,
+          subtitulo: 'COMPROVANTE DE PEDIDO — CATÁLOGO HBN1'
+        });
+
+        const dataStr = new Date(pedido.timestamp).toLocaleDateString('pt-BR').replace(/\//g,'-');
+        let nome = pedido.cliente && pedido.cliente.razao
+          ? limparNomeArquivo(pedido.cliente.razao.toUpperCase()) + ' - ' + dataStr + '.xlsx'
+          : `Pedido_HBN1_${pedido.uf}_${dataStr}.xlsx`;
+
+        await baixarWorkbook(workbook, nome);
+      } catch(e) {
+        console.error('Erro ao gerar Excel do pedido salvo:', e);
+        alert('Erro ao gerar o arquivo. Tente novamente.');
+      }
+    }
+
+    // -----------------------------------------------------------------------
     // AVISO AO SAIR COM CARRINHO PREENCHIDO
     // -----------------------------------------------------------------------
     window.addEventListener('beforeunload', function(e) {
@@ -2270,6 +2533,7 @@
       atualizarMuralInvisivel();
       atualizarProdutosInvisivel(true);
       atualizarClientesInvisivel();
+      atualizarBadgesPedidosSalvos();
 
       setInterval(atualizarMuralInvisivel,     60000);   // 1 min
       setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
