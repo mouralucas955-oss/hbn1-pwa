@@ -920,10 +920,16 @@
       const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
       const temDesconto = percentual > 0;
 
-      // ST do produto (se ativo e configurado)
-      const valorST   = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
-      const precoComST = precoFinal + valorST;
-      const temST      = ST_ATIVO && valorST > 0;
+      // ST: soma ANTES do desconto, depois aplica o percentual sobre (preço + ST)
+      const valorST = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
+      const temST   = ST_ATIVO && valorST > 0;
+
+      // Preço base + ST (sem desconto ainda)
+      const precoOriginalComST = precoOriginal + valorST;
+      // Desconto aplicado sobre (preço + ST)
+      const precoFinalComST = temDesconto
+        ? precoOriginalComST * (1 - percentual / 100)
+        : precoOriginalComST;
 
       let badgeTagHtml = p.tag && p.tag.trim() !== ''
         ? `<span class="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm tracking-wider">${p.tag}</span>`
@@ -931,11 +937,11 @@
 
       const blocoPrecoHtml = temDesconto
         ? `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black text-slate-900">${formatarParaReal(temST ? precoComST : precoFinal)}</span>
-             <span class="text-[10px] text-slate-400 line-through font-medium">${formatarParaReal(precoOriginal)}</span>
+             <span class="text-sm font-black text-slate-900">${formatarParaReal(temST ? precoFinalComST : precoFinal)}</span>
+             <span class="text-[10px] text-slate-400 line-through font-medium">${formatarParaReal(temST ? precoOriginalComST : precoOriginal)}</span>
            </div>`
         : `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black text-slate-900">${precoOriginal > 0 ? formatarParaReal(temST ? precoComST : precoOriginal) : '-'}</span>
+             <span class="text-sm font-black text-slate-900">${precoOriginal > 0 ? formatarParaReal(temST ? precoFinalComST : precoOriginal) : '-'}</span>
            </div>`;
 
       card.innerHTML = `
@@ -1239,12 +1245,14 @@
       document.getElementById('modalPrecoFinal').innerText   = precoOriginal > 0 ? formatarParaReal(precoFinal) : '-';
       document.getElementById('modalPrecoOriginal').innerText = temDesconto ? formatarParaReal(precoOriginal) : '';
 
-      // Bloco ST no modal
-      const valorSTModal  = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
+      // Bloco ST no modal — mesma lógica: desconto sobre (preço + ST)
+      const valorSTModal       = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
       const blocoST = document.getElementById('modalBlocoST');
       if (ST_ATIVO && valorSTModal > 0) {
-        document.getElementById('modalValorST').innerText   = formatarParaReal(valorSTModal);
-        document.getElementById('modalPrecoComST').innerText = formatarParaReal(precoFinal + valorSTModal);
+        const precoOrigComST = precoOriginal + valorSTModal;
+        const precoFimComST  = percentual > 0 ? precoOrigComST * (1 - percentual / 100) : precoOrigComST;
+        document.getElementById('modalValorST').innerText    = formatarParaReal(valorSTModal);
+        document.getElementById('modalPrecoComST').innerText = formatarParaReal(precoFimComST);
         blocoST.classList.remove('hidden');
       } else {
         blocoST.classList.add('hidden');
