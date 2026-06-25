@@ -838,6 +838,8 @@
     function executarFiltrosGerais() {
       const busca = document.getElementById('barraPesquisa').value.toLowerCase().trim();
       PRODUTOS_FILTRADOS = BD_PRODUTOS.filter(p => {
+        // Ignora linhas sem ID válido (linhas de controle/cabeçalho na planilha)
+        if (!p.id || String(p.id).trim() === '' || String(p.id).trim() === 'Sem ID') return false;
         const condForn = filtroFornecedorAtual === "TODOS" || (p.fornecedor && String(p.fornecedor).trim().toUpperCase() === filtroFornecedorAtual);
         if (FILTRO_APENAS_COM_ESTOQUE && (parseInt(p.estoque) || 0) <= 0) return false;
         const condBusca = !busca ||
