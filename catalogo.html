@@ -2684,7 +2684,7 @@
     window.addEventListener('DOMContentLoaded', () => {
 
       function atualizarMuralInvisivel() {
-        chamarApi('avisos')
+        chamarApi('avisos', { uf: UF_USUARIO })
           .then(lista => {
             const c = document.getElementById('containerAvisosLetreiro');
             if (!lista || lista.length === 0) {
