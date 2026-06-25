@@ -150,24 +150,32 @@
        TELA DE PORTAIS (seleção de fornecedor)
        ===================================================================== -->
   <div id="telaPortais" class="hidden fixed inset-0 z-30 overflow-y-auto">
-    <!-- Fundo dinâmico via JS -->
-    <div id="portaisFundo" class="min-h-screen flex flex-col">
+    <!-- Fundo branco com marca d'água -->
+    <div id="portaisFundo" class="min-h-screen flex flex-col relative bg-white">
+      <!-- Marca d'água Nazária -->
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+        <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png"
+          alt="" aria-hidden="true"
+          class="w-[70vw] max-w-3xl object-contain"
+          style="opacity:0.04; filter: grayscale(100%);">
+      </div>
+
       <!-- Header compacto dentro dos portais -->
-      <div class="px-6 py-4 flex items-center justify-between bg-white/10 backdrop-blur-sm border-b border-white/20">
+      <div class="relative z-10 px-6 py-4 flex items-center justify-between bg-white border-b border-slate-100 shadow-sm">
         <div class="flex items-center gap-3">
-          <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazária" class="h-8 w-auto object-contain bg-white/20 rounded-xl px-3 py-1">
+          <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazária" class="h-8 w-auto object-contain bg-[#FF6B00] rounded-xl px-3 py-1">
           <div>
-            <p class="text-white font-black text-sm tracking-tight" id="portaisNomeUsuario"></p>
-            <p class="text-white/60 text-[10px] font-medium">Selecione um fornecedor</p>
+            <p class="text-slate-800 font-black text-sm tracking-tight" id="portaisNomeUsuario"></p>
+            <p class="text-slate-400 text-[10px] font-medium">Selecione um fornecedor</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="abrirModalPedidosSalvos()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
+          <button onclick="abrirModalPedidosSalvos()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative border border-blue-100">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
             Pedidos Salvos
-            <span id="badgePedidosPortais" class="hidden absolute -top-1.5 -right-1.5 bg-white text-slate-900 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            <span id="badgePedidosPortais" class="hidden absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </button>
-          <button onclick="abrirModalCarrinho()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
+          <button onclick="abrirModalCarrinho()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
             Meu Pedido
             <span id="badgeCarrinhoPortais" class="hidden absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
@@ -176,9 +184,12 @@
       </div>
 
       <!-- Grid de portais -->
-      <div class="flex-grow flex flex-col items-center justify-center px-6 py-10 gap-8">
-        <h2 id="portaisTitulo" class="text-white font-black text-2xl sm:text-3xl tracking-tight drop-shadow-lg text-center">Escolha um Fornecedor</h2>
-        <div id="gridPortais" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-4xl"></div>
+      <div class="relative z-10 flex-grow flex flex-col items-center justify-center px-6 py-12 gap-10">
+        <div class="text-center">
+          <h2 id="portaisTitulo" class="text-slate-900 font-black text-3xl sm:text-4xl tracking-tight">Escolha um Fornecedor</h2>
+          <p class="text-slate-400 text-sm mt-1 font-medium">Selecione para ver os produtos disponíveis</p>
+        </div>
+        <div id="gridPortais" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-5xl"></div>
       </div>
     </div>
   </div>
@@ -631,10 +642,7 @@
       document.getElementById('mainProdutos').classList.add('hidden');
       document.getElementById('headerFornecedor').classList.add('hidden');
 
-      // Fundo gradiente animado padrão (laranja Nazária)
-      const fundo = document.getElementById('portaisFundo');
-      fundo.style.background = 'linear-gradient(135deg, #FF6B00 0%, #C44D00 50%, #1E293B 100%)';
-
+      // Fundo já é branco fixo via CSS
       // Nome do usuário
       document.getElementById('portaisNomeUsuario').innerText =
         localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
@@ -665,17 +673,17 @@
           (p.fornecedor || '').trim().toUpperCase() === forn
         ).length;
         const logoHtml = cfg.logo
-          ? `<img src="${cfg.logo}" alt="${forn}" class="h-10 max-w-[120px] object-contain" onerror="this.style.display='none'">`
-          : `<span class="text-white font-black text-lg">${forn}</span>`;
+          ? `<img src="${cfg.logo}" alt="${forn}" class="h-12 max-w-[150px] object-contain" onerror="this.style.display='none'">`
+          : `<span class="text-slate-800 font-black text-lg">${forn}</span>`;
         return `
           <button onclick="entrarFornecedor('${forn}')"
-            class="group relative overflow-hidden rounded-2xl p-6 flex flex-col items-center justify-center gap-3 aspect-[4/3] shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer border border-white/10"
-            style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%)">
-            <div class="bg-white/90 rounded-xl px-4 py-2 flex items-center justify-center min-h-[52px] w-full max-w-[160px]">
+            class="group relative overflow-hidden rounded-3xl p-8 flex flex-col items-center justify-center gap-4 shadow-md hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer border border-white/10"
+            style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%); min-height: 200px;">
+            <div class="bg-white/95 rounded-2xl px-6 py-4 flex items-center justify-center w-full max-w-[200px] min-h-[70px]">
               ${logoHtml}
             </div>
-            <span class="text-white/80 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''}</span>
-            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            <span class="text-white/80 text-[11px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''}</span>
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-3xl"></div>
           </button>`;
       }).join('');
     }
@@ -2939,8 +2947,6 @@
       document.getElementById('telaPortais').classList.remove('hidden');
       document.getElementById('portaisNomeUsuario').innerText =
         localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
-      const fundo = document.getElementById('portaisFundo');
-      if (fundo) fundo.style.background = 'linear-gradient(135deg, #FF6B00 0%, #C44D00 50%, #1E293B 100%)';
 
       setInterval(atualizarMuralInvisivel,     60000);   // 1 min
       setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
