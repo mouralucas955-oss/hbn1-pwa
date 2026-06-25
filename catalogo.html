@@ -873,7 +873,9 @@
     function renderizarFiltrosLaterais() {
       const container = document.getElementById('listaFiltroFornecedores');
       container.innerHTML = '';
-      const fornecedoresUnicos = [...new Set(BD_PRODUTOS.map(p => p.fornecedor).filter(Boolean))];
+      // Só considera produtos com ID válido (mesma regra do executarFiltrosGerais)
+      const produtosValidos = BD_PRODUTOS.filter(p => p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID');
+      const fornecedoresUnicos = [...new Set(produtosValidos.map(p => p.fornecedor).filter(Boolean))];
       fornecedoresUnicos.sort((a, b) => String(a).localeCompare(String(b)));
       const listaFinal = ["TODOS", ...fornecedoresUnicos];
       listaFinal.forEach(forn => {
