@@ -40,79 +40,90 @@
     }
   </style>
 </head>
-<body class="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans antialiased px-4 py-12">
+<body class="min-h-screen bg-white font-sans antialiased">
 
-  <!-- CARD CENTRAL -->
-  <div class="w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-100 p-10 flex flex-col items-center gap-8">
+  <!-- LAYOUT DOIS PAINÉIS -->
+  <div class="min-h-screen flex flex-col lg:flex-row">
 
-    <!-- LOGO -->
-    <div class="anim-fade-up flex flex-col items-center gap-2">
-      <img
-        src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png"
-        alt="Nazária Distribuidora Farmacêutica"
-        class="h-16 w-auto object-contain bg-[#FF6B00] rounded-2xl px-5 py-3 shadow-lg"
-        onerror="this.style.display='none'"
-      >
-      <p class="text-sm font-semibold text-slate-500 tracking-wide mt-1">Distribuidora Farmacêutica</p>
-    </div>
+    <!-- PAINEL ESQUERDO: LOGIN -->
+    <div class="w-full lg:w-[480px] xl:w-[520px] flex flex-col justify-between p-8 lg:p-12 bg-white shrink-0 min-h-screen lg:min-h-screen border-r border-slate-100">
 
-    <!-- TÍTULO -->
-    <div class="anim-fade-up anim-delay-1 text-center">
-      <h1 class="text-3xl font-black text-slate-900 tracking-tight leading-tight">
-        Catálogo de Pedidos
-      </h1>
-      <p class="text-slate-400 text-sm mt-2 font-medium">
-        Acesse o catálogo completo de produtos HBN1.
+      <!-- Logo topo -->
+      <div class="anim-fade-up">
+        <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png"
+          alt="Nazária" class="h-14 w-auto object-contain bg-[#FF6B00] rounded-2xl px-5 py-2.5 shadow-lg"
+          onerror="this.style.display='none'">
+        <p class="text-xs font-bold text-slate-400 tracking-widest uppercase mt-2">Distribuidora Farmacêutica</p>
+      </div>
+
+      <!-- Formulário centralizado -->
+      <div class="anim-fade-up anim-delay-1 flex flex-col gap-6 max-w-sm w-full mx-auto lg:mx-0">
+        <div>
+          <h1 class="text-4xl font-black text-slate-900 tracking-tight leading-tight">Catálogo de<br>Pedidos</h1>
+          <p class="text-slate-400 text-sm mt-2 font-medium">Acesse o catálogo completo de produtos HBN1.</p>
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div class="relative">
+            <input type="text" id="inputUsuario" placeholder="Usuário"
+              class="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all"
+              onkeydown="if(event.key==='Enter') document.getElementById('inputSenha').focus()">
+            <svg class="w-4 h-4 text-slate-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          <div class="relative">
+            <input type="password" id="inputSenha" placeholder="Senha"
+              class="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all"
+              onkeydown="if(event.key==='Enter') iniciarPedido()">
+            <svg class="w-4 h-4 text-slate-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-2a6 6 0 11-12 0 6 6 0 0112 0z M6 11v4a2 2 0 002 2h8a2 2 0 002-2v-4"/>
+            </svg>
+          </div>
+          <p id="msgErroLogin" class="hidden text-xs font-bold text-red-500 -mt-1"></p>
+        </div>
+
+        <button onclick="iniciarPedido()" id="btnIniciarPedido"
+          class="btn-iniciar w-full text-white font-black text-base uppercase tracking-widest rounded-2xl py-4 cursor-pointer select-none">
+          <span id="btnIniciarTexto">INICIAR PEDIDO HBN1!!</span>
+          <span class="block text-xs font-semibold normal-case tracking-normal text-orange-100 mt-0.5 opacity-90">
+            Informe usuário e senha para entrar
+          </span>
+        </button>
+      </div>
+
+      <!-- Rodapé -->
+      <p class="text-xs text-slate-400 font-medium">
+        &copy; <span id="anoAtual"></span> LUCAS JOSE ADM · HBN1
       </p>
     </div>
 
-    <!-- LOGIN: USUÁRIO E SENHA -->
-    <div class="anim-fade-up anim-delay-2 w-full flex flex-col gap-3">
-      <div class="relative">
-        <input type="text" id="inputUsuario" placeholder="Usuário"
-          class="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all"
-          onkeydown="if(event.key==='Enter') document.getElementById('inputSenha').focus()">
-        <svg class="w-4 h-4 text-slate-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
+    <!-- PAINEL DIREITO: PARCEIROS -->
+    <div class="hidden lg:flex flex-col flex-grow bg-slate-50 items-center justify-center p-12 gap-10">
+      <div class="text-center">
+        <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Nossos Parceiros</p>
+        <h2 class="text-2xl font-black text-slate-800">Marcas que trabalhamos</h2>
       </div>
-      <div class="relative">
-        <input type="password" id="inputSenha" placeholder="Senha"
-          class="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent transition-all"
-          onkeydown="if(event.key==='Enter') iniciarPedido()">
-        <svg class="w-4 h-4 text-slate-400 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm6-2a6 6 0 11-12 0 6 6 0 0112 0z M6 11v4a2 2 0 002 2h8a2 2 0 002-2v-4"/>
-        </svg>
-      </div>
-      <p id="msgErroLogin" class="hidden text-xs font-bold text-red-500 text-center -mt-1"></p>
-    </div>
-
-    <!-- BOTÃO -->
-    <button onclick="iniciarPedido()" id="btnIniciarPedido" class="btn-iniciar block w-full text-center text-white font-black text-lg uppercase tracking-widest rounded-2xl py-5 cursor-pointer select-none">
-  <span id="btnIniciarTexto">INICIAR PEDIDO HBN1!!</span>
-  <span class="block text-xs font-semibold normal-case tracking-normal text-orange-100 mt-1 opacity-90">
-    Informe usuário e senha para entrar no catálogo
-  </span>
-</button>
-
-    <!-- PARCEIROS -->
-    <div class="anim-fade-up anim-delay-3 w-full">
-      <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-4">Nossos Parceiros</p>
-      <div class="flex flex-wrap items-center justify-center gap-4">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png"   alt="Danone"       class="logo-parceiro h-8 w-auto object-contain">
-        <img src="https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp"                  alt="Kenvue"       class="logo-parceiro h-7 w-auto object-contain">
-        <img src="https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg"        alt="Kimberly"     class="logo-parceiro h-7 w-auto object-contain">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png" alt="Omron" class="logo-parceiro h-6 w-auto object-contain">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png"             alt="Unilever"     class="logo-parceiro h-8 w-auto object-contain">
+      <div class="grid grid-cols-2 gap-8 w-full max-w-md">
+        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png" alt="Danone" class="h-10 w-auto object-contain">
+        </div>
+        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
+          <img src="https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp" alt="Kenvue" class="h-9 w-auto object-contain">
+        </div>
+        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
+          <img src="https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg" alt="Kimberly" class="h-9 w-auto object-contain">
+        </div>
+        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png" alt="Omron" class="h-8 w-auto object-contain">
+        </div>
+        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video col-span-2">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png" alt="Unilever" class="h-10 w-auto object-contain">
+        </div>
       </div>
     </div>
 
   </div>
-
-  <!-- RODAPÉ -->
-  <p class="mt-8 text-xs text-slate-400 font-medium text-center">
-    &copy; <span id="anoAtual"></span> LUCAS JOSE ADM · HBN1
-  </p>
 
   <script src="api.js"></script>
   <script>
