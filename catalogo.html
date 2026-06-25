@@ -120,18 +120,27 @@
         <span id="labelOLAtivo" class="hidden text-[10px] text-purple-200 font-bold ml-1"></span>
       </div>
 
-      <!-- Linha 3: Botões ST (sempre visíveis — cada UF tem sua tabela) -->
-      <div id="painelST" class="flex flex-wrap items-center gap-2">
-        <span class="text-[10px] font-black text-amber-300 uppercase tracking-widest shrink-0">ST:</span>
-        <button id="btnSTSim" onclick="ativarST(true)"
-          class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40">
-          ✔ Com ST
+      <!-- Linha 3: ST — botão toggle + painel colapsável (oculto por padrão) -->
+      <div id="containerST" class="flex flex-wrap items-center gap-2">
+        <button id="btnToggleST" onclick="togglePainelST()"
+          class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300 hover:border-amber-500 hover:text-amber-300 flex items-center gap-1.5">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+          </svg>
+          ST
+          <span id="badgeSTAtivo" class="hidden w-1.5 h-1.5 rounded-full bg-amber-400"></span>
         </button>
-        <button id="btnSTNao" onclick="ativarST(false)"
-          class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300">
-          ✖ Sem ST
-        </button>
-        <span id="labelSTInfo" class="text-[10px] text-amber-200/70 font-medium ml-1 hidden"></span>
+        <div id="painelST" class="hidden flex flex-wrap items-center gap-2">
+          <button id="btnSTNao" onclick="ativarST(false)"
+            class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40">
+            ✖ Sem ST
+          </button>
+          <button id="btnSTSim" onclick="ativarST(true)"
+            class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300">
+            ✔ Com ST
+          </button>
+          <span id="labelSTInfo" class="text-[10px] text-amber-200/70 font-medium ml-1 hidden"></span>
+        </div>
       </div>
 
     </div>
@@ -338,6 +347,12 @@
             <div id="modalBlocoPrecos" class="flex items-baseline gap-2 mt-0.5">
               <span id="modalPrecoFinal" class="text-xl font-black text-slate-900">R$ 0,00</span>
               <span id="modalPrecoOriginal" class="text-xs text-slate-400 line-through font-medium"></span>
+            </div>
+            <div id="modalBlocoST" class="hidden mt-1 flex items-center gap-1.5">
+              <span class="text-[9px] font-black text-amber-600 uppercase tracking-wider">+ ST:</span>
+              <span id="modalValorST" class="text-[11px] font-black text-amber-700">R$ 0,00</span>
+              <span class="text-[9px] text-slate-400">→ Total:</span>
+              <span id="modalPrecoComST" class="text-[13px] font-black text-slate-900">R$ 0,00</span>
             </div>
           </div>
           <div id="modalBadgeDescontoCont" class="hidden">
@@ -912,13 +927,11 @@
 
       const blocoPrecoHtml = temDesconto
         ? `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black ${temST ? 'text-amber-700' : 'text-slate-900'}">${formatarParaReal(temST ? precoComST : precoFinal)}</span>
+             <span class="text-sm font-black text-slate-900">${formatarParaReal(temST ? precoComST : precoFinal)}</span>
              <span class="text-[10px] text-slate-400 line-through font-medium">${formatarParaReal(precoOriginal)}</span>
-             ${temST ? `<span class="text-[9px] text-amber-600 font-bold">+ ST ${formatarParaReal(valorST)}</span>` : ''}
            </div>`
         : `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black ${temST ? 'text-amber-700' : 'text-slate-900'}">${precoOriginal > 0 ? formatarParaReal(temST ? precoComST : precoOriginal) : '-'}</span>
-             ${temST ? `<span class="text-[9px] text-amber-600 font-bold">+ ST ${formatarParaReal(valorST)}</span>` : ''}
+             <span class="text-sm font-black text-slate-900">${precoOriginal > 0 ? formatarParaReal(temST ? precoComST : precoOriginal) : '-'}</span>
            </div>`;
 
       card.innerHTML = `
@@ -1221,6 +1234,17 @@
 
       document.getElementById('modalPrecoFinal').innerText   = precoOriginal > 0 ? formatarParaReal(precoFinal) : '-';
       document.getElementById('modalPrecoOriginal').innerText = temDesconto ? formatarParaReal(precoOriginal) : '';
+
+      // Bloco ST no modal
+      const valorSTModal  = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
+      const blocoST = document.getElementById('modalBlocoST');
+      if (ST_ATIVO && valorSTModal > 0) {
+        document.getElementById('modalValorST').innerText   = formatarParaReal(valorSTModal);
+        document.getElementById('modalPrecoComST').innerText = formatarParaReal(precoFinal + valorSTModal);
+        blocoST.classList.remove('hidden');
+      } else {
+        blocoST.classList.add('hidden');
+      }
 
       const badgeDescCont = document.getElementById('modalBadgeDescontoCont');
       if (temDesconto) {
@@ -2289,29 +2313,44 @@
     // -----------------------------------------------------------------------
     // ST — SUBSTITUIÇÃO TRIBUTÁRIA
     // -----------------------------------------------------------------------
+    function togglePainelST() {
+      const painel = document.getElementById('painelST');
+      painel.classList.toggle('hidden');
+    }
+
     function ativarST(ativo) {
       ST_ATIVO = ativo;
 
-      // Visual dos botões
-      const btnSim = document.getElementById('btnSTSim');
-      const btnNao = document.getElementById('btnSTNao');
-      const label  = document.getElementById('labelSTInfo');
+      const btnSim   = document.getElementById('btnSTSim');
+      const btnNao   = document.getElementById('btnSTNao');
+      const label    = document.getElementById('labelSTInfo');
+      const badge    = document.getElementById('badgeSTAtivo');
+      const btnToggle = document.getElementById('btnToggleST');
+
+      const ativadoClass  = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40';
+      const inativoClass  = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300';
 
       if (ativo) {
-        btnSim.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40';
-        btnNao.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300';
+        btnSim.className = ativadoClass;
+        btnNao.className = inativoClass;
         const qtdComST = Object.keys(BD_ST).filter(id => BD_ST[id] > 0).length;
         if (qtdComST > 0) {
           label.innerText = qtdComST + ' produto' + (qtdComST !== 1 ? 's' : '') + ' c/ ST';
           label.classList.remove('hidden');
         }
+        // Badge laranja no botão toggle (indica ST ativo)
+        badge.classList.remove('hidden');
+        btnToggle.classList.add('border-amber-500', 'text-amber-300');
+        btnToggle.classList.remove('border-slate-600', 'text-slate-300');
       } else {
-        btnSim.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300';
-        btnNao.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40';
+        btnSim.className = inativoClass;
+        btnNao.className = ativadoClass;
         label.classList.add('hidden');
+        badge.classList.add('hidden');
+        btnToggle.classList.remove('border-amber-500', 'text-amber-300');
+        btnToggle.classList.add('border-slate-600', 'text-slate-300');
       }
 
-      // Re-renderiza cards com/sem ST
       executarFiltrosGerais();
       recalcularTotaisGerais();
     }
@@ -2323,16 +2362,16 @@
           (lista || []).forEach(item => { if (item.id) BD_ST[item.id] = item.st || 0; });
           const qtd = Object.keys(BD_ST).filter(id => BD_ST[id] > 0).length;
           if (qtd === 0) {
-            // UF sem ST configurado: esconde o painel
-            const painel = document.getElementById('painelST');
-            if (painel) painel.classList.add('hidden');
+            // UF sem ST configurado: esconde o container todo
+            const container = document.getElementById('containerST');
+            if (container) container.classList.add('hidden');
           }
           console.log('ST carregado: ' + qtd + ' produtos com ST para ' + UF_USUARIO);
         })
         .catch(e => {
           console.warn('ST não disponível para ' + UF_USUARIO + ':', e);
-          const painel = document.getElementById('painelST');
-          if (painel) painel.classList.add('hidden');
+          const container = document.getElementById('containerST');
+          if (container) container.classList.add('hidden');
         });
     }
 
