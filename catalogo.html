@@ -147,77 +147,101 @@
   </div>
 
   <!-- =====================================================================
-       CONTEÚDO PRINCIPAL
+       TELA DE PORTAIS (seleção de fornecedor)
        ===================================================================== -->
-  <main class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 flex-grow py-6 flex flex-col lg:flex-row gap-6 items-start">
-
-    <!-- SIDEBAR -->
-    <aside class="w-full lg:w-64 bg-slate-100/50 p-4 rounded-2xl border border-slate-200/60 shrink-0 sticky lg:top-36 flex flex-col gap-5">
-      <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm">
-        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Itens com Estoque?</h2>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" id="btnEstoqueSim" onclick="definirFiltroEstoque(true)"
-            class="py-1.5 px-3 text-xs font-bold rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition-all text-center">Sim</button>
-          <button type="button" id="btnEstoqueNao" onclick="definirFiltroEstoque(false)"
-            class="py-1.5 px-3 text-xs font-bold rounded-lg border bg-orange-600 text-white border-orange-600 shadow-sm transition-all text-center">Não</button>
-        </div>
-      </div>
-      <div>
-        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Filtrar Fornecedor</h2>
-        <div id="listaFiltroFornecedores" class="space-y-2 max-h-[300px] lg:max-h-[calc(100vh-320px)] overflow-y-auto pr-1 no-scrollbar">
-          <div class="animate-pulse space-y-2">
-            <div class="h-10 bg-slate-200 rounded-xl"></div>
-            <div class="h-10 bg-slate-200 rounded-xl"></div>
+  <div id="telaPortais" class="hidden fixed inset-0 z-30 overflow-y-auto">
+    <!-- Fundo dinâmico via JS -->
+    <div id="portaisFundo" class="min-h-screen flex flex-col">
+      <!-- Header compacto dentro dos portais -->
+      <div class="px-6 py-4 flex items-center justify-between bg-white/10 backdrop-blur-sm border-b border-white/20">
+        <div class="flex items-center gap-3">
+          <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazária" class="h-8 w-auto object-contain bg-white/20 rounded-xl px-3 py-1">
+          <div>
+            <p class="text-white font-black text-sm tracking-tight" id="portaisNomeUsuario"></p>
+            <p class="text-white/60 text-[10px] font-medium">Selecione um fornecedor</p>
           </div>
         </div>
-      </div>
-    </aside>
-
-    <!-- GRID DE PRODUTOS -->
-    <section class="flex-grow w-full">
-      <div class="flex items-center justify-between mb-4 bg-white p-3 rounded-xl border border-slate-200/60 shadow-sm gap-2 flex-wrap">
-        <div class="text-xs font-bold text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span>Mostrando <span id="contadorProdutos" class="text-slate-800 font-black">0</span> itens listados</span>
-          <span id="textoUltimaAtualizacao" class="text-[10px] font-semibold text-slate-400 normal-case flex items-center gap-1"></span>
-        </div>
         <div class="flex items-center gap-2">
-          <button id="btnLimparPedidoFora" onclick="limparPedidoCompleto()"
-            class="hidden px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl border border-red-200 transition-all flex items-center gap-1">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-            </svg>
-            Limpar Pedido
-          </button>
-          <button id="btnAbrirImportacao" onclick="abrirModalImportarPedido()"
-            class="px-4 py-2 bg-white text-slate-700 font-black text-xs rounded-xl hover:bg-slate-50 transition-all shadow-sm border border-slate-200 flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            Ver Valor do Pedido
-          </button>
-          <button id="btnAbrirPedidosSalvos" onclick="abrirModalPedidosSalvos()"
-            class="px-4 py-2 bg-blue-50 text-blue-700 font-black text-xs rounded-xl hover:bg-blue-100 transition-all shadow-sm border border-blue-200 flex items-center gap-2 relative">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-            </svg>
+          <button onclick="abrirModalPedidosSalvos()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
             Pedidos Salvos
-            <span id="badgePedidosSalvos" class="hidden absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+            <span id="badgePedidosPortais" class="hidden absolute -top-1.5 -right-1.5 bg-white text-slate-900 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </button>
-          <button id="btnAbrirCarrinhoFixo" onclick="abrirModalCarrinho()"
-            class="px-4 py-2 bg-slate-900 text-white font-black text-xs rounded-xl hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 relative">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
-            </svg>
-            Ver Meu Pedido
-            <span id="badgeContadorFlutuante" class="absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white hidden">0</span>
+          <button onclick="abrirModalCarrinho()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
+            Meu Pedido
+            <span id="badgeCarrinhoPortais" class="hidden absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </button>
         </div>
       </div>
 
-      <div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-        <div class="col-span-full text-center py-20 text-slate-400 font-medium">Carregando catálogo de produtos ativos...</div>
+      <!-- Grid de portais -->
+      <div class="flex-grow flex flex-col items-center justify-center px-6 py-10 gap-8">
+        <h2 id="portaisTitulo" class="text-white font-black text-2xl sm:text-3xl tracking-tight drop-shadow-lg text-center">Escolha um Fornecedor</h2>
+        <div id="gridPortais" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-4xl"></div>
       </div>
-    </section>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       CONTEÚDO PRINCIPAL (produtos)
+       ===================================================================== -->
+  <main id="mainProdutos" class="hidden max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 flex-grow py-6 flex flex-col gap-4 items-start">
+
+    <!-- HEADER DO FORNECEDOR SELECIONADO -->
+    <div id="headerFornecedor" class="w-full rounded-2xl overflow-hidden shadow-lg hidden">
+      <div id="headerFornecedorBg" class="px-6 py-5 flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-4">
+          <button onclick="voltarParaPortais()"
+            class="w-9 h-9 bg-white/20 hover:bg-white/40 text-white rounded-xl flex items-center justify-center transition-all shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <img id="logoFornecedorHeader" src="" alt="" class="h-10 max-w-[140px] object-contain bg-white/90 rounded-xl px-3 py-1.5">
+          <div>
+            <p id="nomeFornecedorHeader" class="text-white font-black text-lg tracking-tight drop-shadow"></p>
+            <p id="qtdProdutosFornecedor" class="text-white/70 text-xs font-medium"></p>
+          </div>
+        </div>
+        <!-- Mini switcher de fornecedores -->
+        <div id="miniSwitcherFornecedores" class="flex flex-wrap items-center gap-2"></div>
+      </div>
+    </div>
+
+    <!-- BARRA DE CONTROLES -->
+    <div class="w-full flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200/60 shadow-sm gap-2 flex-wrap">
+      <div class="text-xs font-bold text-slate-500 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span>Mostrando <span id="contadorProdutos" class="text-slate-800 font-black">0</span> itens listados</span>
+        <span id="textoUltimaAtualizacao" class="text-[10px] font-semibold text-slate-400 normal-case flex items-center gap-1"></span>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button id="btnLimparPedidoFora" onclick="limparPedidoCompleto()"
+          class="hidden px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs rounded-xl border border-red-200 transition-all flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          Limpar Pedido
+        </button>
+        <button id="btnAbrirImportacao" onclick="abrirModalImportarPedido()"
+          class="px-4 py-2 bg-white text-slate-700 font-black text-xs rounded-xl hover:bg-slate-50 transition-all shadow-sm border border-slate-200 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Ver Valor do Pedido
+        </button>
+        <button id="btnAbrirPedidosSalvos" onclick="abrirModalPedidosSalvos()"
+          class="px-4 py-2 bg-blue-50 text-blue-700 font-black text-xs rounded-xl hover:bg-blue-100 transition-all shadow-sm border border-blue-200 flex items-center gap-2 relative">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+          Pedidos Salvos
+          <span id="badgePedidosSalvos" class="hidden absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white">0</span>
+        </button>
+        <button id="btnAbrirCarrinhoFixo" onclick="abrirModalCarrinho()"
+          class="px-4 py-2 bg-slate-900 text-white font-black text-xs rounded-xl hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 relative">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
+          Ver Meu Pedido
+          <span id="badgeContadorFlutuante" class="absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white hidden">0</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="gridProdutos" class="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div class="col-span-full text-center py-20 text-slate-400 font-medium">Carregando catálogo de produtos ativos...</div>
+    </div>
   </main>
 
   <!-- FOOTER MOBILE -->
@@ -576,6 +600,165 @@
     // ST (Substituição Tributária): mapa { id_produto -> valor_st_em_reais }
     let BD_ST = {};        // carregado da API
     let ST_ATIVO = false;  // controlado pelos botões
+
+    // -----------------------------------------------------------------------
+    // CONFIGURAÇÃO DE FORNECEDORES — cores, logos, gradientes
+    // -----------------------------------------------------------------------
+    const CONFIG_FORNECEDORES = {
+      'DANONE'   : { cor1: '#005BAA', cor2: '#003F7F', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png',  textoBg: '#EBF4FF' },
+      'UNILEVER' : { cor1: '#1F3D6E', cor2: '#0D1F3C', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png',             textoBg: '#EEF2FF' },
+      'KIMBERLY' : { cor1: '#CC0000', cor2: '#8B0000', logo: 'https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg',         textoBg: '#FFF1F1' },
+      'KENVUE'   : { cor1: '#00704A', cor2: '#004D33', logo: 'https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp',                   textoBg: '#ECFDF5' },
+      'OMRON'    : { cor1: '#B22222', cor2: '#7A1111', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png', textoBg: '#FFF5F5' },
+      'NAZARIA'  : { cor1: '#FF6B00', cor2: '#C44D00', logo: 'https://epedidos.nazaria.com.br/img/logo-nazaria-white.png', textoBg: '#FFF7ED' },
+    };
+
+    function getConfigFornecedor(nome) {
+      const chave = String(nome || '').toUpperCase().trim();
+      // Busca exata primeiro, depois parcial
+      if (CONFIG_FORNECEDORES[chave]) return CONFIG_FORNECEDORES[chave];
+      for (const k of Object.keys(CONFIG_FORNECEDORES)) {
+        if (chave.includes(k) || k.includes(chave)) return CONFIG_FORNECEDORES[k];
+      }
+      return { cor1: '#475569', cor2: '#1E293B', logo: '', textoBg: '#F8FAFC' };
+    }
+
+    // -----------------------------------------------------------------------
+    // SISTEMA DE PORTAIS
+    // -----------------------------------------------------------------------
+    function mostrarTelaPortais() {
+      document.getElementById('telaPortais').classList.remove('hidden');
+      document.getElementById('mainProdutos').classList.add('hidden');
+      document.getElementById('headerFornecedor').classList.add('hidden');
+
+      // Fundo gradiente animado padrão (laranja Nazária)
+      const fundo = document.getElementById('portaisFundo');
+      fundo.style.background = 'linear-gradient(135deg, #FF6B00 0%, #C44D00 50%, #1E293B 100%)';
+
+      // Nome do usuário
+      document.getElementById('portaisNomeUsuario').innerText =
+        localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
+
+      renderizarGridPortais();
+      atualizarBadgesPortais();
+    }
+
+    function renderizarGridPortais() {
+      const grid = document.getElementById('gridPortais');
+      // Fornecedores com produtos válidos
+      const fornecedoresValidos = [...new Set(
+        BD_PRODUTOS
+          .filter(p => p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID')
+          .map(p => (p.fornecedor || '').trim().toUpperCase())
+          .filter(Boolean)
+      )].sort();
+
+      if (fornecedoresValidos.length === 0) {
+        grid.innerHTML = '<p class="col-span-full text-center text-white/60 font-medium">Carregando fornecedores...</p>';
+        return;
+      }
+
+      grid.innerHTML = fornecedoresValidos.map(forn => {
+        const cfg = getConfigFornecedor(forn);
+        const qtd = BD_PRODUTOS.filter(p =>
+          p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID' &&
+          (p.fornecedor || '').trim().toUpperCase() === forn
+        ).length;
+        const logoHtml = cfg.logo
+          ? `<img src="${cfg.logo}" alt="${forn}" class="h-10 max-w-[120px] object-contain" onerror="this.style.display='none'">`
+          : `<span class="text-white font-black text-lg">${forn}</span>`;
+        return `
+          <button onclick="entrarFornecedor('${forn}')"
+            class="group relative overflow-hidden rounded-2xl p-6 flex flex-col items-center justify-center gap-3 aspect-[4/3] shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer border border-white/10"
+            style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%)">
+            <div class="bg-white/90 rounded-xl px-4 py-2 flex items-center justify-center min-h-[52px] w-full max-w-[160px]">
+              ${logoHtml}
+            </div>
+            <span class="text-white/80 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''}</span>
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+          </button>`;
+      }).join('');
+    }
+
+    function entrarFornecedor(nomeFornecedor) {
+      filtroFornecedorAtual = nomeFornecedor.toUpperCase();
+      const cfg = getConfigFornecedor(nomeFornecedor);
+
+      // Esconde portais, mostra produtos
+      document.getElementById('telaPortais').classList.add('hidden');
+      document.getElementById('mainProdutos').classList.remove('hidden');
+
+      // Ambientação: header do fornecedor
+      const header = document.getElementById('headerFornecedor');
+      const headerBg = document.getElementById('headerFornecedorBg');
+      header.classList.remove('hidden');
+      headerBg.style.background = `linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%)`;
+
+      if (cfg.logo) document.getElementById('logoFornecedorHeader').src = cfg.logo;
+      document.getElementById('nomeFornecedorHeader').innerText = nomeFornecedor;
+
+      // Mini switcher: outros fornecedores
+      renderizarMiniSwitcher(nomeFornecedor);
+
+      // Filtra e renderiza produtos
+      executarFiltrosGerais();
+
+      const qtd = PRODUTOS_FILTRADOS.length;
+      document.getElementById('qtdProdutosFornecedor').innerText = qtd + ' produto' + (qtd !== 1 ? 's' : '');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderizarMiniSwitcher(fornAtual) {
+      const container = document.getElementById('miniSwitcherFornecedores');
+      const fornecedoresValidos = [...new Set(
+        BD_PRODUTOS
+          .filter(p => p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID')
+          .map(p => (p.fornecedor || '').trim().toUpperCase())
+          .filter(f => f && f !== fornAtual.toUpperCase())
+      )].sort();
+
+      container.innerHTML = fornecedoresValidos.map(forn => {
+        const cfg = getConfigFornecedor(forn);
+        const logoHtml = cfg.logo
+          ? `<img src="${cfg.logo}" alt="${forn}" class="h-5 max-w-[60px] object-contain" onerror="this.parentElement.innerText='${forn}'">`
+          : forn;
+        return `
+          <button onclick="entrarFornecedor('${forn}')"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/40 transition-all border border-white/20"
+            title="${forn}">
+            <div class="bg-white rounded-md px-1.5 py-0.5 flex items-center">${logoHtml}</div>
+          </button>`;
+      }).join('');
+    }
+
+    function voltarParaPortais() {
+      filtroFornecedorAtual = 'TODOS';
+      mostrarTelaPortais();
+    }
+
+    function atualizarBadgesPortais() {
+      const n = carregarPedidosSalvos().length;
+      const qtdCarrinho = Object.keys(CARRINHO).reduce((s, k) => s + CARRINHO[k], 0);
+      ['badgePedidosPortais'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = n;
+        el.classList.toggle('hidden', n === 0);
+      });
+      const bc = document.getElementById('badgeCarrinhoPortais');
+      if (bc) { bc.innerText = qtdCarrinho; bc.classList.toggle('hidden', qtdCarrinho === 0); }
+    }
+
+    // -----------------------------------------------------------------------
+    // Substituição de renderizarFiltrosLaterais — agora atualiza os portais
+    // -----------------------------------------------------------------------
+    function renderizarFiltrosLaterais() {
+      // Mantida para compatibilidade — agora só atualiza a tela de portais
+      if (!document.getElementById('telaPortais').classList.contains('hidden')) {
+        renderizarGridPortais();
+      }
+    }
 
     // -----------------------------------------------------------------------
     // CÁLCULO DE PREÇO COM DESCONTO DINÂMICO (versão genérica)
@@ -1052,6 +1235,12 @@
       if (badge) {
         badge.innerText = totalItens;
         totalItens > 0 ? badge.classList.remove('hidden') : badge.classList.add('hidden');
+      }
+      // Badge carrinho nos portais
+      const badgePortais = document.getElementById('badgeCarrinhoPortais');
+      if (badgePortais) {
+        badgePortais.innerText = totalItens;
+        totalItens > 0 ? badgePortais.classList.remove('hidden') : badgePortais.classList.add('hidden');
       }
       const btnFora   = document.getElementById('btnLimparPedidoFora');
       const btnMobile = document.getElementById('btnLimparPedidoMobile');
@@ -2712,8 +2901,13 @@
             });
             const qtdAnt = BD_PRODUTOS.length;
             BD_PRODUTOS = dados;
-            if (isPrimeiraCarga || qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
-            executarFiltrosGerais();
+            if (isPrimeiraCarga) {
+              // Primeira carga: abre tela de portais
+              mostrarTelaPortais();
+            } else {
+              if (qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
+              executarFiltrosGerais();
+            }
             recalcularTotaisGerais();
             atualizarTextoUltimaSincronizacao();
           })
@@ -2741,6 +2935,12 @@
       atualizarClientesInvisivel();
       carregarST();
       atualizarBadgesPedidosSalvos();
+      // Mostra portais imediatamente (grid atualiza quando produtos chegarem)
+      document.getElementById('telaPortais').classList.remove('hidden');
+      document.getElementById('portaisNomeUsuario').innerText =
+        localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
+      const fundo = document.getElementById('portaisFundo');
+      if (fundo) fundo.style.background = 'linear-gradient(135deg, #FF6B00 0%, #C44D00 50%, #1E293B 100%)';
 
       setInterval(atualizarMuralInvisivel,     60000);   // 1 min
       setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
