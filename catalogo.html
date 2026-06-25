@@ -120,6 +120,20 @@
         <span id="labelOLAtivo" class="hidden text-[10px] text-purple-200 font-bold ml-1"></span>
       </div>
 
+      <!-- Linha 3: Botões ST (sempre visíveis — cada UF tem sua tabela) -->
+      <div id="painelST" class="flex flex-wrap items-center gap-2">
+        <span class="text-[10px] font-black text-amber-300 uppercase tracking-widest shrink-0">ST:</span>
+        <button id="btnSTSim" onclick="ativarST(true)"
+          class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40">
+          ✔ Com ST
+        </button>
+        <button id="btnSTNao" onclick="ativarST(false)"
+          class="px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300">
+          ✖ Sem ST
+        </button>
+        <span id="labelSTInfo" class="text-[10px] text-amber-200/70 font-medium ml-1 hidden"></span>
+      </div>
+
     </div>
   </div>
 
@@ -544,6 +558,10 @@
     // Controle de OL Danone: 0 = sem OL, 250 | 500 | 1000
     let OL_ATIVO = 0;
 
+    // ST (Substituição Tributária): mapa { id_produto -> valor_st_em_reais }
+    let BD_ST = {};        // carregado da API
+    let ST_ATIVO = false;  // controlado pelos botões
+
     // -----------------------------------------------------------------------
     // CÁLCULO DE PREÇO COM DESCONTO DINÂMICO (versão genérica)
     // Aceita cliente e OL explícitos — usada tanto pelo catálogo (globais)
@@ -883,17 +901,24 @@
       const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
       const temDesconto = percentual > 0;
 
+      // ST do produto (se ativo e configurado)
+      const valorST   = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
+      const precoComST = precoFinal + valorST;
+      const temST      = ST_ATIVO && valorST > 0;
+
       let badgeTagHtml = p.tag && p.tag.trim() !== ''
         ? `<span class="absolute top-2 left-2 z-10 bg-amber-500 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm tracking-wider">${p.tag}</span>`
         : '';
 
       const blocoPrecoHtml = temDesconto
         ? `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black text-slate-900">${formatarParaReal(precoFinal)}</span>
+             <span class="text-sm font-black ${temST ? 'text-amber-700' : 'text-slate-900'}">${formatarParaReal(temST ? precoComST : precoFinal)}</span>
              <span class="text-[10px] text-slate-400 line-through font-medium">${formatarParaReal(precoOriginal)}</span>
+             ${temST ? `<span class="text-[9px] text-amber-600 font-bold">+ ST ${formatarParaReal(valorST)}</span>` : ''}
            </div>`
         : `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black text-slate-900">${precoOriginal > 0 ? formatarParaReal(precoOriginal) : '-'}</span>
+             <span class="text-sm font-black ${temST ? 'text-amber-700' : 'text-slate-900'}">${precoOriginal > 0 ? formatarParaReal(temST ? precoComST : precoOriginal) : '-'}</span>
+             ${temST ? `<span class="text-[9px] text-amber-600 font-bold">+ ST ${formatarParaReal(valorST)}</span>` : ''}
            </div>`;
 
       card.innerHTML = `
@@ -2262,6 +2287,56 @@
     function voltarAoTopo() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
     // -----------------------------------------------------------------------
+    // ST — SUBSTITUIÇÃO TRIBUTÁRIA
+    // -----------------------------------------------------------------------
+    function ativarST(ativo) {
+      ST_ATIVO = ativo;
+
+      // Visual dos botões
+      const btnSim = document.getElementById('btnSTSim');
+      const btnNao = document.getElementById('btnSTNao');
+      const label  = document.getElementById('labelSTInfo');
+
+      if (ativo) {
+        btnSim.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40';
+        btnNao.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300';
+        const qtdComST = Object.keys(BD_ST).filter(id => BD_ST[id] > 0).length;
+        if (qtdComST > 0) {
+          label.innerText = qtdComST + ' produto' + (qtdComST !== 1 ? 's' : '') + ' c/ ST';
+          label.classList.remove('hidden');
+        }
+      } else {
+        btnSim.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-600 bg-slate-700 text-slate-300';
+        btnNao.className = 'px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-amber-500 bg-amber-500 text-white shadow-sm shadow-amber-900/40';
+        label.classList.add('hidden');
+      }
+
+      // Re-renderiza cards com/sem ST
+      executarFiltrosGerais();
+      recalcularTotaisGerais();
+    }
+
+    function carregarST() {
+      chamarApi('st', { uf: UF_USUARIO })
+        .then(lista => {
+          BD_ST = {};
+          (lista || []).forEach(item => { if (item.id) BD_ST[item.id] = item.st || 0; });
+          const qtd = Object.keys(BD_ST).filter(id => BD_ST[id] > 0).length;
+          if (qtd === 0) {
+            // UF sem ST configurado: esconde o painel
+            const painel = document.getElementById('painelST');
+            if (painel) painel.classList.add('hidden');
+          }
+          console.log('ST carregado: ' + qtd + ' produtos com ST para ' + UF_USUARIO);
+        })
+        .catch(e => {
+          console.warn('ST não disponível para ' + UF_USUARIO + ':', e);
+          const painel = document.getElementById('painelST');
+          if (painel) painel.classList.add('hidden');
+        });
+    }
+
+    // -----------------------------------------------------------------------
     // PEDIDOS SALVOS — localStorage
     // Chave: 'hbn1_pedidos_salvos'
     // Estrutura: Array de { id, data, timestamp, cliente, uf, itens[], totais{} }
@@ -2608,6 +2683,7 @@
       atualizarMuralInvisivel();
       atualizarProdutosInvisivel(true);
       atualizarClientesInvisivel();
+      carregarST();
       atualizarBadgesPedidosSalvos();
 
       setInterval(atualizarMuralInvisivel,     60000);   // 1 min
