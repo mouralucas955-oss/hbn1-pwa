@@ -7,19 +7,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FF6B00">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] }
-        }
-      }
-    }
-  </script>
   <style>
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
@@ -71,8 +59,8 @@
       <!-- Formulário centralizado -->
       <div class="anim-fade-up anim-delay-1 flex flex-col gap-6 max-w-sm w-full mx-auto lg:mx-0">
         <div>
-          <h1 class="text-4xl font-bold text-slate-900 tracking-tight leading-tight">Catálogo de<br>Pedidos</h1>
-          <p class="text-slate-400 text-sm mt-2">Acesse o catálogo completo de produtos HBN1.</p>
+          <h1 class="text-4xl font-black text-slate-900 tracking-tight leading-tight">Catálogo de<br>Pedidos</h1>
+          <p class="text-slate-400 text-sm mt-2 font-medium">Acesse o catálogo completo de produtos HBN1.</p>
         </div>
 
         <div class="flex flex-col gap-3">
@@ -96,9 +84,9 @@
         </div>
 
         <button onclick="iniciarPedido()" id="btnIniciarPedido"
-          class="btn-iniciar w-full text-white font-semibold text-base rounded-2xl py-4 cursor-pointer select-none tracking-wide">
-          <span id="btnIniciarTexto">Iniciar Pedido HBN1</span>
-          <span class="block text-xs font-normal text-orange-100 mt-0.5 opacity-80">
+          class="btn-iniciar w-full text-white font-black text-base uppercase tracking-widest rounded-2xl py-4 cursor-pointer select-none">
+          <span id="btnIniciarTexto">INICIAR PEDIDO HBN1!!</span>
+          <span class="block text-xs font-semibold normal-case tracking-normal text-orange-100 mt-0.5 opacity-90">
             Informe usuário e senha para entrar
           </span>
         </button>
