@@ -1071,44 +1071,6 @@
     }
 
     // -----------------------------------------------------------------------
-    // SIDEBAR DE FORNECEDORES
-    // -----------------------------------------------------------------------
-    function renderizarFiltrosLaterais() {
-      const container = document.getElementById('listaFiltroFornecedores');
-      container.innerHTML = '';
-      // Só considera produtos com ID válido (mesma regra do executarFiltrosGerais)
-      const produtosValidos = BD_PRODUTOS.filter(p => p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID');
-      const fornecedoresUnicos = [...new Set(produtosValidos.map(p => p.fornecedor).filter(Boolean))];
-      fornecedoresUnicos.sort((a, b) => String(a).localeCompare(String(b)));
-      const listaFinal = ["TODOS", ...fornecedoresUnicos];
-      listaFinal.forEach(forn => {
-        const nomeBotao = String(forn).trim().toUpperCase();
-        const isActive  = filtroFornecedorAtual === nomeBotao;
-        const btn = document.createElement('button');
-        btn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all flex flex-col gap-1.5 border ${
-          isActive
-            ? 'bg-orange-600 text-white border-orange-700 shadow-md scale-[1.02]'
-            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-        }`;
-        btn.onclick = () => { filtroFornecedorAtual = nomeBotao; renderizarFiltrosLaterais(); executarFiltrosGerais(); };
-        let urlLogo = "";
-        if      (nomeBotao.includes("UNILEVER"))  urlLogo = "https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png";
-        else if (nomeBotao.includes("KENVUE"))    urlLogo = "https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp";
-        else if (nomeBotao.includes("DANONE"))    urlLogo = "https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png";
-        else if (nomeBotao.includes("KIMBERLY"))  urlLogo = "https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg";
-        else if (nomeBotao.includes("OMRON"))     urlLogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png";
-        else if (nomeBotao === "TODOS" || nomeBotao.includes("NAZARIA")) urlLogo = "https://epedidos.nazaria.com.br/img/logo-nazaria-white.png";
-        else urlLogo = "https://via.placeholder.com/120x40/f8fafc/64748b?text=" + encodeURIComponent(nomeBotao);
-        btn.innerHTML = `
-          <span class="truncate uppercase tracking-wider">${nomeBotao === 'TODOS' ? '✨ TODOS OS FORNECEDORES' : nomeBotao}</span>
-          <div class="w-full flex items-center justify-start mt-0.5">
-            <img src="${urlLogo}" alt="${nomeBotao}" class="h-7 w-auto object-contain bg-white p-1 rounded-md border border-slate-100 shadow-sm">
-          </div>`;
-        container.appendChild(btn);
-      });
-    }
-
-    // -----------------------------------------------------------------------
     // CARD DE PRODUTO
     // -----------------------------------------------------------------------
     function criarCardProduto(p) {
