@@ -7,7 +7,19 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FF6B00">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -150,24 +162,32 @@
        TELA DE PORTAIS (seleção de fornecedor)
        ===================================================================== -->
   <div id="telaPortais" class="hidden fixed inset-0 z-30 overflow-y-auto">
-    <!-- Fundo dinâmico via JS -->
-    <div id="portaisFundo" class="min-h-screen flex flex-col">
+    <!-- Fundo branco com marca d'água -->
+    <div id="portaisFundo" class="min-h-screen flex flex-col relative bg-white">
+      <!-- Marca d'água Nazária -->
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+        <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png"
+          alt="" aria-hidden="true"
+          class="w-[70vw] max-w-3xl object-contain"
+          style="opacity:0.04; filter: grayscale(100%);">
+      </div>
+
       <!-- Header compacto dentro dos portais -->
-      <div class="px-6 py-4 flex items-center justify-between bg-white/10 backdrop-blur-sm border-b border-white/20">
+      <div class="relative z-10 px-6 py-4 flex items-center justify-between bg-white border-b border-slate-100 shadow-sm">
         <div class="flex items-center gap-3">
-          <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazária" class="h-8 w-auto object-contain bg-white/20 rounded-xl px-3 py-1">
+          <img src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazária" class="h-8 w-auto object-contain bg-[#FF6B00] rounded-xl px-3 py-1">
           <div>
-            <p class="text-white font-black text-sm tracking-tight" id="portaisNomeUsuario"></p>
-            <p class="text-white/60 text-[10px] font-medium">Selecione um fornecedor</p>
+            <p class="text-slate-800 font-black text-sm tracking-tight" id="portaisNomeUsuario"></p>
+            <p class="text-slate-400 text-[10px] font-medium">Selecione um fornecedor</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="abrirModalPedidosSalvos()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
+          <button onclick="abrirModalPedidosSalvos()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative border border-blue-100">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
             Pedidos Salvos
-            <span id="badgePedidosPortais" class="hidden absolute -top-1.5 -right-1.5 bg-white text-slate-900 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+            <span id="badgePedidosPortais" class="hidden absolute -top-1.5 -right-1.5 bg-blue-600 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
           </button>
-          <button onclick="abrirModalCarrinho()" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
+          <button onclick="abrirModalCarrinho()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 relative">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/></svg>
             Meu Pedido
             <span id="badgeCarrinhoPortais" class="hidden absolute -top-1.5 -right-1.5 bg-[#FF6B00] text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
@@ -176,9 +196,12 @@
       </div>
 
       <!-- Grid de portais -->
-      <div class="flex-grow flex flex-col items-center justify-center px-6 py-10 gap-8">
-        <h2 id="portaisTitulo" class="text-white font-black text-2xl sm:text-3xl tracking-tight drop-shadow-lg text-center">Escolha um Fornecedor</h2>
-        <div id="gridPortais" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-4xl"></div>
+      <div class="relative z-10 flex-grow flex flex-col items-center justify-center px-6 py-12 gap-10">
+        <div class="text-center">
+          <h2 id="portaisTitulo" class="text-slate-900 font-black text-3xl sm:text-4xl tracking-tight">Escolha um Fornecedor</h2>
+          <p class="text-slate-400 text-sm mt-1 font-medium">Selecione para ver os produtos disponíveis</p>
+        </div>
+        <div id="gridPortais" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-5xl"></div>
       </div>
     </div>
   </div>
@@ -605,12 +628,12 @@
     // CONFIGURAÇÃO DE FORNECEDORES — cores, logos, gradientes
     // -----------------------------------------------------------------------
     const CONFIG_FORNECEDORES = {
-      'DANONE'   : { cor1: '#005BAA', cor2: '#003F7F', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png',  textoBg: '#EBF4FF' },
-      'UNILEVER' : { cor1: '#1F3D6E', cor2: '#0D1F3C', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png',             textoBg: '#EEF2FF' },
-      'KIMBERLY' : { cor1: '#CC0000', cor2: '#8B0000', logo: 'https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg',         textoBg: '#FFF1F1' },
-      'KENVUE'   : { cor1: '#00704A', cor2: '#004D33', logo: 'https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp',                   textoBg: '#ECFDF5' },
-      'OMRON'    : { cor1: '#B22222', cor2: '#7A1111', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png', textoBg: '#FFF5F5' },
-      'NAZARIA'  : { cor1: '#FF6B00', cor2: '#C44D00', logo: 'https://epedidos.nazaria.com.br/img/logo-nazaria-white.png', textoBg: '#FFF7ED' },
+      'DANONE'   : { cor1: '#3B82C4', cor2: '#1E5FA0', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png',  textoBg: '#EBF4FF' },
+      'UNILEVER' : { cor1: '#3D5A8A', cor2: '#253A5E', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png',             textoBg: '#EEF2FF' },
+      'KIMBERLY' : { cor1: '#C94040', cor2: '#9B2020', logo: 'https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg',         textoBg: '#FFF1F1' },
+      'KENVUE'   : { cor1: '#2D8B62', cor2: '#1A5C40', logo: 'https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp',                   textoBg: '#ECFDF5' },
+      'OMRON'    : { cor1: '#C0392B', cor2: '#8E1F14', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png', textoBg: '#FFF5F5' },
+      'NAZARIA'  : { cor1: '#E8620A', cor2: '#B84A00', logo: 'https://epedidos.nazaria.com.br/img/logo-nazaria-white.png', textoBg: '#FFF7ED' },
     };
 
     function getConfigFornecedor(nome) {
@@ -631,10 +654,7 @@
       document.getElementById('mainProdutos').classList.add('hidden');
       document.getElementById('headerFornecedor').classList.add('hidden');
 
-      // Fundo gradiente animado padrão (laranja Nazária)
-      const fundo = document.getElementById('portaisFundo');
-      fundo.style.background = 'linear-gradient(135deg, #FF6B00 0%, #C44D00 50%, #1E293B 100%)';
-
+      // Fundo já é branco fixo via CSS
       // Nome do usuário
       document.getElementById('portaisNomeUsuario').innerText =
         localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
@@ -665,17 +685,17 @@
           (p.fornecedor || '').trim().toUpperCase() === forn
         ).length;
         const logoHtml = cfg.logo
-          ? `<img src="${cfg.logo}" alt="${forn}" class="h-10 max-w-[120px] object-contain" onerror="this.style.display='none'">`
-          : `<span class="text-white font-black text-lg">${forn}</span>`;
+          ? `<img src="${cfg.logo}" alt="${forn}" class="h-12 max-w-[150px] object-contain" onerror="this.style.display='none'">`
+          : `<span class="text-slate-800 font-black text-lg">${forn}</span>`;
         return `
           <button onclick="entrarFornecedor('${forn}')"
-            class="group relative overflow-hidden rounded-2xl p-6 flex flex-col items-center justify-center gap-3 aspect-[4/3] shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer border border-white/10"
-            style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%)">
-            <div class="bg-white/90 rounded-xl px-4 py-2 flex items-center justify-center min-h-[52px] w-full max-w-[160px]">
+            class="group relative overflow-hidden rounded-3xl p-8 flex flex-col items-center justify-center gap-4 shadow-md hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer border border-white/10"
+            style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%); min-height: 200px;">
+            <div class="bg-white/95 rounded-2xl px-6 py-4 flex items-center justify-center w-full max-w-[200px] min-h-[70px]">
               ${logoHtml}
             </div>
-            <span class="text-white/80 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''}</span>
-            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-2xl"></div>
+            <span class="text-white/80 text-[11px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''}</span>
+            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-3xl"></div>
           </button>`;
       }).join('');
     }
@@ -1051,49 +1071,11 @@
     }
 
     // -----------------------------------------------------------------------
-    // SIDEBAR DE FORNECEDORES
-    // -----------------------------------------------------------------------
-    function renderizarFiltrosLaterais() {
-      const container = document.getElementById('listaFiltroFornecedores');
-      container.innerHTML = '';
-      // Só considera produtos com ID válido (mesma regra do executarFiltrosGerais)
-      const produtosValidos = BD_PRODUTOS.filter(p => p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID');
-      const fornecedoresUnicos = [...new Set(produtosValidos.map(p => p.fornecedor).filter(Boolean))];
-      fornecedoresUnicos.sort((a, b) => String(a).localeCompare(String(b)));
-      const listaFinal = ["TODOS", ...fornecedoresUnicos];
-      listaFinal.forEach(forn => {
-        const nomeBotao = String(forn).trim().toUpperCase();
-        const isActive  = filtroFornecedorAtual === nomeBotao;
-        const btn = document.createElement('button');
-        btn.className = `w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all flex flex-col gap-1.5 border ${
-          isActive
-            ? 'bg-orange-600 text-white border-orange-700 shadow-md scale-[1.02]'
-            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-        }`;
-        btn.onclick = () => { filtroFornecedorAtual = nomeBotao; renderizarFiltrosLaterais(); executarFiltrosGerais(); };
-        let urlLogo = "";
-        if      (nomeBotao.includes("UNILEVER"))  urlLogo = "https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png";
-        else if (nomeBotao.includes("KENVUE"))    urlLogo = "https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp";
-        else if (nomeBotao.includes("DANONE"))    urlLogo = "https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png";
-        else if (nomeBotao.includes("KIMBERLY"))  urlLogo = "https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg";
-        else if (nomeBotao.includes("OMRON"))     urlLogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png";
-        else if (nomeBotao === "TODOS" || nomeBotao.includes("NAZARIA")) urlLogo = "https://epedidos.nazaria.com.br/img/logo-nazaria-white.png";
-        else urlLogo = "https://via.placeholder.com/120x40/f8fafc/64748b?text=" + encodeURIComponent(nomeBotao);
-        btn.innerHTML = `
-          <span class="truncate uppercase tracking-wider">${nomeBotao === 'TODOS' ? '✨ TODOS OS FORNECEDORES' : nomeBotao}</span>
-          <div class="w-full flex items-center justify-start mt-0.5">
-            <img src="${urlLogo}" alt="${nomeBotao}" class="h-7 w-auto object-contain bg-white p-1 rounded-md border border-slate-100 shadow-sm">
-          </div>`;
-        container.appendChild(btn);
-      });
-    }
-
-    // -----------------------------------------------------------------------
     // CARD DE PRODUTO
     // -----------------------------------------------------------------------
     function criarCardProduto(p) {
       const card = document.createElement('div');
-      card.className = "bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative group text-[11px]";
+      card.className = "bg-white border border-slate-100 rounded-2xl hover:border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col overflow-hidden relative group text-[11px]";
       card.id = `card-item-${p.id}`;
 
       const qtdNoCarrinho = CARRINHO[p.id] || 0;
@@ -1124,47 +1106,53 @@
 
       const blocoPrecoHtml = temDesconto
         ? `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black text-slate-900">${formatarParaReal(temST ? precoFinalComST : precoFinal)}</span>
-             <span class="text-[10px] text-slate-400 line-through font-medium">${formatarParaReal(temST ? precoOriginalComST : precoOriginal)}</span>
+             <span class="text-sm font-bold text-slate-900">${formatarParaReal(temST ? precoFinalComST : precoFinal)}</span>
+             <span class="text-[10px] text-slate-400 line-through">${formatarParaReal(temST ? precoOriginalComST : precoOriginal)}</span>
            </div>`
-        : `<div class="flex flex-col mt-0.5">
-             <span class="text-sm font-black text-slate-900">${precoOriginal > 0 ? formatarParaReal(temST ? precoFinalComST : precoOriginal) : '-'}</span>
+        : `<div class="mt-0.5">
+             <span class="text-sm font-bold text-slate-900">${precoOriginal > 0 ? formatarParaReal(temST ? precoFinalComST : precoOriginal) : '—'}</span>
            </div>`;
 
       card.innerHTML = `
         ${badgeTagHtml}
         ${badgeSTHtml}
-        <div class="p-2 flex flex-col items-center bg-slate-50 border-b border-slate-100 relative cursor-pointer" onclick="abrirModalDetalhes('${p.id}')">
+
+        <!-- Imagem -->
+        <div class="relative bg-slate-50 flex items-center justify-center p-3 cursor-pointer" style="min-height:108px" onclick="abrirModalDetalhes('${p.id}')">
           <img src="${p.imagens}" class="h-24 w-24 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-200" loading="lazy">
-          <span class="absolute bottom-1 right-1 text-[8px] font-bold border ${isEsgotado ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'} px-1 py-0.5 rounded uppercase shadow-sm">
+          <span class="absolute bottom-1.5 right-1.5 text-[8px] font-semibold px-1.5 py-0.5 rounded-md ${isEsgotado ? 'bg-red-100 text-red-500' : 'bg-emerald-100 text-emerald-600'}">
             Est: ${p.estoque || 0}
           </span>
         </div>
-        <div class="p-2 flex flex-col flex-grow justify-between gap-1.5">
+
+        <!-- Informações -->
+        <div class="p-2.5 flex flex-col flex-grow justify-between gap-2">
+
+          <!-- Nome e marca -->
           <div>
-            <span class="text-[8px] font-black text-[#FF6B00] uppercase tracking-wider block">${p.marca || 'OUTROS'}</span>
-            <h2 class="text-[11px] font-bold text-slate-800 line-clamp-2 leading-tight mt-0.5 min-h-[28px] hover:text-orange-600 cursor-pointer" onclick="abrirModalDetalhes('${p.id}')">
-              ${p.descricao || 'Sem descrição cadastrada'}
+            <span class="text-[9px] font-semibold text-orange-500 uppercase tracking-widest">${p.marca || ''}</span>
+            <h2 class="text-[11px] font-semibold text-slate-700 line-clamp-2 leading-snug mt-0.5 min-h-[28px] cursor-pointer hover:text-orange-500 transition-colors" onclick="abrirModalDetalhes('${p.id}')">
+              ${p.descricao || ''}
             </h2>
           </div>
-          <div class="pt-1.5 border-t border-dashed border-slate-100 flex flex-col gap-0.5 text-[9px]">
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400 font-medium">Forn:</span>
-              <span class="font-bold text-slate-700 uppercase bg-slate-100 px-1 rounded truncate max-w-[70px] text-right">${p.fornecedor || 'GERAL'}</span>
+
+          <!-- Detalhes compactos -->
+          <div class="flex flex-col gap-0.5 text-[9px] text-slate-400">
+            <div class="flex justify-between">
+              <span>Emb.</span>
+              <span class="font-medium text-slate-600">${p.embalagem ? p.embalagem + ' un' : '—'}</span>
             </div>
-            <div class="flex justify-between items-center text-[8.5px]">
-              <span class="text-slate-400">Emb. Padrão:</span>
-              <span class="font-bold text-slate-600">${p.embalagem ? p.embalagem + ' un' : '-'}</span>
-            </div>
-            <div class="flex justify-between items-center font-mono">
-              <span class="text-slate-400">ID:</span>
-              <span class="text-slate-500 font-medium">${p.id}</span>
+            <div class="flex justify-between font-mono">
+              <span>ID</span>
+              <span class="text-slate-500">${p.id}</span>
             </div>
           </div>
-          <div class="pt-1">
-            <div class="flex items-center justify-between mb-1.5">
+
+          <!-- Preço e botão -->
+          <div class="pt-2 border-t border-slate-100">
+            <div class="flex items-end justify-between mb-2">
               ${blocoPrecoHtml}
-              ${temDesconto ? `<span class="bg-red-500 text-white text-[8px] font-black px-1 py-0.5 rounded shadow-sm shrink-0">-${percentual}%</span>` : ''}
+              ${temDesconto ? `<span class="text-[8px] font-semibold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">−${percentual}%</span>` : ''}
             </div>
             <div id="card-btn-${p.id}">
               ${obterHtmlBotaoAcao(p.id, qtdNoCarrinho, estoque, isEsgotado)}
@@ -1172,18 +1160,17 @@
           </div>
         </div>`;
       return card;
-    }
 
     function obterHtmlBotaoAcao(idProd, qtd, estoque, isEsgotado) {
-      if (isEsgotado) return `<button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded-lg cursor-not-allowed uppercase tracking-wider">Esgotado</button>`;
+      if (isEsgotado) return `<button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-[10px] font-medium rounded-lg cursor-not-allowed tracking-wide">Sem estoque</button>`;
       if (qtd > 0) return `
-        <div class="flex items-center justify-between bg-orange-50 border border-orange-200 p-0.5 rounded-xl w-full">
-          <button onclick="alterarQtd('${idProd}', -1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-xs text-[#FF6B00] flex items-center justify-center shadow-sm border border-orange-100 transition-colors shrink-0">-</button>
+        <div class="flex items-center justify-between bg-orange-50 border border-orange-100 rounded-xl p-0.5 w-full">
+          <button onclick="alterarQtd('${idProd}', -1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-semibold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">−</button>
           <input type="number" value="${qtd}" min="1" max="${estoque}" onchange="atualizarQtdDigitada('${idProd}', this.value, ${estoque})" onkeydown="if(event.key==='Enter') this.blur();"
-            class="w-full text-center font-black text-xs text-[#FF6B00] bg-transparent focus:outline-none min-w-0 p-0 border-0 focus:ring-0">
-          <button onclick="alterarQtd('${idProd}', 1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-xs text-[#FF6B00] flex items-center justify-center shadow-sm border border-orange-100 transition-colors shrink-0">+</button>
+            class="w-full text-center font-bold text-sm text-orange-500 bg-transparent focus:outline-none min-w-0 p-0 border-0">
+          <button onclick="alterarQtd('${idProd}', 1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-semibold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">+</button>
         </div>`;
-      return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-2 bg-[#FF6B00] hover:bg-orange-600 text-white text-[10px] font-black rounded-xl transition-all uppercase tracking-wider shadow-sm flex items-center justify-center gap-1">
+      return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-1.5 bg-slate-900 hover:bg-slate-700 text-white text-[10px] font-semibold rounded-xl transition-all tracking-wide flex items-center justify-center gap-1">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>Adicionar</button>`;
     }
 
@@ -2939,8 +2926,6 @@
       document.getElementById('telaPortais').classList.remove('hidden');
       document.getElementById('portaisNomeUsuario').innerText =
         localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
-      const fundo = document.getElementById('portaisFundo');
-      if (fundo) fundo.style.background = 'linear-gradient(135deg, #FF6B00 0%, #C44D00 50%, #1E293B 100%)';
 
       setInterval(atualizarMuralInvisivel,     60000);   // 1 min
       setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
