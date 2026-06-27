@@ -1926,7 +1926,8 @@
         const itensBrutos = extrairItensDeLinhas(linhas);
 
         if (itensBrutos.length === 0) {
-          throw new Error('Não foi possível localizar nenhum CNPJ com itens no arquivo. Verifique se o arquivo contém o CNPJ e os códigos/EAN dos produtos.');
+          throw new Error('Não foi possível identificar produtos no arquivo. Verifique se o arquivo contém os códigos EAN e as quantidades dos produtos.');
+        }
         }
 
         await processarItensImportados(itensBrutos);
@@ -1994,6 +1995,25 @@
     // 4) EXTRAÇÃO DE ITENS (CNPJ + CÓDIGO/EAN + QTD) A PARTIR DAS LINHAS
     //    Funciona tanto para linhas do Excel (células) quanto do PDF (tokens)
     // -------------------------------------------------------------------
+    // Normaliza CNPJ para 14 dígitos (padding de zeros à esquerda)
+    function normalizarCNPJ(digitos) {
+      return digitos.padStart(14, '0');
+    }
+
+    // Normaliza EAN para 8 ou 13 dígitos (padding de zeros à esquerda)
+    function normalizarEAN(codigo) {
+      const s = String(codigo).trim();
+      const d = s.replace(/\D/g, '');
+      if (d.length === 0) return s;
+      // EAN-8: entre 5 e 8 dígitos → pad para 8
+      if (d.length <= 8 && d.length >= 5) return d.padStart(8, '0');
+      // EAN-13: entre 9 e 13 dígitos → pad para 13
+      if (d.length <= 13 && d.length >= 9) return d.padStart(13, '0');
+      return d;
+    }
+
+    const CNPJ_SEM_CADASTRO = '__SEM_CNPJ__';
+
     const REGEX_CNPJ = /^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/;
 
     // CNPJ da própria Nazária (distribuidora) — nunca deve ser tratado como CNPJ
@@ -2147,9 +2167,9 @@
         if (!linhaTextoUp.includes('FORNECEDOR')) {
           const tokenCnpj = tokensLinha.find(t => {
             const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(d);
+            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
           });
-          if (tokenCnpj) ultimoCnpjValido = normalizarSoDigitos(tokenCnpj);
+          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
       }
 
@@ -2164,14 +2184,12 @@
         if (!linhaTextoUp.includes('FORNECEDOR')) {
           const tokenCnpj = tokensLinha.find(t => {
             const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(d);
+            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
           });
-          if (tokenCnpj) ultimoCnpjValido = normalizarSoDigitos(tokenCnpj);
+          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
 
-        // Lê o código pela posição da coluna detectada (token de código costuma
-        // ser estável mesmo quando a linha desalinha um pouco).
-        const codigo = String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, '');
+        const codigo = normalizarEAN(String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, ''));
 
         // QUANTIDADE: a leitura POSICIONAL (linha[idxQtd]) não é confiável em PDFs.
         // O pdf.js não preserva colunas reais — só agrupa texto por posição vertical (Y).
@@ -2191,8 +2209,9 @@
           qtd = (!isNaN(qtdPosicional) && qtdPosicional > 0 && qtdPosicional < 100000) ? qtdPosicional : NaN;
         }
 
-        if (ultimoCnpjValido && codigo && /^\d{6,13}$/.test(codigo) && qtd > 0) {
-          itens.push({ cnpjDigits: ultimoCnpjValido, codigo, qtd });
+        if (codigo && /^\d{6,13}$/.test(codigo.replace(/\D/g, '')) && qtd > 0) {
+          // Usa placeholder quando não há CNPJ — será tratado como "sem cadastro"
+          itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo, qtd });
         }
       }
       return itens;
@@ -2221,24 +2240,23 @@
         if (!linhaTextoUpper.includes('FORNECEDOR')) {
           const tokenCnpj = tokens.find(t => {
             const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(d);
+            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
           });
-          if (tokenCnpj) ultimoCnpjValido = normalizarSoDigitos(tokenCnpj);
+          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
 
         // Precisa de EAN e do token marcador para tentar extrair item
         const candidatosCodigo = tokens.filter(t => /^\d{7,13}$/.test(t));
         const idxMarcador = tokens.indexOf(PDF2_TOKEN_APOS_QTD);
 
-        if (ultimoCnpjValido && candidatosCodigo.length > 0 && idxMarcador !== -1) {
-          const codigo = candidatosCodigo[0];
-          // Quantidade = primeiro número curto (1-4 dígitos) após o marcador
+        if (candidatosCodigo.length > 0 && idxMarcador !== -1) {
+          const codigo = normalizarEAN(candidatosCodigo[0]);
           const tokensAposMarcador = tokens.slice(idxMarcador + 1);
           const qtdToken = tokensAposMarcador.find(t => /^\d{1,4}$/.test(t));
           if (qtdToken) {
             const qtd = parseInt(qtdToken, 10);
             if (qtd > 0 && qtd < 100000) {
-              itens.push({ cnpjDigits: ultimoCnpjValido, codigo, qtd });
+              itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo, qtd });
             }
           }
         }
@@ -2374,14 +2392,15 @@
         const cliente = clientesEncontrados[i];
         const itensDoGrupo = gruposPorCnpj[cnpjDigits];
 
-        if (!cliente) {
+        // Arquivo sem CNPJ: vai direto para seleção manual de UF
+        if (cnpjDigits === CNPJ_SEM_CADASTRO || !cliente) {
           const totalQtd = itensDoGrupo.reduce((s, it) => s + it.qtd, 0);
           naoEncontrados.push({
             cnpjDigits,
-            cnpjFormatado: formatarCNPJ(cnpjDigits),
+            cnpjFormatado: cnpjDigits === CNPJ_SEM_CADASTRO ? 'Arquivo sem CNPJ' : formatarCNPJ(cnpjDigits),
             linhas: itensDoGrupo.length,
             unidades: totalQtd,
-            itensOriginais: itensDoGrupo  // guardados para o processamento manual por UF
+            itensOriginais: itensDoGrupo
           });
           continue;
         }
