@@ -577,10 +577,10 @@
           <div id="importBlocosClientes" class="space-y-4"></div>
 
           <!-- Relatório de CNPJs não encontrados -->
-          <div id="importBlocoCnpjNaoEncontrados" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4">
-            <p class="text-xs font-black text-red-700 uppercase tracking-wider mb-2">⚠️ CNPJ Não Encontrados</p>
-            <p class="text-[11px] text-red-600 mb-2">Estes CNPJs apareceram no arquivo mas não estão cadastrados na aba CLIENTES — não foi possível calcular preço/desconto para eles.</p>
-            <div id="importTabelaCnpjNaoEncontrados" class="space-y-1"></div>
+          <div id="importBlocoCnpjNaoEncontrados" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <p class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">⚠️ CNPJs não cadastrados — Calcular manualmente</p>
+            <p class="text-[11px] text-amber-600 mb-3">Estes CNPJs não estão na aba CLIENTES. Escolha uma UF para calcular preço e estoque:</p>
+            <div id="importTabelaCnpjNaoEncontrados" class="space-y-2"></div>
           </div>
 
           <!-- Códigos/EAN não localizados no catálogo -->
@@ -2279,6 +2279,80 @@
         .catch(() => []);
     }
 
+    // Mapa de UFs disponíveis para o seletor manual
+    const MAPA_UFS_DISPONIVEIS = {
+      'PI': 'Piauí', 'MA': 'Maranhão/Timon', 'IMPTZ': 'Imperatriz',
+      'TO': 'Tocantins', 'PB': 'Paraíba', 'PE': 'Pernambuco',
+      'PA': 'Pará', 'AP': 'Amapá', 'RN': 'Rio Grande do Norte',
+      'CE': 'Ceará', 'BA': 'Bahia', 'SE': 'Sergipe', 'AL': 'Alagoas'
+    };
+
+    async function processarCnpjSemCadastro(cnpjDigits, uf) {
+      const naoEnc = IMPORT_RESULTADO.naoEncontrados.find(n => n.cnpjDigits === cnpjDigits);
+      if (!naoEnc || !naoEnc.itensOriginais || naoEnc.itensOriginais.length === 0) {
+        alert('Itens originais não disponíveis. Tente reimportar o arquivo.');
+        return;
+      }
+
+      const clienteAvulso = {
+        cnpj: cnpjDigits, razao: 'CNPJ ' + formatarCNPJ(cnpjDigits),
+        grupoUnilever: '', perfilDanone: '', painelTransfer: '', equipe: '',
+        uf: uf, _avulso: true
+      };
+
+      const produtosDaUF = await buscarProdutosAsync(uf);
+      const codigosNaoEncontradosSet = new Set(IMPORT_RESULTADO.codigosNaoEncontrados);
+      let totalDanoneQtd = 0;
+      const itensCasados = [];
+
+      naoEnc.itensOriginais.forEach(it => {
+        const codigoDigits = normalizarSoDigitos(it.codigo);
+        let p = produtosDaUF.find(prod => normalizarSoDigitos(prod.ean) === codigoDigits && codigoDigits !== '');
+        if (!p) p = produtosDaUF.find(prod => String(prod.id).trim() === String(it.codigo).trim());
+        if (!p) { codigosNaoEncontradosSet.add(it.codigo); return; }
+        itensCasados.push({ p, qtd: it.qtd });
+        if (String(p.fornecedor || '').toUpperCase().includes('DANONE')) totalDanoneQtd += it.qtd;
+      });
+
+      if (itensCasados.length === 0) {
+        alert('Nenhum produto encontrado para a UF ' + uf + '. Verifique os EANs do arquivo.');
+        return;
+      }
+
+      let olDetectado = 0;
+      if (totalDanoneQtd >= 1000) olDetectado = 1000;
+      else if (totalDanoneQtd >= 500) olDetectado = 500;
+      else if (totalDanoneQtd >= 250) olDetectado = 250;
+
+      let acBruto = 0, acLiquido = 0, acUnidades = 0;
+      let acQtdAtendida = 0, acValorAtendido = 0, acQtdNaoAtendida = 0, acValorNaoAtendido = 0;
+      const estoqueRest = {};
+      const itensPorFornecedor = {};
+
+      itensCasados.forEach(({ p, qtd }) => {
+        const { precoFinal, precoOriginal, percentual } = calcularPrecosPara(p, clienteAvulso, olDetectado, 0);
+        acBruto += precoOriginal * qtd; acLiquido += precoFinal * qtd; acUnidades += qtd;
+        if (estoqueRest[p.id] === undefined) estoqueRest[p.id] = Number(p.estoque || 0);
+        const qtdAt = Math.min(qtd, estoqueRest[p.id]);
+        const qtdNAt = qtd - qtdAt;
+        estoqueRest[p.id] -= qtdAt;
+        acQtdAtendida += qtdAt; acValorAtendido += precoFinal * qtdAt;
+        acQtdNaoAtendida += qtdNAt; acValorNaoAtendido += precoFinal * qtdNAt;
+        const forn = (p.fornecedor || 'GERAL').trim().toUpperCase();
+        if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+        itensPorFornecedor[forn].push({ p, qtd, precoFinal, precoOriginal, percentual, qtdAtendida: qtdAt, qtdNaoAtendida: qtdNAt });
+      });
+
+      IMPORT_RESULTADO.pedidos.push({
+        cliente: clienteAvulso, olDetectado, itensPorFornecedor,
+        acBruto, acLiquido, acUnidades, totalVariedades: itensCasados.length,
+        acQtdAtendida, acValorAtendido, acQtdNaoAtendida, acValorNaoAtendido
+      });
+      IMPORT_RESULTADO.naoEncontrados = IMPORT_RESULTADO.naoEncontrados.filter(n => n.cnpjDigits !== cnpjDigits);
+      IMPORT_RESULTADO.codigosNaoEncontrados = Array.from(codigosNaoEncontradosSet);
+      renderizarResultadoImportacao();
+    }
+
     async function processarItensImportados(itensBrutos) {
       atualizarTextoProcessando('Identificando clientes pelos CNPJs...');
 
@@ -2302,7 +2376,13 @@
 
         if (!cliente) {
           const totalQtd = itensDoGrupo.reduce((s, it) => s + it.qtd, 0);
-          naoEncontrados.push({ cnpjDigits, cnpjFormatado: formatarCNPJ(cnpjDigits), linhas: itensDoGrupo.length, unidades: totalQtd });
+          naoEncontrados.push({
+            cnpjDigits,
+            cnpjFormatado: formatarCNPJ(cnpjDigits),
+            linhas: itensDoGrupo.length,
+            unidades: totalQtd,
+            itensOriginais: itensDoGrupo  // guardados para o processamento manual por UF
+          });
           continue;
         }
 
@@ -2465,10 +2545,26 @@
 
       const blocoCnpjNaoEnc = document.getElementById('importBlocoCnpjNaoEncontrados');
       if (naoEncontrados.length > 0) {
+        const ufsDisponiveis = Object.keys(MAPA_UFS_DISPONIVEIS).sort();
         document.getElementById('importTabelaCnpjNaoEncontrados').innerHTML = naoEncontrados.map(n => `
-          <div class="flex justify-between items-center bg-white rounded-lg px-3 py-2 border border-red-100 text-xs">
-            <span class="font-mono font-bold text-red-700">${n.cnpjFormatado}</span>
-            <span class="text-red-500">${n.linhas} linha(s) • ${n.unidades} un não calculadas</span>
+          <div class="bg-white rounded-xl border border-amber-200 p-3 flex flex-col gap-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span class="font-mono font-bold text-amber-700 text-xs">${n.cnpjFormatado}</span>
+                <span class="text-amber-500 text-[10px] ml-2">${n.linhas} linha(s) • ${n.unidades} un</span>
+              </div>
+              <span class="text-[9px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">CNPJ não cadastrado</span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-[10px] text-slate-500 font-medium shrink-0">Calcular pela UF:</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${ufsDisponiveis.map(uf => `
+                  <button onclick="processarCnpjSemCadastro('${n.cnpjDigits}', '${uf}')"
+                    class="px-2.5 py-1 text-[9px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all">
+                    ${uf}
+                  </button>`).join('')}
+              </div>
+            </div>
           </div>`).join('');
         blocoCnpjNaoEnc.classList.remove('hidden');
       } else {
