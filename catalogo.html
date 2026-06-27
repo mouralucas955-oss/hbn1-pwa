@@ -117,19 +117,30 @@
           <span id="cliInfoPerfilDanVal" class="hidden text-purple-300 font-bold font-mono shrink-0"></span>
           <span id="cliInfoTransfer" class="hidden text-slate-500 shrink-0">|</span>
           <span id="cliInfoTransferVal" class="hidden text-amber-300 font-bold font-mono shrink-0"></span>
+          <span id="cliInfoEquipeSep" class="hidden text-slate-500 shrink-0">|</span>
+          <span id="cliInfoEquipeVal" class="hidden text-green-300 font-bold font-mono shrink-0"></span>
           <button onclick="limparClienteSelecionado()" id="btnLimparCliente"
             class="hidden text-red-400 hover:text-red-300 hover:bg-red-950/50 font-bold px-2 py-0.5 rounded-md transition-all ml-auto">✖ Remover</button>
         </div>
       </div>
 
-      <!-- Linha 2: Botões OL Danone (aparecem só quando cliente tem perfil Danone) -->
+      <!-- Linha 2: Botões OL Danone (só quando cliente tem perfil Danone E estiver na sala Danone) -->
       <div id="painelOL" class="hidden flex flex-wrap items-center gap-2">
-        <span class="text-[10px] font-black text-purple-300 uppercase tracking-widest shrink-0">OL Danone:</span>
-        <button id="btnOL250"  onclick="selecionarOL(250)"  class="ol-btn px-3 py-1 text-[10px] font-black rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all">OL 250</button>
-        <button id="btnOL500"  onclick="selecionarOL(500)"  class="ol-btn px-3 py-1 text-[10px] font-black rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all">OL 500</button>
-        <button id="btnOL1000" onclick="selecionarOL(1000)" class="ol-btn px-3 py-1 text-[10px] font-black rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all">OL 1000</button>
-        <button onclick="selecionarOL(0)" class="px-3 py-1 text-[10px] font-bold rounded-lg border border-slate-700 bg-transparent text-slate-400 hover:text-red-300 transition-all">✖ Sem OL</button>
-        <span id="labelOLAtivo" class="hidden text-[10px] text-purple-200 font-bold ml-1"></span>
+        <span class="text-[10px] font-semibold text-purple-300 uppercase tracking-widest shrink-0">OL Danone:</span>
+        <button id="btnOL250"  onclick="selecionarOL(250)"  class="ol-btn px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all hidden">OL 250</button>
+        <button id="btnOL500"  onclick="selecionarOL(500)"  class="ol-btn px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all hidden">OL 500</button>
+        <button id="btnOL1000" onclick="selecionarOL(1000)" class="ol-btn px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all hidden">OL 1000</button>
+        <button onclick="selecionarOL(0)" class="px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-700 bg-transparent text-slate-400 hover:text-red-300 transition-all">✖ Sem OL</button>
+        <span id="labelOLAtivo" class="hidden text-[10px] text-purple-200 font-semibold ml-1"></span>
+      </div>
+
+      <!-- Linha 3: Botões OL OMRON (só quando estiver na sala OMRON E cliente selecionado) -->
+      <div id="painelOLOmron" class="hidden flex flex-wrap items-center gap-2">
+        <span class="text-[10px] font-semibold text-red-300 uppercase tracking-widest shrink-0">OL OMRON:</span>
+        <button id="btnOmronOL500"  onclick="selecionarOmronOL(500)"  class="omron-ol-btn px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all hidden">OL 500</button>
+        <button id="btnOmronOL1000" onclick="selecionarOmronOL(1000)" class="omron-ol-btn px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-600 bg-slate-700 text-slate-200 transition-all hidden">OL 1000</button>
+        <button onclick="selecionarOmronOL(0)" class="px-3 py-1 text-[10px] font-semibold rounded-lg border border-slate-700 bg-transparent text-slate-400 hover:text-red-300 transition-all">✖ Sem OL</button>
+        <span id="labelOmronOLAtivo" class="hidden text-[10px] text-red-200 font-semibold ml-1"></span>
       </div>
 
       <!-- Linha 3: ST — botão toggle + painel colapsável (oculto por padrão) -->
@@ -454,6 +465,12 @@
             <span id="resumoTotalLiquido" class="text-sm font-black text-emerald-700">R$ 0,00</span>
           </div>
         </div>
+        <!-- Resumo de Valores Mínimos (aparece só se houver mínimos configurados) -->
+        <div id="resumoValoresMinimos" class="hidden mt-1 border border-slate-100 rounded-xl p-3 bg-slate-50">
+          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Faturamento Mínimo</p>
+          <div id="listaValoresMinimos" class="flex flex-wrap gap-2"></div>
+        </div>
+
         <div class="flex flex-col sm:flex-row items-center justify-end gap-2">
           <button onclick="fecharModalCarrinho()"
             class="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-bold rounded-xl transition-all uppercase tracking-wider">Continuar Comprando</button>
@@ -619,6 +636,10 @@
 
     // Controle de OL Danone: 0 = sem OL, 250 | 500 | 1000
     let OL_ATIVO = 0;
+    // Controle de OL OMRON: 0 = sem OL, 500 | 1000
+    let OMRON_OL_ATIVO = 0;
+    // Valores mínimos por grupo de desconto
+    let BD_VALORES_MINIMOS = {}; // { chave: { minimo, label } }
 
     // ST (Substituição Tributária): mapa { id_produto -> valor_st_em_reais }
     let BD_ST = {};        // carregado da API
@@ -717,6 +738,9 @@
       if (cfg.logo) document.getElementById('logoFornecedorHeader').src = cfg.logo;
       document.getElementById('nomeFornecedorHeader').innerText = nomeFornecedor;
 
+      // Atualiza painéis OL conforme o fornecedor
+      atualizarPaineisOLPorFornecedor(nomeFornecedor);
+
       // Mini switcher: outros fornecedores
       renderizarMiniSwitcher(nomeFornecedor);
 
@@ -786,54 +810,97 @@
     // quanto pela importação de pedidos (cliente identificado pelo CNPJ)
     // Retorna { precoFinal, precoOriginal, percentualDesconto }
     // -----------------------------------------------------------------------
-    function calcularPrecosPara(p, cliente, olAtivo) {
+    function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       const precoBruto = converterPrecoValido(p.preco);
-      if (precoBruto === 0) return { precoFinal: 0, precoOriginal: 0, percentual: 0 };
+      if (precoBruto === 0) return { precoFinal: 0, precoOriginal: 0, percentual: 0, colunaAtiva: null };
 
-      const forn    = String(p.fornecedor || '').toUpperCase().trim();
+      const forn       = String(p.fornecedor || '').toUpperCase().trim();
       const isDanone   = forn.includes('DANONE');
       const isUnilever = forn.includes('UNILEVER');
       const isKenvue   = forn.includes('KENVUE');
+      const isOmron    = forn.includes('OMRON');
+      const isKimberly = forn.includes('KIMBERLY');
 
-      let percentual = 0;
+      let percentual  = 0;
+      let colunaAtiva = null;
 
       if (isDanone) {
-        // Danone só recebe desconto quando há cliente selecionado E uma OL ativa.
-        // Se a OL não foi clicada, o percentual permanece 0 (não cai no desconto padrão).
         if (cliente && olAtivo > 0) {
           const perfil = String(cliente.perfilDanone || '').toUpperCase().trim();
           if (perfil === 'ASSOCIATIVISMO') {
-            if      (olAtivo === 250)  percentual = converterPercentual(p.olAssoc250);
-            else if (olAtivo === 500)  percentual = converterPercentual(p.olAssoc500);
-            else if (olAtivo === 1000) percentual = converterPercentual(p.olAssoc1000);
+            if      (olAtivo === 250)  { percentual = converterPercentual(p.olAssoc250);  colunaAtiva = 'olAssoc250'; }
+            else if (olAtivo === 500)  { percentual = converterPercentual(p.olAssoc500);  colunaAtiva = 'olAssoc500'; }
+            else if (olAtivo === 1000) { percentual = converterPercentual(p.olAssoc1000); colunaAtiva = 'olAssoc1000'; }
           } else if (perfil === 'PNV') {
-            if      (olAtivo === 250)  percentual = converterPercentual(p.olPnv250);
-            else if (olAtivo === 500)  percentual = converterPercentual(p.olPnv500);
-            else if (olAtivo === 1000) percentual = converterPercentual(p.olPnv1000);
+            if      (olAtivo === 250)  { percentual = converterPercentual(p.olPnv250);  colunaAtiva = 'olPnv250'; }
+            else if (olAtivo === 500)  { percentual = converterPercentual(p.olPnv500);  colunaAtiva = 'olPnv500'; }
+            else if (olAtivo === 1000) { percentual = converterPercentual(p.olPnv1000); colunaAtiva = 'olPnv1000'; }
           }
         }
       } else if (isUnilever) {
         if (cliente) {
           const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
-          if      (grupo === 'GRUPO1' || grupo === '1') percentual = converterPercentual(p.descUniG1);
-          else if (grupo === 'GRUPO2' || grupo === '2') percentual = converterPercentual(p.descUniG2);
-          else if (grupo === 'GRUPO3' || grupo === '3') percentual = converterPercentual(p.descUniG3);
+          if      (grupo === 'GRUPO1' || grupo === '1') { percentual = converterPercentual(p.descUniG1); colunaAtiva = 'descUniG1'; }
+          else if (grupo === 'GRUPO2' || grupo === '2') { percentual = converterPercentual(p.descUniG2); colunaAtiva = 'descUniG2'; }
+          else if (grupo === 'GRUPO3' || grupo === '3') { percentual = converterPercentual(p.descUniG3); colunaAtiva = 'descUniG3'; }
         }
       } else if (isKenvue) {
         if (cliente && String(cliente.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE') {
           percentual = converterPercentual(p.descTransfer);
+          colunaAtiva = 'descTransfer';
+        } else if (cliente) {
+          const equipe = String(cliente.equipe || '').toUpperCase().trim();
+          if (equipe === 'DEDICADO' && p.kenuveDedicado) {
+            percentual = converterPercentual(p.kenuveDedicado);
+            colunaAtiva = 'kenuveDedicado';
+          } else if (equipe === 'FARMA' && p.kenuveFarma) {
+            percentual = converterPercentual(p.kenuveFarma);
+            colunaAtiva = 'kenuveFarma';
+          }
+        }
+      } else if (isOmron) {
+        if (cliente) {
+          // OL OMRON tem prioridade sobre desconto de equipe
+          if (omronOlAtivo === 500 && p.omronOL500) {
+            percentual = converterPercentual(p.omronOL500);
+            colunaAtiva = 'omronOL500';
+          } else if (omronOlAtivo === 1000 && p.omronOL1000) {
+            percentual = converterPercentual(p.omronOL1000);
+            colunaAtiva = 'omronOL1000';
+          } else {
+            const equipe = String(cliente.equipe || '').toUpperCase().trim();
+            if (equipe === 'DEDICADO' && p.omronDedicado) {
+              percentual = converterPercentual(p.omronDedicado);
+              colunaAtiva = 'omronDedicado';
+            } else if (equipe === 'FARMA' && p.omronFarma) {
+              percentual = converterPercentual(p.omronFarma);
+              colunaAtiva = 'omronFarma';
+            }
+          }
+        }
+      } else if (isKimberly) {
+        if (cliente) {
+          const equipe = String(cliente.equipe || '').toUpperCase().trim();
+          if (equipe === 'DEDICADO' && p.kimberlyDedicado) {
+            percentual = converterPercentual(p.kimberlyDedicado);
+            colunaAtiva = 'kimberlyDedicado';
+          } else if (equipe === 'FARMA' && p.kimberlyFarma) {
+            percentual = converterPercentual(p.kimberlyFarma);
+            colunaAtiva = 'kimberlyFarma';
+          }
         }
       } else if (cliente) {
         percentual = converterPercentual(p.descontoPadrao);
+        if (percentual > 0) colunaAtiva = 'descontoPadrao';
       }
 
       const precoFinal = percentual > 0 ? precoBruto * (1 - percentual / 100) : precoBruto;
-      return { precoFinal, precoOriginal: precoBruto, percentual };
+      return { precoFinal, precoOriginal: precoBruto, percentual, colunaAtiva };
     }
 
-    // Wrapper usado em todo o catálogo: usa o cliente/OL selecionados na tela
+    // Wrapper usado em todo o catálogo
     function calcularPrecos(p) {
-      return calcularPrecosPara(p, CLIENTE_SELECIONADO, OL_ATIVO);
+      return calcularPrecosPara(p, CLIENTE_SELECIONADO, OL_ATIVO, OMRON_OL_ATIVO);
     }
 
     // Converte "15%", "15", 15, "15,5%" etc. → número float
@@ -890,9 +957,82 @@
         if (btnId) document.getElementById(btnId).classList.add('ol-btn-ativo');
         if (labelOL) { labelOL.innerText = `OL ${valor} cx ativo`; labelOL.classList.remove('hidden'); }
       }
-      // Recalcula cards e totais
       executarFiltrosGerais();
       atualizarIndicadoresFinanceirosGlobais();
+      atualizarResumoValoresMinimos();
+    }
+
+    function selecionarOmronOL(valor) {
+      OMRON_OL_ATIVO = valor;
+      ['btnOmronOL500', 'btnOmronOL1000'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('bg-red-600', 'border-red-400', 'text-white');
+      });
+      const label = document.getElementById('labelOmronOLAtivo');
+      if (valor > 0) {
+        const mapa = { 500: 'btnOmronOL500', 1000: 'btnOmronOL1000' };
+        const btn = document.getElementById(mapa[valor]);
+        if (btn) btn.classList.add('bg-red-600', 'border-red-400', 'text-white');
+        if (label) { label.innerText = 'OL ' + valor + ' ativo'; label.classList.remove('hidden'); }
+      } else {
+        if (label) label.classList.add('hidden');
+      }
+      executarFiltrosGerais();
+      atualizarIndicadoresFinanceirosGlobais();
+      atualizarResumoValoresMinimos();
+    }
+
+    function atualizarPaineisOLPorFornecedor(fornecedor) {
+      const forn     = String(fornecedor || '').toUpperCase();
+      const isDanone = forn.includes('DANONE');
+      const isOmron  = forn.includes('OMRON');
+
+      // --- Painel Danone ---
+      const painelOL = document.getElementById('painelOL');
+      if (painelOL) {
+        if (isDanone && CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.perfilDanone) {
+          atualizarBotoesOLDanone();
+          painelOL.classList.remove('hidden');
+        } else {
+          painelOL.classList.add('hidden');
+          OL_ATIVO = 0;
+        }
+      }
+
+      // --- Painel OMRON ---
+      const painelOmron = document.getElementById('painelOLOmron');
+      if (painelOmron) {
+        if (isOmron && CLIENTE_SELECIONADO) {
+          const temOL500  = BD_PRODUTOS.some(p => String(p.fornecedor||'').toUpperCase().includes('OMRON') && converterPercentual(p.omronOL500)  > 0);
+          const temOL1000 = BD_PRODUTOS.some(p => String(p.fornecedor||'').toUpperCase().includes('OMRON') && converterPercentual(p.omronOL1000) > 0);
+          const btn500  = document.getElementById('btnOmronOL500');
+          const btn1000 = document.getElementById('btnOmronOL1000');
+          if (btn500)  btn500.classList.toggle('hidden', !temOL500);
+          if (btn1000) btn1000.classList.toggle('hidden', !temOL1000);
+          if (temOL500 || temOL1000) painelOmron.classList.remove('hidden');
+          else { painelOmron.classList.add('hidden'); OMRON_OL_ATIVO = 0; }
+        } else {
+          painelOmron.classList.add('hidden');
+          OMRON_OL_ATIVO = 0;
+        }
+      }
+    }
+
+    function atualizarBotoesOLDanone() {
+      if (!CLIENTE_SELECIONADO) return;
+      const perfil = String(CLIENTE_SELECIONADO.perfilDanone || '').toUpperCase().trim();
+      const camposAssoc = { 250: 'olAssoc250', 500: 'olAssoc500', 1000: 'olAssoc1000' };
+      const camposPnv   = { 250: 'olPnv250',   500: 'olPnv500',   1000: 'olPnv1000' };
+      const campos = perfil === 'ASSOCIATIVISMO' ? camposAssoc : perfil === 'PNV' ? camposPnv : {};
+      [250, 500, 1000].forEach(ol => {
+        const campo = campos[ol];
+        const temDesc = campo
+          ? BD_PRODUTOS.some(p => String(p.fornecedor||'').toUpperCase().includes('DANONE') && converterPercentual(p[campo]) > 0)
+          : false;
+        const id = { 250: 'btnOL250', 500: 'btnOL500', 1000: 'btnOL1000' }[ol];
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.toggle('hidden', !temDesc);
+      });
     }
 
     // -----------------------------------------------------------------------
@@ -985,35 +1125,53 @@
         elValTransfer.classList.add('hidden');
       }
 
+      // Exibe equipe (DEDICADO/FARMA)
+      const equipe = String(cliente.equipe || '').trim();
+      const elEquipeSep = document.getElementById('cliInfoEquipeSep');
+      const elEquipeVal = document.getElementById('cliInfoEquipeVal');
+      if (equipe) {
+        elEquipeSep.classList.remove('hidden');
+        elEquipeVal.innerText = '🟢 EQ: ' + equipe;
+        elEquipeVal.classList.remove('hidden');
+      } else {
+        elEquipeSep.classList.add('hidden');
+        elEquipeVal.classList.add('hidden');
+      }
+
       document.getElementById('dropdownClientes').innerHTML = '';
       document.getElementById('dropdownClientes').classList.add('hidden');
       document.getElementById('buscaClienteInput').value = '';
 
-      // Recalcula preços com novo cliente
+      // Recalcula preços com novo cliente e atualiza painéis OL
       executarFiltrosGerais();
       atualizarIndicadoresFinanceirosGlobais();
+      atualizarPaineisOLPorFornecedor(filtroFornecedorAtual);
+      atualizarResumoValoresMinimos();
     }
 
     function limparClienteSelecionado() {
       CLIENTE_SELECIONADO = null;
       OL_ATIVO = 0;
+      OMRON_OL_ATIVO = 0;
       document.getElementById('cliInfoRazao').innerText = "NENHUM CLIENTE SELECIONADO";
       document.getElementById('cliInfoCNPJ').innerText  = "CNPJ: --.---.---/----.--";
       document.getElementById('cliInfoID').innerText    = "ID: ----";
       document.getElementById('btnLimparCliente').classList.add('hidden');
-      document.getElementById('cliInfoGrupoUni').classList.add('hidden');
-      document.getElementById('cliInfoGrupoUniVal').classList.add('hidden');
-      document.getElementById('cliInfoPerfilDan').classList.add('hidden');
-      document.getElementById('cliInfoPerfilDanVal').classList.add('hidden');
-      document.getElementById('cliInfoTransfer').classList.add('hidden');
-      document.getElementById('cliInfoTransferVal').classList.add('hidden');
+      ['cliInfoGrupoUni','cliInfoGrupoUniVal','cliInfoPerfilDan','cliInfoPerfilDanVal',
+       'cliInfoTransfer','cliInfoTransferVal','cliInfoEquipeSep','cliInfoEquipeVal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
       document.getElementById('painelOL').classList.add('hidden');
+      const painelOmron = document.getElementById('painelOLOmron');
+      if (painelOmron) painelOmron.classList.add('hidden');
       ['btnOL250','btnOL500','btnOL1000'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.classList.remove('ol-btn-ativo');
       });
       executarFiltrosGerais();
       atualizarIndicadoresFinanceirosGlobais();
+      atualizarResumoValoresMinimos();
     }
 
     document.addEventListener('click', function(e) {
@@ -1391,6 +1549,7 @@
       document.getElementById('resumoTotalLiquido').innerText = formatarParaReal(acumuladorLiquido);
       blocoResumo.classList.remove('hidden');
       document.getElementById('modalCarrinho').classList.remove('hidden');
+      atualizarResumoValoresMinimos();
     }
 
     function alterarQtdNoModal(idProd, mudanca)               { alterarQtd(idProd, mudanca); abrirModalCarrinho(); }
@@ -2570,6 +2729,65 @@
     }
 
     // -----------------------------------------------------------------------
+    // VALORES MÍNIMOS POR GRUPO DE DESCONTO
+    // -----------------------------------------------------------------------
+    function carregarValoresMinimos() {
+      chamarApi('valoresMinimos')
+        .then(lista => {
+          BD_VALORES_MINIMOS = {};
+          (lista || []).forEach(item => {
+            if (item.chave) BD_VALORES_MINIMOS[item.chave] = { minimo: item.minimo, label: item.label };
+          });
+          console.log('Valores mínimos carregados:', Object.keys(BD_VALORES_MINIMOS).length);
+        })
+        .catch(e => console.warn('Valores mínimos não disponíveis:', e));
+    }
+
+    function atualizarResumoValoresMinimos() {
+      const secao = document.getElementById('resumoValoresMinimos');
+      const lista = document.getElementById('listaValoresMinimos');
+      if (!secao || !lista) return;
+      if (Object.keys(BD_VALORES_MINIMOS).length === 0 || Object.keys(CARRINHO).length === 0) {
+        secao.classList.add('hidden');
+        return;
+      }
+
+      // Agrupar itens do carrinho por colunaAtiva
+      const grupos = {};
+      Object.keys(CARRINHO).forEach(idProd => {
+        const p = BD_PRODUTOS.find(x => x.id === idProd);
+        if (!p) return;
+        const qtd = CARRINHO[idProd];
+        const { precoFinal, colunaAtiva } = calcularPrecos(p);
+        if (!colunaAtiva || !BD_VALORES_MINIMOS[colunaAtiva]) return;
+        if (!grupos[colunaAtiva]) grupos[colunaAtiva] = 0;
+        grupos[colunaAtiva] += precoFinal * qtd;
+      });
+
+      if (Object.keys(grupos).length === 0) {
+        secao.classList.add('hidden');
+        return;
+      }
+
+      lista.innerHTML = Object.keys(grupos).map(chave => {
+        const { minimo, label } = BD_VALORES_MINIMOS[chave];
+        const total    = grupos[chave];
+        const atingiu  = total >= minimo;
+        const totalFmt = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const minFmt   = minimo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return `
+          <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${atingiu ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}">
+            <span class="text-[11px]">${atingiu ? '✅' : '❌'}</span>
+            <span class="text-[10px] font-semibold ${atingiu ? 'text-emerald-700' : 'text-red-600'}">${label}</span>
+            <span class="text-[10px] font-bold ${atingiu ? 'text-emerald-800' : 'text-red-700'}">${totalFmt}</span>
+            ${!atingiu ? `<span class="text-[9px] text-red-400 font-medium">/ ${minFmt}</span>` : ''}
+          </div>`;
+      }).join('');
+
+      secao.classList.remove('hidden');
+    }
+
+    // -----------------------------------------------------------------------
     // PEDIDOS SALVOS — localStorage
     // Chave: 'hbn1_pedidos_salvos'
     // Estrutura: Array de { id, data, timestamp, cliente, uf, itens[], totais{} }
@@ -2922,6 +3140,7 @@
       atualizarProdutosInvisivel(true);
       atualizarClientesInvisivel();
       carregarST();
+      carregarValoresMinimos();
       atualizarBadgesPedidosSalvos();
       // Mostra portais imediatamente (grid atualiza quando produtos chegarem)
       document.getElementById('telaPortais').classList.remove('hidden');
