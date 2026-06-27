@@ -2239,10 +2239,14 @@
         // Atualiza CNPJ ativo (ignora linhas do fornecedor)
         if (!linhaTextoUpper.includes('FORNECEDOR')) {
           const tokenCnpj = tokens.find(t => {
-            const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
-          });
-          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
+
+    const texto = String(t).trim();
+
+    const somenteDigitos = normalizarSoDigitos(texto);
+
+    return REGEX_CNPJ.test(texto);
+
+});f (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
 
         // Precisa de EAN e do token marcador para tentar extrair item
@@ -2306,11 +2310,19 @@
     };
 
     async function processarCnpjSemCadastro(cnpjDigits, uf) {
-      const naoEnc = IMPORT_RESULTADO.naoEncontrados.find(n => n.cnpjDigits === cnpjDigits);
-      if (!naoEnc || !naoEnc.itensOriginais || naoEnc.itensOriginais.length === 0) {
-        alert('Itens originais não disponíveis. Tente reimportar o arquivo.');
-        return;
-      }
+      async function processarTodosCnpjsSemCadastro(uf){
+
+    UF_MANUAL_SELECIONADA = uf;
+
+    const lista = [...IMPORT_RESULTADO.naoEncontrados];
+
+    for(const item of lista){
+
+        await processarCnpjSemCadastro(item.cnpjDigits, uf);
+
+    }
+
+}
 
       const clienteAvulso = {
         cnpj: cnpjDigits, razao: 'CNPJ ' + formatarCNPJ(cnpjDigits),
@@ -2565,23 +2577,76 @@
       const blocoCnpjNaoEnc = document.getElementById('importBlocoCnpjNaoEncontrados');
       if (naoEncontrados.length > 0) {
         const ufsDisponiveis = Object.keys(MAPA_UFS_DISPONIVEIS).sort();
-        document.getElementById('importTabelaCnpjNaoEncontrados').innerHTML = naoEncontrados.map(n => `
-          <div class="bg-white rounded-xl border border-amber-200 p-3 flex flex-col gap-2">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <span class="font-mono font-bold text-amber-700 text-xs">${n.cnpjFormatado}</span>
-                <span class="text-amber-500 text-[10px] ml-2">${n.linhas} linha(s) • ${n.unidades} un</span>
-              </div>
-              <span class="text-[9px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">CNPJ não cadastrado</span>
-            </div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-[10px] text-slate-500 font-medium shrink-0">Calcular pela UF:</span>
-              <div class="flex flex-wrap gap-1.5">
-                ${ufsDisponiveis.map(uf => `
-                  <button onclick="processarCnpjSemCadastro('${n.cnpjDigits}', '${uf}')"
-                    class="px-2.5 py-1 text-[9px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all">
-                    ${uf}
-                  </button>`).join('')}
+       const totalCnpjs = naoEncontrados.length;
+const totalLinhas = naoEncontrados.reduce((s, n) => s + n.linhas, 0);
+const totalUnidades = naoEncontrados.reduce((s, n) => s + n.unidades, 0);
+
+document.getElementById('importTabelaCnpjNaoEncontrados').innerHTML = `
+<div class="bg-white rounded-xl border border-amber-200 p-4">
+
+    <div class="mb-3">
+        <div class="font-bold text-amber-700 text-sm">
+            ${totalCnpjs} CNPJ(s) não cadastrados
+        </div>
+
+        <div class="text-xs text-slate-500 mt-1">
+            ${totalLinhas} linha(s) • ${totalUnidades} unidades
+        </div>
+
+        <div class="text-xs text-slate-500 mt-2">
+            Escolha apenas uma UF para calcular todos os pedidos abaixo.
+        </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+
+        ${ufsDisponiveis.map(uf => `
+
+            <button
+                onclick="processarTodosCnpjsSemCadastro('${uf}')"
+                class="px-3 py-1.5 rounded-lg border border-slate-200
+                       bg-slate-50 hover:bg-orange-500
+                       hover:text-white hover:border-orange-500
+                       transition-all text-xs font-bold">
+
+                ${uf}
+
+            </button>
+
+        `).join('')}
+
+    </div>
+
+    <div class="mt-4 border-t pt-3">
+
+        <div class="text-[11px] text-slate-500 mb-2">
+            CNPJs encontrados no arquivo:
+        </div>
+
+        <ul class="space-y-1">
+
+            ${naoEncontrados.map(n => `
+
+                <li class="flex justify-between text-xs">
+
+                    <span class="font-mono text-amber-700">
+                        ${n.cnpjFormatado}
+                    </span>
+
+                    <span class="text-slate-500">
+                        ${n.unidades} un
+                    </span>
+
+                </li>
+
+            `).join('')}
+
+        </ul>
+
+    </div>
+
+</div>
+`;
               </div>
             </div>
           </div>`).join('');
