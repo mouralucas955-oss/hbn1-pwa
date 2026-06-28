@@ -1,54 +1,53 @@
 // ==========================================================================
-// SERVICE WORKER — HBN1 PWA
-// Cacheia o "app shell" (HTML/CSS/JS/ícones) para abrir rápido e permitir
-// instalação no celular/desktop. Os DADOS (produtos, clientes, avisos)
-// continuam vindo ao vivo da API/planilha — não são cacheados aqui,
-// porque precisam estar sempre atualizados.
+// SERVICE WORKER — HBN1 PWA v2
+// Cache do app shell com versionamento automático
 // ==========================================================================
-const CACHE_NAME = 'hbn1-shell-v1';
+const CACHE_NAME = 'hbn1-shell-v2';
 
 const ARQUIVOS_PARA_CACHE = [
   './',
   './index.html',
   './catalogo.html',
+  './catalogo.js',
+  './catalogo.css',
   './api.js',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARQUIVOS_PARA_CACHE))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ARQUIVOS_PARA_CACHE))
+      .then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((nomes) =>
-      Promise.all(
-        nomes.filter((nome) => nome !== CACHE_NAME).map((nome) => caches.delete(nome))
-      )
-    )
+    caches.keys()
+      .then(nomes => Promise.all(
+        nomes.filter(n => n !== CACHE_NAME).map(n => caches.delete(n))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Estratégia: "network first" para tudo, com fallback pro cache se ficar
-// offline. Assim o app sempre tenta buscar a versão mais nova primeiro.
+// Network first → cache fallback (nunca intercepta chamadas à API)
 self.addEventListener('fetch', (event) => {
-  // Nunca interceptar chamadas para a API do Apps Script — sempre direto na rede
-  if (event.request.method !== 'GET' || event.request.url.includes('script.google.com')) {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
+  if (event.request.url.includes('script.google.com')) return;
+  if (event.request.url.includes('fonts.googleapis.com')) return;
+  if (event.request.url.includes('fonts.gstatic.com')) return;
+  if (event.request.url.includes('cdn.tailwindcss.com')) return;
 
   event.respondWith(
     fetch(event.request)
-      .then((respostaRede) => {
-        const copia = respostaRede.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
-        return respostaRede;
+      .then(resp => {
+        const copia = resp.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copia));
+        return resp;
       })
       .catch(() => caches.match(event.request))
   );
