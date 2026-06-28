@@ -259,3 +259,58 @@ input[type=number] { -moz-appearance: textfield; }
 .aviso-item:last-child::after { content: "•"; }
 
 .ol-btn-ativo { background: #FF6B00 !important; color: #fff !important; border-color: #e55300 !important; box-shadow: 0 2px 8px rgba(255,107,0,0.35); }
+
+/* ============================================================
+   EXCLUSÕES DO DARK MODE — elementos que devem manter visual original
+   ============================================================ */
+
+/* Imagens de produto — remove mix-blend-multiply no escuro (ficava invisível) */
+[data-theme="dark"] .group img.object-contain {
+  mix-blend-mode: normal !important;
+  background: transparent !important;
+}
+
+/* Área da imagem do card — fundo mais neutro para produto aparecer bem */
+[data-theme="dark"] [style*="min-height:108px"],
+[data-theme="dark"] .relative.bg-slate-50 {
+  background-color: #1A2535 !important;
+}
+
+/* Logo da Nazária no header — mantém o fundo laranja original */
+[data-theme="dark"] img[alt="Nazária Logo"],
+[data-theme="dark"] img[alt="Nazária"],
+[data-theme="dark"] img[alt="HBN1"] {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Mural de avisos — mantém o fundo escuro original (já está bem) */
+[data-theme="dark"] #containerAvisosLetreiro,
+[data-theme="dark"] .letreiro-container {
+  background-color: #0A111C !important;
+}
+
+/* Botão ADICIONAR — mantém o slate escuro com texto branco legível */
+[data-theme="dark"] button[onclick*="alterarQtd"].bg-slate-900,
+[data-theme="dark"] button[onclick*="alterarQtd"].w-full {
+  background-color: #1E3A5F !important;
+  color: #E8EDF5 !important;
+  border-color: #2A4A70 !important;
+}
+[data-theme="dark"] button[onclick*="alterarQtd"].w-full:hover {
+  background-color: #FF6B00 !important;
+  color: #ffffff !important;
+  border-color: #FF6B00 !important;
+}
+
+/* Controles de quantidade +/- — ajuste para dark */
+[data-theme="dark"] .bg-orange-50.border-orange-100,
+[data-theme="dark"] .bg-orange-50.border-orange-200 {
+  background-color: #1A1200 !important;
+  border-color: #7C3300 !important;
+}
+[data-theme="dark"] .bg-orange-50 button.bg-white {
+  background-color: #243347 !important;
+  border-color: #2A4A70 !important;
+  color: #FF6B00 !important;
+}
