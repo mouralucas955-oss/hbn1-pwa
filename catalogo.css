@@ -337,12 +337,6 @@ nav.sticky {
   letter-spacing: 0.015em;
 }
 
-/* Fundo do container pai (bg-orange-950) — preservado no dark */
-[data-theme="dark"] .letreiro-container {
-  background-color: #060D16 !important;
-}
-
-
 /* ============================================================
    7. TELA DE PORTAIS
    ============================================================ */
