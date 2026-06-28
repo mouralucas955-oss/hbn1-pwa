@@ -1327,7 +1327,7 @@
     //    Funciona tanto para linhas do Excel (células) quanto do PDF (tokens)
     // Normaliza CNPJ para 14 dígitos (padding de zeros à esquerda)
     function normalizarCNPJ(digitos) {
-      return digitos.padStart(14, '0');
+      return String(digitos).replace(/\D/g, '').padStart(14, '0');
     }
 
     // Normaliza EAN para 8 ou 13 dígitos (padding de zeros à esquerda)
@@ -1335,16 +1335,26 @@
       const s = String(codigo).trim();
       const d = s.replace(/\D/g, '');
       if (d.length === 0) return s;
-      // EAN-8: entre 5 e 8 dígitos → pad para 8
-      if (d.length <= 8 && d.length >= 5) return d.padStart(8, '0');
-      // EAN-13: entre 9 e 13 dígitos → pad para 13
-      if (d.length <= 13 && d.length >= 9) return d.padStart(13, '0');
+      if (d.length <= 8  && d.length >= 5)  return d.padStart(8,  '0');
+      if (d.length <= 13 && d.length >= 9)  return d.padStart(13, '0');
       return d;
     }
 
-    const CNPJ_SEM_CADASTRO = '__SEM_CNPJ__';
+    // Detecta se um token é um CNPJ válido.
+    // Aceita: formato pontuado (XX.XXX.XXX/XXXX-XX) com 13 ou 14 dígitos,
+    //         ou string de exatamente 14 dígitos numéricos.
+    // NÃO aceita strings de 13 dígitos puros (seriam EAN-13).
+    function isCNPJ(token) {
+      const s = String(token).trim();
+      const d = s.replace(/\D/g, '');
+      // Formato pontuado com / e - → CNPJ mesmo com zero cortado (13 dígitos)
+      if (/\//.test(s) && /-/.test(s) && (d.length === 13 || d.length === 14)) return true;
+      // String de exatamente 14 dígitos
+      if (/^\d{14}$/.test(s)) return true;
+      return false;
+    }
 
-    const REGEX_CNPJ = /^\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}$/;
+    const CNPJ_SEM_CADASTRO = '__SEM_CNPJ__';
 
     // CNPJ da própria Nazária (distribuidora) — nunca deve ser tratado como CNPJ
     // do cliente, mesmo que apareça no meio do arquivo (ex: linha "Fornecedor ...").
@@ -1490,7 +1500,7 @@
         if (!linhaTextoUp.includes('FORNECEDOR')) {
           const tokenCnpj = tokensLinha.find(t => {
             const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
+            return isCNPJ(t) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(t));
           });
           if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
@@ -1507,7 +1517,7 @@
         if (!linhaTextoUp.includes('FORNECEDOR')) {
           const tokenCnpj = tokensLinha.find(t => {
             const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
+            return isCNPJ(t) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(t));
           });
           if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
@@ -1560,7 +1570,7 @@
         if (!linhaTextoUpper.includes('FORNECEDOR')) {
           const tokenCnpj = tokens.find(t => {
             const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
+            return isCNPJ(t) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(t));
           });
           if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
