@@ -2020,6 +2020,36 @@
     // do cliente, mesmo que apareça no meio do arquivo (ex: linha "Fornecedor ...").
     const CNPJS_IGNORAR_COMO_CLIENTE = ['07224991002189'];
 
+    function cnpjTemDigitosValidos(digits) {
+      const d = normalizarSoDigitos(digits);
+      if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+
+      const calcularDigito = (base) => {
+        let peso = base.length - 7;
+        let soma = 0;
+        for (let i = 0; i < base.length; i++) {
+          soma += parseInt(base[i], 10) * peso--;
+          if (peso < 2) peso = 9;
+        }
+        const resto = soma % 11;
+        return resto < 2 ? 0 : 11 - resto;
+      };
+
+      return calcularDigito(d.slice(0, 12)) === parseInt(d[12], 10)
+          && calcularDigito(d.slice(0, 13)) === parseInt(d[13], 10);
+    }
+
+    function extrairCnpjValidoDaLinha(tokens) {
+      const token = tokens.find(t => {
+        const texto = String(t || '').trim();
+        const d = normalizarSoDigitos(texto);
+        if (!REGEX_CNPJ.test(texto) && (d.length < 12 || d.length > 14)) return false;
+        const cnpj = normalizarCNPJ(d);
+        return cnpjTemDigitosValidos(cnpj) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(cnpj);
+      });
+      return token ? normalizarCNPJ(normalizarSoDigitos(token)) : '';
+    }
+
     // Identifica a quantidade correta de uma linha cruzando com os valores
     // decimais (preço unitário x quantidade ≈ total). Mais confiável que pegar
     // "o último número curto da linha", já que layouts de pedido costumam ter
@@ -2165,11 +2195,8 @@
         const tokensLinha = linha.map(t => String(t).trim());
         const linhaTextoUp = tokensLinha.join(' ').toUpperCase();
         if (!linhaTextoUp.includes('FORNECEDOR')) {
-          const tokenCnpj = tokensLinha.find(t => {
-            const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
-          });
-          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
+          const cnpjLinha = extrairCnpjValidoDaLinha(tokensLinha);
+          if (cnpjLinha) ultimoCnpjValido = cnpjLinha;
         }
       }
 
@@ -2182,11 +2209,8 @@
         const tokensLinha = linha.map(t => String(t).trim());
         const linhaTextoUp = tokensLinha.join(' ').toUpperCase();
         if (!linhaTextoUp.includes('FORNECEDOR')) {
-          const tokenCnpj = tokensLinha.find(t => {
-            const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
-          });
-          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
+          const cnpjLinha = extrairCnpjValidoDaLinha(tokensLinha);
+          if (cnpjLinha) ultimoCnpjValido = cnpjLinha;
         }
 
         const codigo = normalizarEAN(String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, ''));
@@ -2238,11 +2262,8 @@
 
         // Atualiza CNPJ ativo (ignora linhas do fornecedor)
         if (!linhaTextoUpper.includes('FORNECEDOR')) {
-          const tokenCnpj = tokens.find(t => {
-            const d = normalizarSoDigitos(t);
-            return (REGEX_CNPJ.test(t) || d.length === 14 || d.length === 13) && !CNPJS_IGNORAR_COMO_CLIENTE.includes(normalizarCNPJ(d));
-          });
-          if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
+          const cnpjLinha = extrairCnpjValidoDaLinha(tokens);
+          if (cnpjLinha) ultimoCnpjValido = cnpjLinha;
         }
 
         // Precisa de EAN e do token marcador para tentar extrair item
@@ -2312,8 +2333,10 @@
         return;
       }
 
+      const semCnpj = cnpjDigits === CNPJ_SEM_CADASTRO;
       const clienteAvulso = {
-        cnpj: cnpjDigits, razao: 'CNPJ ' + formatarCNPJ(cnpjDigits),
+        cnpj: semCnpj ? '' : cnpjDigits,
+        razao: semCnpj ? 'Pedido sem CNPJ - UF ' + uf : 'CNPJ ' + formatarCNPJ(cnpjDigits),
         grupoUnilever: '', perfilDanone: '', painelTransfer: '', equipe: '',
         uf: uf, _avulso: true
       };
@@ -2381,7 +2404,9 @@
       });
       const cnpjsUnicos = Object.keys(gruposPorCnpj);
 
-      const clientesEncontrados = await Promise.all(cnpjsUnicos.map(buscarClientePorCNPJAsync));
+      const clientesEncontrados = await Promise.all(cnpjsUnicos.map(cnpj =>
+        cnpj === CNPJ_SEM_CADASTRO ? Promise.resolve(null) : buscarClientePorCNPJAsync(cnpj)
+      ));
 
       const pedidos = [];
       const naoEncontrados = [];
@@ -2572,7 +2597,7 @@
                 <span class="font-mono font-bold text-amber-700 text-xs">${n.cnpjFormatado}</span>
                 <span class="text-amber-500 text-[10px] ml-2">${n.linhas} linha(s) • ${n.unidades} un</span>
               </div>
-              <span class="text-[9px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">CNPJ não cadastrado</span>
+              <span class="text-[9px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">${n.cnpjDigits === CNPJ_SEM_CADASTRO ? 'Pedido sem CNPJ' : 'CNPJ não cadastrado'}</span>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-[10px] text-slate-500 font-medium shrink-0">Calcular pela UF:</span>
