@@ -1,77 +1,50 @@
 /* ============================================================
-   CORREÇÕES DO TEMA ESCURO
+   CORREÇÕES CIRÚRGICAS DO TEMA ESCURO
+   Adicione este bloco AO FINAL do seu CSS principal.
+   Ele sobrescreve apenas os pontos problemáticos.
    ============================================================ */
 
 /* ----------------------------------------------------------
-   1. LOGO NAZÁRIA — garantir que não fique escura/filtrada
+   1. LOGO NAZÁRIA — só remove filtro nas imagens do header
    ---------------------------------------------------------- */
-[data-theme="dark"] img[alt="Nazária Logo"],
-[data-theme="dark"] img[alt="Nazária"],
-[data-theme="dark"] img[alt="HBN1"],
-[data-theme="dark"] img[alt="NZR"],
 [data-theme="dark"] header img,
 [data-theme="dark"] nav img {
   filter: none !important;
   opacity: 1 !important;
-  mix-blend-mode: normal !important;
 }
 
 /* ----------------------------------------------------------
-   2. ÁREA DA IMAGEM DO CARD DE PRODUTO — fundo neutro claro
-      para o produto aparecer bem, sem escurecer a foto
+   2. ÁREA DA IMAGEM DO CARD — fundo branco só no container
+      da foto, para o produto aparecer sem escurecer
    ---------------------------------------------------------- */
-[data-theme="dark"] .group .bg-slate-50,
-[data-theme="dark"] .group [style*="min-height"],
-[data-theme="dark"] .group .relative.flex.items-center.justify-center,
-[data-theme="dark"] .group .flex.items-center.justify-center.overflow-hidden {
-  background-color: #FFFFFF !important;
-}
-
-/* Imagem dentro do card — sem blend, exibe normal */
-[data-theme="dark"] .group img.object-contain,
-[data-theme="dark"] .group img.object-cover {
-  mix-blend-mode: normal !important;
-  filter: none !important;
-  opacity: 1 !important;
-}
-
-/* ----------------------------------------------------------
-   3. MODAL DE DETALHES DO PRODUTO — área da imagem clara
-   ---------------------------------------------------------- */
-
-/* Container da imagem no modal (geralmente o topo arredondado) */
-[data-theme="dark"] .bg-white.rounded-3xl .bg-slate-50,
-[data-theme="dark"] .bg-white.rounded-2xl .bg-slate-50,
-[data-theme="dark"] .bg-white.rounded-xl .bg-slate-50,
-[data-theme="dark"] [class*="rounded"] .flex.items-center.justify-center:has(img) {
-  background-color: #FFFFFF !important;
-}
-
-/* Imagem dentro do modal — exibe normalmente */
-[data-theme="dark"] .bg-white.rounded-3xl img,
-[data-theme="dark"] .bg-white.rounded-2xl img,
-[data-theme="dark"] .bg-white.rounded-xl img {
-  mix-blend-mode: normal !important;
-  filter: none !important;
-  opacity: 1 !important;
-}
-
-/* Seletor genérico para qualquer área de imagem que tenha min-height no modal */
 [data-theme="dark"] [style*="min-height:108px"],
-[data-theme="dark"] [style*="min-height: 108px"],
-[data-theme="dark"] [style*="min-height:140px"],
-[data-theme="dark"] [style*="min-height: 140px"],
-[data-theme="dark"] [style*="min-height:160px"],
-[data-theme="dark"] [style*="min-height: 160px"] {
+[data-theme="dark"] [style*="min-height: 108px"] {
   background-color: #FFFFFF !important;
 }
 
+/* Imagem do card — exibe normalmente sem blend */
+[data-theme="dark"] .group img.object-contain {
+  mix-blend-mode: normal !important;
+  filter: none !important;
+}
+
 /* ----------------------------------------------------------
-   4. MURAL DE AVISOS — fundo escuro navy (não preto total)
+   3. MODAL — fundo branco só na área da foto do produto;
+      informações abaixo continuam com tema escuro
    ---------------------------------------------------------- */
-[data-theme="dark"] #containerAvisosLetreiro,
-[data-theme="dark"] .letreiro-container {
-  background-color: #060D16 !important;
-  border-top: 1px solid #1E3047 !important;
-  border-bottom: 1px solid #1E3047 !important;
+[data-theme="dark"] .relative.bg-slate-50 {
+  background-color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .relative.bg-slate-50 img.object-contain {
+  mix-blend-mode: normal !important;
+  filter: none !important;
+}
+
+/* ----------------------------------------------------------
+   4. MURAL — navy suave, não preto total
+   ---------------------------------------------------------- */
+[data-theme="dark"] .letreiro-container,
+[data-theme="dark"] #containerAvisosLetreiro {
+  background-color: #0A111C !important;
 }
