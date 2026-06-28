@@ -150,9 +150,9 @@ body {
   box-shadow: var(--shadow-hover) !important;
 }
 
-/* Área da imagem do produto */
+/* Área da foto permanece clara */
 [data-theme="dark"] .bg-slate-50.flex.items-center.justify-center {
-  background-color: var(--bg-secondary) !important;
+    background:#F8FAFC !important;
 }
 
 /* Badge de estoque */
