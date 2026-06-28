@@ -1,50 +1,316 @@
 /* ============================================================
-   CORREÇÕES CIRÚRGICAS DO TEMA ESCURO
-   Adicione este bloco AO FINAL do seu CSS principal.
-   Ele sobrescreve apenas os pontos problemáticos.
+   VARIÁVEIS DE TEMA — Light (padrão) e Dark (navy sofisticado)
+   ============================================================ */
+:root {
+  --bg-page:        #F8FAFC;
+  --bg-card:        #FFFFFF;
+  --bg-secondary:   #F1F5F9;
+  --bg-tertiary:    #E2E8F0;
+  --bg-header:      #0F172A;
+  --border-subtle:  #E2E8F0;
+  --border-default: #CBD5E1;
+  --text-primary:   #0F172A;
+  --text-secondary: #475569;
+  --text-muted:     #94A3B8;
+  --text-inverse:   #FFFFFF;
+  --accent:         #FF6B00;
+  --accent-soft:    #FFF7ED;
+  --shadow-card:    0 1px 3px rgba(0,0,0,0.06);
+  --shadow-hover:   0 4px 16px rgba(0,0,0,0.10);
+  --scrollbar-track:#F1F5F9;
+  --scrollbar-thumb:#CBD5E1;
+}
+
+[data-theme="dark"] {
+  --bg-page:        #0E1623;
+  --bg-card:        #152032;
+  --bg-secondary:   #1C2D42;
+  --bg-tertiary:    #243347;
+  --bg-header:      #060D16;
+  --border-subtle:  #1E3047;
+  --border-default: #2A3F58;
+  --text-primary:   #E8EDF5;
+  --text-secondary: #8BA3BE;
+  --text-muted:     #4D6580;
+  --text-inverse:   #E8EDF5;
+  --accent:         #FF6B00;
+  --accent-soft:    #1A1200;
+  --shadow-card:    0 1px 3px rgba(0,0,0,0.30);
+  --shadow-hover:   0 4px 20px rgba(0,0,0,0.50);
+  --scrollbar-track:#0E1623;
+  --scrollbar-thumb:#243347;
+}
+
+/* ============================================================
+   APLICAÇÃO DAS VARIÁVEIS NO BODY E ELEMENTOS BASE
+   ============================================================ */
+body {
+  background-color: var(--bg-page) !important;
+  color: var(--text-primary) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cabeçalho (header fixo laranja/dark) */
+[data-theme="dark"] header.sticky,
+[data-theme="dark"] nav.sticky {
+  background-color: var(--bg-header) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* ============================================================
+   CARDS E PAINÉIS
+   ============================================================ */
+[data-theme="dark"] .bg-white {
+  background-color: var(--bg-card) !important;
+}
+[data-theme="dark"] .bg-slate-50 {
+  background-color: var(--bg-secondary) !important;
+}
+[data-theme="dark"] .bg-slate-100 {
+  background-color: var(--bg-tertiary) !important;
+}
+[data-theme="dark"] .bg-slate-200 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Bordas */
+[data-theme="dark"] .border-slate-100 { border-color: var(--border-subtle)  !important; }
+[data-theme="dark"] .border-slate-200 { border-color: var(--border-default) !important; }
+[data-theme="dark"] .border-slate-300 { border-color: var(--border-default) !important; }
+[data-theme="dark"] .divide-slate-100 > * { border-color: var(--border-subtle) !important; }
+
+/* Textos */
+[data-theme="dark"] .text-slate-900 { color: var(--text-primary)   !important; }
+[data-theme="dark"] .text-slate-800 { color: var(--text-primary)   !important; }
+[data-theme="dark"] .text-slate-700 { color: var(--text-primary)   !important; }
+[data-theme="dark"] .text-slate-600 { color: var(--text-secondary) !important; }
+[data-theme="dark"] .text-slate-500 { color: var(--text-secondary) !important; }
+[data-theme="dark"] .text-slate-400 { color: var(--text-muted)     !important; }
+
+/* ============================================================
+   INPUTS E DROPDOWNS
+   ============================================================ */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] input::placeholder { color: var(--text-muted) !important; }
+
+/* Dropdown de clientes */
+[data-theme="dark"] #dropdownClientes {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-default) !important;
+}
+[data-theme="dark"] #dropdownClientes > div:hover {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* ============================================================
+   BARRA DE CONTROLES E TOOLBAR
+   ============================================================ */
+[data-theme="dark"] .bg-slate-900 {
+  background-color: var(--bg-header) !important;
+}
+[data-theme="dark"] .bg-slate-800 { background-color: #0A111C !important; }
+[data-theme="dark"] .bg-slate-700 { background-color: var(--bg-tertiary) !important; }
+
+[data-theme="dark"] .text-slate-200 { color: #B8C9DC !important; }
+[data-theme="dark"] .text-slate-300 { color: #8BA3BE !important; }
+
+/* Hover states na barra */
+[data-theme="dark"] .hover\:bg-slate-50:hover  { background-color: var(--bg-secondary) !important; }
+[data-theme="dark"] .hover\:bg-slate-800:hover  { background-color: #0A111C !important; }
+[data-theme="dark"] .hover\:bg-slate-700:hover  { background-color: var(--bg-tertiary) !important; }
+
+/* ============================================================
+   MODAIS
+   ============================================================ */
+[data-theme="dark"] .bg-white.rounded-3xl,
+[data-theme="dark"] .bg-white.rounded-2xl,
+[data-theme="dark"] .bg-white.rounded-xl {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Backdrop dos modais */
+[data-theme="dark"] .bg-slate-900\/60 { background-color: rgba(6,13,22,0.80) !important; }
+
+/* ============================================================
+   CARDS DE PRODUTO
+   ============================================================ */
+[data-theme="dark"] .group.bg-white {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-subtle) !important;
+}
+[data-theme="dark"] .group.bg-white:hover {
+  border-color: var(--border-default) !important;
+  box-shadow: var(--shadow-hover) !important;
+}
+
+/* Área da imagem do produto */
+[data-theme="dark"] .bg-slate-50.flex.items-center.justify-center {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Badge de estoque */
+[data-theme="dark"] .bg-emerald-100 { background-color: #0D2318 !important; }
+[data-theme="dark"] .text-emerald-600 { color: #34D399 !important; }
+[data-theme="dark"] .bg-red-100 { background-color: #220D0D !important; }
+[data-theme="dark"] .text-red-500 { color: #F87171 !important; }
+
+/* Badge de desconto */
+[data-theme="dark"] .bg-emerald-50 { background-color: #0D2318 !important; }
+[data-theme="dark"] .text-emerald-700 { color: #34D399 !important; }
+
+/* Separador de preço */
+[data-theme="dark"] .border-slate-100 { border-color: var(--border-subtle) !important; }
+
+/* Botão adicionar */
+[data-theme="dark"] .bg-slate-900.hover\:bg-slate-700 {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-default);
+}
+[data-theme="dark"] .bg-slate-100.text-slate-400 {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Controles de quantidade (+ / -) */
+[data-theme="dark"] .bg-orange-50 { background-color: #1A0D00 !important; }
+[data-theme="dark"] .border-orange-100 { border-color: #7C3300 !important; }
+[data-theme="dark"] .border-orange-200 { border-color: #7C3300 !important; }
+
+/* ============================================================
+   HEADER DE FORNECEDOR E PORTAL
+   ============================================================ */
+/* Tela de portais — fundo já é branco com logo, mantém mas ajusta */
+[data-theme="dark"] #telaPortais .bg-white {
+  background-color: var(--bg-page) !important;
+  border-color: var(--border-subtle) !important;
+}
+[data-theme="dark"] #telaPortais h2 { color: var(--text-primary) !important; }
+[data-theme="dark"] #telaPortais p  { color: var(--text-secondary) !important; }
+
+/* Cards dos portais de fornecedor — mantêm gradiente de cor da marca */
+[data-theme="dark"] #gridPortais button { opacity: 0.92; }
+
+/* ============================================================
+   SEÇÃO DE AVISOS (letreiro)
+   ============================================================ */
+[data-theme="dark"] .letreiro-container {
+  background-color: var(--bg-header) !important;
+}
+
+/* ============================================================
+   PAINEL DE CLIENTE E BARRA ESCURA
+   ============================================================ */
+[data-theme="dark"] .bg-\[\#0F172A\],
+[data-theme="dark"] [style*="background-color: rgb(15, 23, 42)"] {
+  background-color: var(--bg-header) !important;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
+
+/* ============================================================
+   BOTÃO TOGGLE DARK MODE
+   ============================================================ */
+#btnDarkMode {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  background: transparent;
+  color: #94A3B8;
+}
+#btnDarkMode:hover { background: rgba(148,163,184,0.15); }
+[data-theme="dark"] #btnDarkMode { color: #FFD700; }
+
+/* ============================================================
+   ELEMENTOS ORIGINAIS (scrollbar, animações, etc.)
+   ============================================================ */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+.letreiro-container { overflow: hidden; white-space: nowrap; display: flex; align-items: center; }
+.letreiro-conteudo { display: inline-block; padding-left: 100%; animation: marqueeInfinita 30s linear infinite; }
+.letreiro-conteudo:hover { animation-play-state: paused; }
+@keyframes marqueeInfinita {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
+}
+.aviso-item::after { content: "•"; margin-left: 2.5rem; margin-right: 2.5rem; color: #fdba74; font-weight: bold; }
+.aviso-item:last-child::after { content: "•"; }
+
+.ol-btn-ativo { background: #FF6B00 !important; color: #fff !important; border-color: #e55300 !important; box-shadow: 0 2px 8px rgba(255,107,0,0.35); }
+
+/* ============================================================
+   EXCLUSÕES DO DARK MODE — elementos que devem manter visual original
    ============================================================ */
 
-/* ----------------------------------------------------------
-   1. LOGO NAZÁRIA — só remove filtro nas imagens do header
-   ---------------------------------------------------------- */
-[data-theme="dark"] header img,
-[data-theme="dark"] nav img {
+/* Imagens de produto — remove mix-blend-multiply no escuro (ficava invisível) */
+[data-theme="dark"] .group img.object-contain {
+  mix-blend-mode: normal !important;
+  background: transparent !important;
+}
+
+/* Área da imagem do card — fundo mais neutro para produto aparecer bem */
+[data-theme="dark"] [style*="min-height:108px"],
+[data-theme="dark"] .relative.bg-slate-50 {
+  background-color: #1A2535 !important;
+}
+
+/* Logo da Nazária no header — mantém o fundo laranja original */
+[data-theme="dark"] img[alt="Nazária Logo"],
+[data-theme="dark"] img[alt="Nazária"],
+[data-theme="dark"] img[alt="HBN1"] {
   filter: none !important;
   opacity: 1 !important;
 }
 
-/* ----------------------------------------------------------
-   2. ÁREA DA IMAGEM DO CARD — fundo branco só no container
-      da foto, para o produto aparecer sem escurecer
-   ---------------------------------------------------------- */
-[data-theme="dark"] [style*="min-height:108px"],
-[data-theme="dark"] [style*="min-height: 108px"] {
-  background-color: #FFFFFF !important;
-}
-
-/* Imagem do card — exibe normalmente sem blend */
-[data-theme="dark"] .group img.object-contain {
-  mix-blend-mode: normal !important;
-  filter: none !important;
-}
-
-/* ----------------------------------------------------------
-   3. MODAL — fundo branco só na área da foto do produto;
-      informações abaixo continuam com tema escuro
-   ---------------------------------------------------------- */
-[data-theme="dark"] .relative.bg-slate-50 {
-  background-color: #FFFFFF !important;
-}
-
-[data-theme="dark"] .relative.bg-slate-50 img.object-contain {
-  mix-blend-mode: normal !important;
-  filter: none !important;
-}
-
-/* ----------------------------------------------------------
-   4. MURAL — navy suave, não preto total
-   ---------------------------------------------------------- */
-[data-theme="dark"] .letreiro-container,
-[data-theme="dark"] #containerAvisosLetreiro {
+/* Mural de avisos — mantém o fundo escuro original (já está bem) */
+[data-theme="dark"] #containerAvisosLetreiro,
+[data-theme="dark"] .letreiro-container {
   background-color: #0A111C !important;
+}
+
+/* Botão ADICIONAR — mantém o slate escuro com texto branco legível */
+[data-theme="dark"] button[onclick*="alterarQtd"].bg-slate-900,
+[data-theme="dark"] button[onclick*="alterarQtd"].w-full {
+  background-color: #1E3A5F !important;
+  color: #E8EDF5 !important;
+  border-color: #2A4A70 !important;
+}
+[data-theme="dark"] button[onclick*="alterarQtd"].w-full:hover {
+  background-color: #FF6B00 !important;
+  color: #ffffff !important;
+  border-color: #FF6B00 !important;
+}
+
+/* Controles de quantidade +/- — ajuste para dark */
+[data-theme="dark"] .bg-orange-50.border-orange-100,
+[data-theme="dark"] .bg-orange-50.border-orange-200 {
+  background-color: #1A1200 !important;
+  border-color: #7C3300 !important;
+}
+[data-theme="dark"] .bg-orange-50 button.bg-white {
+  background-color: #243347 !important;
+  border-color: #2A4A70 !important;
+  color: #FF6B00 !important;
 }
