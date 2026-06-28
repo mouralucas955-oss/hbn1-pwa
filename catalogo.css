@@ -425,7 +425,7 @@ nav.sticky {
 /* Área da imagem do produto */
 [id^="card-item-"] .relative.bg-slate-50,
 [id^="card-item-"] [style*="min-height:108px"] {
-  background-color: var(--surface-secondary) !important;
+  background-color: #FFFFFF !important;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
@@ -607,7 +607,7 @@ nav.sticky {
 
 /* Área da imagem no modal — fundo sempre neutro claro para a foto aparecer bem */
 #modalDetalhes .bg-slate-50.flex.items-center.justify-center {
-  background-color: var(--surface-secondary) !important;
+  background-color: #FFFFFF !important;
 }
 
 /* Imagem principal do modal: mantém mix-blend no light */
