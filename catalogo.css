@@ -1,316 +1,1012 @@
 /* ============================================================
-   VARIÁVEIS DE TEMA — Light (padrão) e Dark (navy sofisticado)
+   HBN1 — CATÁLOGO DE PEDIDOS NAZÁRIA
+   Versão 2.0 — Tema Bicolor (Light / Dark Navy Grafite)
+   ============================================================
+
+   ÍNDICE
+   ──────────────────────────────────────────────────────────
+   1. Tokens de Tema (CSS Custom Properties)
+   2. Resets & Base
+   3. Scrollbar
+   4. Animações (letreiro, spin)
+   5. Header & Navegação
+   6. Barra de Avisos (Mural)
+   7. Tela de Portais
+   8. Grid de Produtos
+   9. Cards de Produto
+   10. Botões de Ação (adicionar / contador)
+   11. Modais (genérico)
+   12. Modal — Detalhes do Produto
+   13. Modal — Carrinho
+   14. Modal — Importar Pedido
+   15. Modal — Pedidos Salvos
+   16. Footer Mobile
+   17. Botão Dark Mode
+   18. Botão Voltar ao Topo
+   19. OL / ST Badges
+   20. Utilitários
+   ──────────────────────────────────────────────────────────
+*/
+
+
+/* ============================================================
+   1. TOKENS DE TEMA
    ============================================================ */
+
 :root {
-  --bg-page:        #F8FAFC;
-  --bg-card:        #FFFFFF;
-  --bg-secondary:   #F1F5F9;
-  --bg-tertiary:    #E2E8F0;
-  --bg-header:      #0F172A;
-  --border-subtle:  #E2E8F0;
-  --border-default: #CBD5E1;
-  --text-primary:   #0F172A;
-  --text-secondary: #475569;
-  --text-muted:     #94A3B8;
-  --text-inverse:   #FFFFFF;
-  --accent:         #FF6B00;
-  --accent-soft:    #FFF7ED;
-  --shadow-card:    0 1px 3px rgba(0,0,0,0.06);
-  --shadow-hover:   0 4px 16px rgba(0,0,0,0.10);
-  --scrollbar-track:#F1F5F9;
-  --scrollbar-thumb:#CBD5E1;
+  /* Superfícies */
+  --surface-page:       #F8FAFC;
+  --surface-card:       #FFFFFF;
+  --surface-secondary:  #F1F5F9;
+  --surface-tertiary:   #E8EDF4;
+  --surface-header:     #0F172A;
+  --surface-overlay:    rgba(15, 23, 42, 0.55);
+
+  /* Bordas */
+  --border-subtle:      #E2E8F0;
+  --border-default:     #CBD5E1;
+  --border-strong:      #94A3B8;
+
+  /* Texto */
+  --text-primary:       #0F172A;
+  --text-secondary:     #475569;
+  --text-muted:         #94A3B8;
+  --text-inverse:       #FFFFFF;
+  --text-on-accent:     #FFFFFF;
+
+  /* Acento principal */
+  --accent:             #FF6B00;
+  --accent-hover:       #E55300;
+  --accent-soft:        #FFF7ED;
+  --accent-border:      #FDBA74;
+
+  /* Semânticas */
+  --success:            #16A34A;
+  --success-soft:       #F0FDF4;
+  --success-border:     #BBF7D0;
+  --danger:             #DC2626;
+  --danger-soft:        #FEF2F2;
+  --danger-border:      #FECACA;
+  --warning:            #D97706;
+  --warning-soft:       #FFFBEB;
+  --warning-border:     #FDE68A;
+
+  /* Sombras */
+  --shadow-sm:          0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md:          0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg:          0 10px 32px rgba(0, 0, 0, 0.10), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-modal:       0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.08);
+
+  /* Scrollbar */
+  --scrollbar-track:    #F1F5F9;
+  --scrollbar-thumb:    #CBD5E1;
+
+  /* Raios */
+  --radius-sm:          8px;
+  --radius-md:          12px;
+  --radius-lg:          16px;
+  --radius-xl:          20px;
+  --radius-2xl:         24px;
+  --radius-full:        9999px;
+
+  /* Transições */
+  --transition-fast:    0.15s ease;
+  --transition-base:    0.25s ease;
+  --transition-slow:    0.35s ease;
 }
 
+/* ── Dark Mode ─────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --bg-page:        #0E1623;
-  --bg-card:        #152032;
-  --bg-secondary:   #1C2D42;
-  --bg-tertiary:    #243347;
-  --bg-header:      #060D16;
-  --border-subtle:  #1E3047;
-  --border-default: #2A3F58;
-  --text-primary:   #E8EDF5;
-  --text-secondary: #8BA3BE;
-  --text-muted:     #4D6580;
-  --text-inverse:   #E8EDF5;
-  --accent:         #FF6B00;
-  --accent-soft:    #1A1200;
-  --shadow-card:    0 1px 3px rgba(0,0,0,0.30);
-  --shadow-hover:   0 4px 20px rgba(0,0,0,0.50);
-  --scrollbar-track:#0E1623;
-  --scrollbar-thumb:#243347;
+  --surface-page:       #0D1B2A;
+  --surface-card:       #142232;
+  --surface-secondary:  #1A2D40;
+  --surface-tertiary:   #213347;
+  --surface-header:     #070F1A;
+  --surface-overlay:    rgba(4, 10, 18, 0.80);
+
+  --border-subtle:      #1C3048;
+  --border-default:     #274460;
+  --border-strong:      #3A5A78;
+
+  --text-primary:       #E4EDF6;
+  --text-secondary:     #7EA8CC;
+  --text-muted:         #3E5C78;
+  --text-inverse:       #E4EDF6;
+
+  --accent-soft:        #1C1000;
+  --accent-border:      #7C3300;
+
+  --success-soft:       #071A0D;
+  --success-border:     #134D24;
+  --danger-soft:        #1C0606;
+  --danger-border:      #5A1010;
+  --warning-soft:       #1A1100;
+  --warning-border:     #5A3C00;
+
+  --shadow-sm:          0 1px 3px rgba(0, 0, 0, 0.40);
+  --shadow-md:          0 4px 12px rgba(0, 0, 0, 0.50);
+  --shadow-lg:          0 10px 32px rgba(0, 0, 0, 0.60);
+  --shadow-modal:       0 24px 64px rgba(0, 0, 0, 0.70);
+
+  --scrollbar-track:    #0D1B2A;
+  --scrollbar-thumb:    #213347;
 }
 
+
 /* ============================================================
-   APLICAÇÃO DAS VARIÁVEIS NO BODY E ELEMENTOS BASE
+   2. RESETS & BASE
    ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: var(--bg-page) !important;
-  color: var(--text-primary) !important;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: var(--surface-page);
+  color: var(--text-primary);
+  transition:
+    background-color var(--transition-base),
+    color var(--transition-base);
 }
 
-/* Cabeçalho (header fixo laranja/dark) */
-[data-theme="dark"] header.sticky,
-[data-theme="dark"] nav.sticky {
-  background-color: var(--bg-header) !important;
-  border-color: var(--border-subtle) !important;
+/* Inputs e Textareas */
+input,
+select,
+textarea {
+  background-color: var(--surface-secondary);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
-/* ============================================================
-   CARDS E PAINÉIS
-   ============================================================ */
-[data-theme="dark"] .bg-white {
-  background-color: var(--bg-card) !important;
-}
-[data-theme="dark"] .bg-slate-50 {
-  background-color: var(--bg-secondary) !important;
-}
-[data-theme="dark"] .bg-slate-100 {
-  background-color: var(--bg-tertiary) !important;
-}
-[data-theme="dark"] .bg-slate-200 {
-  background-color: var(--bg-tertiary) !important;
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
 }
 
-/* Bordas */
-[data-theme="dark"] .border-slate-100 { border-color: var(--border-subtle)  !important; }
-[data-theme="dark"] .border-slate-200 { border-color: var(--border-default) !important; }
-[data-theme="dark"] .border-slate-300 { border-color: var(--border-default) !important; }
-[data-theme="dark"] .divide-slate-100 > * { border-color: var(--border-subtle) !important; }
+/* Remove spin dos number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
 
-/* Textos */
-[data-theme="dark"] .text-slate-900 { color: var(--text-primary)   !important; }
-[data-theme="dark"] .text-slate-800 { color: var(--text-primary)   !important; }
-[data-theme="dark"] .text-slate-700 { color: var(--text-primary)   !important; }
-[data-theme="dark"] .text-slate-600 { color: var(--text-secondary) !important; }
-[data-theme="dark"] .text-slate-500 { color: var(--text-secondary) !important; }
-[data-theme="dark"] .text-slate-400 { color: var(--text-muted)     !important; }
 
 /* ============================================================
-   INPUTS E DROPDOWNS
+   3. SCROLLBAR
    ============================================================ */
-[data-theme="dark"] input,
-[data-theme="dark"] select,
-[data-theme="dark"] textarea {
-  background-color: var(--bg-secondary) !important;
-  border-color: var(--border-default) !important;
-  color: var(--text-primary) !important;
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
-[data-theme="dark"] input::placeholder { color: var(--text-muted) !important; }
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Scrollbar invisível (utilitário) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+
+/* ============================================================
+   4. ANIMAÇÕES
+   ============================================================ */
+
+/* Letreiro infinito */
+.letreiro-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+.letreiro-conteudo {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marqueeInfinita 36s linear infinite;
+}
+.letreiro-conteudo:hover {
+  animation-play-state: paused;
+}
+@keyframes marqueeInfinita {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-100%, 0, 0); }
+}
+
+/* Separador do aviso */
+.aviso-item::after {
+  content: "•";
+  margin: 0 2.25rem;
+  color: #FDBA74;
+  font-weight: 700;
+}
+.aviso-item:last-child::after {
+  content: "•";
+}
+
+/* Spin genérico */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.9s linear infinite;
+}
+
+/* Ping para o badge de avisos ao vivo */
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.animate-ping {
+  animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+
+/* ============================================================
+   5. HEADER & NAVEGAÇÃO
+   ============================================================ */
+
+/* Header laranja — sempre laranja, nunca escurece */
+header.sticky,
+nav.sticky {
+  background-color: #FF6B00 !important;
+  border-color: #E55300 !important;
+}
+
+/* Barra de busca dentro do header */
+#barraPesquisa {
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+#barraPesquisa:focus {
+  background-color: rgba(255, 255, 255, 0.20);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+  outline: none;
+}
+#barraPesquisa::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Barra de cliente (dark slate) */
+.bg-slate-900 {
+  background-color: var(--surface-header) !important;
+}
 
 /* Dropdown de clientes */
-[data-theme="dark"] #dropdownClientes {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-default) !important;
+#dropdownClientes {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-lg);
 }
-[data-theme="dark"] #dropdownClientes > div:hover {
-  background-color: var(--bg-secondary) !important;
+#dropdownClientes > div:hover {
+  background-color: var(--surface-secondary);
 }
+#dropdownClientes .font-bold {
+  color: var(--text-primary);
+}
+#dropdownClientes .text-slate-500 {
+  color: var(--text-secondary);
+}
+
+/* Barra de cliente: input de busca */
+#buscaClienteInput {
+  background-color: var(--surface-secondary);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+#buscaClienteInput::placeholder {
+  color: var(--text-muted);
+}
+#buscaClienteInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25);
+  outline: none;
+}
+
 
 /* ============================================================
-   BARRA DE CONTROLES E TOOLBAR
+   6. BARRA DE AVISOS (MURAL / LETREIRO)
    ============================================================ */
-[data-theme="dark"] .bg-slate-900 {
-  background-color: var(--bg-header) !important;
+
+#containerAvisosLetreiro {
+  background-color: transparent;
+  color: #FED7AA;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.015em;
 }
-[data-theme="dark"] .bg-slate-800 { background-color: #0A111C !important; }
-[data-theme="dark"] .bg-slate-700 { background-color: var(--bg-tertiary) !important; }
 
-[data-theme="dark"] .text-slate-200 { color: #B8C9DC !important; }
-[data-theme="dark"] .text-slate-300 { color: #8BA3BE !important; }
+/* Fundo do container pai (bg-orange-950) — preservado no dark */
+[data-theme="dark"] .letreiro-container {
+  background-color: #060D16 !important;
+}
 
-/* Hover states na barra */
-[data-theme="dark"] .hover\:bg-slate-50:hover  { background-color: var(--bg-secondary) !important; }
-[data-theme="dark"] .hover\:bg-slate-800:hover  { background-color: #0A111C !important; }
-[data-theme="dark"] .hover\:bg-slate-700:hover  { background-color: var(--bg-tertiary) !important; }
 
 /* ============================================================
-   MODAIS
+   7. TELA DE PORTAIS
    ============================================================ */
-[data-theme="dark"] .bg-white.rounded-3xl,
-[data-theme="dark"] .bg-white.rounded-2xl,
-[data-theme="dark"] .bg-white.rounded-xl {
-  background-color: var(--bg-card) !important;
+
+/* Fundo da tela de portais */
+#telaPortais #portaisFundo {
+  background-color: var(--surface-page) !important;
+}
+
+/* Cabeçalho dentro dos portais */
+#telaPortais .bg-white.border-b {
+  background-color: var(--surface-card) !important;
   border-color: var(--border-subtle) !important;
 }
 
-/* Backdrop dos modais */
-[data-theme="dark"] .bg-slate-900\/60 { background-color: rgba(6,13,22,0.80) !important; }
+/* Textos */
+#telaPortais h2,
+#portaisTitulo {
+  color: var(--text-primary) !important;
+}
+#telaPortais p {
+  color: var(--text-secondary) !important;
+}
+
+/* Cards dos portais mantêm gradiente da marca.
+   Apenas leve ajuste de opacidade no dark para não saturar demais. */
+[data-theme="dark"] #gridPortais button {
+  opacity: 0.90;
+}
+[data-theme="dark"] #gridPortais button:hover {
+  opacity: 1;
+}
+
+/* Marca d'água do fundo */
+#telaPortais [aria-hidden="true"] {
+  pointer-events: none;
+  user-select: none;
+}
+[data-theme="dark"] #telaPortais [aria-hidden="true"] {
+  opacity: 0.03;
+}
+
 
 /* ============================================================
-   CARDS DE PRODUTO
+   8. GRID DE PRODUTOS
    ============================================================ */
-[data-theme="dark"] .group.bg-white {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-subtle) !important;
+
+#mainProdutos {
+  background-color: var(--surface-page);
 }
-[data-theme="dark"] .group.bg-white:hover {
-  border-color: var(--border-default) !important;
-  box-shadow: var(--shadow-hover) !important;
+
+/* Barra de controles acima do grid */
+#mainProdutos > .flex.items-center.justify-between {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Header do fornecedor selecionado — preserva gradiente da marca */
+#headerFornecedor {
+  box-shadow: var(--shadow-md);
+}
+
+
+/* ============================================================
+   9. CARDS DE PRODUTO
+   ============================================================ */
+
+/* Card raiz */
+[id^="card-item-"] {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+[id^="card-item-"]:hover {
+  border-color: var(--border-default);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 /* Área da imagem do produto */
-[data-theme="dark"] .bg-slate-50.flex.items-center.justify-center {
-  background-color: var(--bg-secondary) !important;
+[id^="card-item-"] .relative.bg-slate-50,
+[id^="card-item-"] [style*="min-height:108px"] {
+  background-color: var(--surface-secondary) !important;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
-/* Badge de estoque */
-[data-theme="dark"] .bg-emerald-100 { background-color: #0D2318 !important; }
-[data-theme="dark"] .text-emerald-600 { color: #34D399 !important; }
-[data-theme="dark"] .bg-red-100 { background-color: #220D0D !important; }
-[data-theme="dark"] .text-red-500 { color: #F87171 !important; }
+/* Imagem do produto — no light usa mix-blend-multiply para remover fundo branco;
+   no dark desativa (a imagem ficaria invisível sobre fundos escuros) */
+[id^="card-item-"] img.object-contain {
+  mix-blend-mode: multiply;
+  transition: transform var(--transition-base);
+}
+[data-theme="dark"] [id^="card-item-"] img.object-contain {
+  mix-blend-mode: normal;
+}
 
-/* Badge de desconto */
-[data-theme="dark"] .bg-emerald-50 { background-color: #0D2318 !important; }
-[data-theme="dark"] .text-emerald-700 { color: #34D399 !important; }
+/* Hover na imagem */
+[id^="card-item-"]:hover img.object-contain {
+  transform: scale(1.06);
+}
+
+/* Badge de estoque (disponível / esgotado) */
+[id^="card-item-"] .bg-emerald-100 {
+  background-color: var(--success-soft) !important;
+}
+[id^="card-item-"] .text-emerald-600 {
+  color: var(--success) !important;
+}
+[id^="card-item-"] .bg-red-100 {
+  background-color: var(--danger-soft) !important;
+}
+[id^="card-item-"] .text-red-500 {
+  color: var(--danger) !important;
+}
+
+/* Texto do card */
+[id^="card-item-"] h2,
+[id^="card-item-"] .text-slate-700 {
+  color: var(--text-primary);
+}
+[id^="card-item-"] .text-slate-400,
+[id^="card-item-"] .text-slate-500 {
+  color: var(--text-secondary);
+}
+[id^="card-item-"] .text-slate-600 {
+  color: var(--text-secondary);
+}
 
 /* Separador de preço */
-[data-theme="dark"] .border-slate-100 { border-color: var(--border-subtle) !important; }
-
-/* Botão adicionar */
-[data-theme="dark"] .bg-slate-900.hover\:bg-slate-700 {
-  background-color: var(--bg-secondary) !important;
-  border: 1px solid var(--border-default);
+[id^="card-item-"] .border-t {
+  border-color: var(--border-subtle);
 }
-[data-theme="dark"] .bg-slate-100.text-slate-400 {
-  background-color: var(--bg-secondary) !important;
+
+/* Badge de desconto */
+[id^="card-item-"] .bg-emerald-50 {
+  background-color: var(--success-soft) !important;
+}
+[id^="card-item-"] .text-emerald-600 {
+  color: #22C55E !important;
+}
+
+/* Preço riscado */
+[id^="card-item-"] .line-through {
+  color: var(--text-muted);
+}
+
+
+/* ============================================================
+   10. BOTÕES DE AÇÃO (ADICIONAR / CONTADOR QTD)
+   ============================================================ */
+
+/* Botão "Adicionar" (slate escuro) */
+[id^="card-btn-"] button.w-full {
+  background-color: var(--surface-header);
+  color: var(--text-inverse);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+[id^="card-btn-"] button.w-full:hover {
+  background-color: var(--accent);
+  border-color: var(--accent-hover);
+}
+
+/* Botão "Sem estoque" */
+[id^="card-btn-"] button[disabled] {
+  background-color: var(--surface-secondary) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-subtle);
+  cursor: not-allowed;
+}
+
+/* Contador de quantidade (+/-) — container */
+[id^="card-btn-"] .bg-orange-50 {
+  background-color: var(--accent-soft) !important;
+  border-color: var(--accent-border) !important;
+}
+
+/* Botões + e - dentro do contador */
+[id^="card-btn-"] .bg-orange-50 button {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-default) !important;
+  color: var(--accent) !important;
+}
+[id^="card-btn-"] .bg-orange-50 button:hover {
+  background-color: var(--accent-soft) !important;
+}
+
+/* Input numérico dentro do contador */
+[id^="card-btn-"] input[type="number"] {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--accent) !important;
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   11. MODAIS — BASE GENÉRICA
+   ============================================================ */
+
+/* Backdrop */
+[id^="modal"] {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Janela do modal */
+[id^="modal"] > div {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-modal);
+}
+
+/* Corpo interno do modal (scroll) */
+[id^="modal"] [id^="corpo"] {
+  background-color: var(--surface-secondary);
+}
+
+/* Bordas internas de listas */
+[id^="modal"] .border-b {
+  border-color: var(--border-subtle);
+}
+
+/* Textos dentro dos modais */
+[id^="modal"] .text-slate-900,
+[id^="modal"] .text-slate-800 {
+  color: var(--text-primary) !important;
+}
+[id^="modal"] .text-slate-700,
+[id^="modal"] .text-slate-600 {
+  color: var(--text-secondary) !important;
+}
+[id^="modal"] .text-slate-500,
+[id^="modal"] .text-slate-400 {
   color: var(--text-muted) !important;
 }
 
-/* Controles de quantidade (+ / -) */
-[data-theme="dark"] .bg-orange-50 { background-color: #1A0D00 !important; }
-[data-theme="dark"] .border-orange-100 { border-color: #7C3300 !important; }
-[data-theme="dark"] .border-orange-200 { border-color: #7C3300 !important; }
-
-/* ============================================================
-   HEADER DE FORNECEDOR E PORTAL
-   ============================================================ */
-/* Tela de portais — fundo já é branco com logo, mantém mas ajusta */
-[data-theme="dark"] #telaPortais .bg-white {
-  background-color: var(--bg-page) !important;
+/* Fundos brancos dentro de modais */
+[id^="modal"] .bg-white {
+  background-color: var(--surface-card) !important;
+}
+[id^="modal"] .bg-slate-50 {
+  background-color: var(--surface-secondary) !important;
+}
+[id^="modal"] .bg-slate-100 {
+  background-color: var(--surface-tertiary) !important;
+}
+[id^="modal"] .border-slate-100 {
   border-color: var(--border-subtle) !important;
 }
-[data-theme="dark"] #telaPortais h2 { color: var(--text-primary) !important; }
-[data-theme="dark"] #telaPortais p  { color: var(--text-secondary) !important; }
-
-/* Cards dos portais de fornecedor — mantêm gradiente de cor da marca */
-[data-theme="dark"] #gridPortais button { opacity: 0.92; }
-
-/* ============================================================
-   SEÇÃO DE AVISOS (letreiro)
-   ============================================================ */
-[data-theme="dark"] .letreiro-container {
-  background-color: var(--bg-header) !important;
+[id^="modal"] .border-slate-200 {
+  border-color: var(--border-default) !important;
 }
 
+
 /* ============================================================
-   PAINEL DE CLIENTE E BARRA ESCURA
+   12. MODAL — DETALHES DO PRODUTO
    ============================================================ */
-[data-theme="dark"] .bg-\[\#0F172A\],
-[data-theme="dark"] [style*="background-color: rgb(15, 23, 42)"] {
-  background-color: var(--bg-header) !important;
+
+/* Área da imagem no modal — fundo sempre neutro claro para a foto aparecer bem */
+#modalDetalhes .bg-slate-50.flex.items-center.justify-center {
+  background-color: var(--surface-secondary) !important;
 }
 
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
-[data-theme="dark"] ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-[data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
+/* Imagem principal do modal: mantém mix-blend no light */
+#modalImagem {
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] #modalImagem {
+  mix-blend-mode: normal;
+}
+
+/* Grade de informações */
+#modalDetalhes .grid.grid-cols-2 {
+  background-color: var(--surface-secondary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Badge de fornecedor no modal */
+#modalFornecedor {
+  background-color: var(--surface-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Badge estoque disponível */
+.bg-emerald-100.text-emerald-800 {
+  background-color: var(--success-soft) !important;
+  color: var(--success) !important;
+  border-color: var(--success-border) !important;
+}
+
+/* Badge estoque esgotado */
+.bg-red-100.text-red-800 {
+  background-color: var(--danger-soft) !important;
+  color: var(--danger) !important;
+  border-color: var(--danger-border) !important;
+}
+
 
 /* ============================================================
-   BOTÃO TOGGLE DARK MODE
+   13. MODAL — CARRINHO
    ============================================================ */
+
+/* Cabeçalho dark do carrinho — mantém */
+#modalCarrinho header.bg-slate-900 {
+  background-color: var(--surface-header) !important;
+}
+
+/* Corpo do carrinho */
+#corpoCarrinho {
+  background-color: var(--surface-secondary) !important;
+}
+
+/* Resumo financeiro */
+#blocoResumoFinanceiro {
+  background-color: var(--surface-tertiary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Cards de resumo por fornecedor */
+#corpoCarrinho .bg-blue-50\/50 {
+  background-color: rgba(30, 64, 115, 0.10) !important;
+}
+[data-theme="dark"] #corpoCarrinho .bg-blue-50\/50 {
+  background-color: rgba(30, 64, 115, 0.18) !important;
+}
+
+/* Imagens dos itens no carrinho */
+#corpoCarrinho img.object-contain {
+  background-color: var(--surface-secondary);
+  mix-blend-mode: multiply;
+}
+[data-theme="dark"] #corpoCarrinho img.object-contain {
+  mix-blend-mode: normal;
+}
+
+/* Controles +/- do carrinho */
+#corpoCarrinho .bg-slate-100 {
+  background-color: var(--surface-tertiary) !important;
+}
+#corpoCarrinho .bg-slate-100 button.bg-white {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+}
+#corpoCarrinho .bg-slate-100 button.bg-white:hover {
+  background-color: var(--surface-secondary) !important;
+}
+
+/* Bloco de resumo em 3 colunas */
+#blocoResumoFinanceiro .bg-white {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-default) !important;
+}
+#blocoResumoFinanceiro .bg-emerald-50\/20 {
+  background-color: var(--success-soft) !important;
+  border-color: var(--success-border) !important;
+}
+
+
+/* ============================================================
+   14. MODAL — IMPORTAR PEDIDO
+   ============================================================ */
+
+/* Cabeçalho dark */
+#modalImportarPedido header {
+  background-color: var(--surface-header) !important;
+}
+
+/* Área de drop */
+#importEstadoUpload label {
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xl);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+#importEstadoUpload label:hover {
+  border-color: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+/* Blocos de cliente importado */
+#importBlocosClientes .border-emerald-200 {
+  border-color: var(--success-border) !important;
+}
+#importBlocosClientes .bg-emerald-50 {
+  background-color: var(--success-soft) !important;
+}
+.text-emerald-900 { color: #065F46 !important; }
+[data-theme="dark"] .text-emerald-900 { color: #6EE7B7 !important; }
+
+/* Blocos de aviso (CNPJ não encontrado) */
+#importBlocoCnpjNaoEncontrados,
+#importBlocoCodigoNaoEncontrados {
+  background-color: var(--warning-soft) !important;
+  border-color: var(--warning-border) !important;
+}
+
+/* Resumo de estoque */
+#importBlocoResumoEstoque .bg-emerald-50 {
+  background-color: var(--success-soft) !important;
+  border-color: var(--success-border) !important;
+}
+#importBlocoResumoEstoque .bg-red-50 {
+  background-color: var(--danger-soft) !important;
+  border-color: var(--danger-border) !important;
+}
+
+/* Cards de totais superiores */
+#importEstadoResultado .bg-slate-50 {
+  background-color: var(--surface-secondary) !important;
+  border-color: var(--border-subtle) !important;
+}
+#importEstadoResultado .bg-emerald-50 {
+  background-color: var(--success-soft) !important;
+  border-color: var(--success-border) !important;
+}
+
+/* Rodapé de ações */
+#importRodapeAcoes {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+
+/* ============================================================
+   15. MODAL — PEDIDOS SALVOS
+   ============================================================ */
+
+/* Cabeçalho azul — preservado */
+#modalPedidosSalvos header {
+  background-color: #1D4ED8 !important;
+}
+
+/* Corpo */
+#corpoPedidosSalvos {
+  background-color: var(--surface-secondary) !important;
+}
+
+/* Cards de pedido salvo */
+#corpoPedidosSalvos > div {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Cabeçalho do card de pedido */
+#corpoPedidosSalvos .p-4 {
+  background-color: var(--surface-card) !important;
+}
+
+/* Preview expansível */
+#corpoPedidosSalvos [id^="preview_"] {
+  background-color: var(--surface-secondary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Badge de UF */
+#corpoPedidosSalvos .bg-blue-50 {
+  background-color: rgba(29, 78, 216, 0.12) !important;
+}
+#corpoPedidosSalvos .text-blue-600 {
+  color: #60A5FA !important;
+}
+
+
+/* ============================================================
+   16. FOOTER MOBILE
+   ============================================================ */
+
+footer.fixed {
+  background-color: var(--surface-card) !important;
+  border-color: var(--border-subtle) !important;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Botão de ícone no footer */
+footer.fixed button.bg-slate-100 {
+  background-color: var(--surface-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+footer.fixed button.bg-blue-50 {
+  background-color: rgba(29, 78, 216, 0.10) !important;
+}
+footer.fixed button.bg-red-50 {
+  background-color: rgba(220, 38, 38, 0.10) !important;
+}
+
+/* Total do pedido no footer */
+footer.fixed p.text-slate-900 {
+  color: var(--text-primary) !important;
+}
+footer.fixed p.text-slate-400 {
+  color: var(--text-muted) !important;
+}
+
+/* Icone de carrinho no footer */
+footer.fixed .bg-slate-100.p-2.rounded-xl {
+  background-color: var(--surface-secondary) !important;
+}
+
+
+/* ============================================================
+   17. BOTÃO DARK MODE
+   ============================================================ */
+
 #btnDarkMode {
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  display: flex; align-items: center; justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 16px;
-  background: transparent;
-  color: #94A3B8;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
 }
-#btnDarkMode:hover { background: rgba(148,163,184,0.15); }
-[data-theme="dark"] #btnDarkMode { color: #FFD700; }
+#btnDarkMode:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.40);
+}
+[data-theme="dark"] #btnDarkMode {
+  color: #FBBF24;
+}
+
 
 /* ============================================================
-   ELEMENTOS ORIGINAIS (scrollbar, animações, etc.)
+   18. BOTÃO VOLTAR AO TOPO
    ============================================================ */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--scrollbar-track); }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type=number] { -moz-appearance: textfield; }
 
-.letreiro-container { overflow: hidden; white-space: nowrap; display: flex; align-items: center; }
-.letreiro-conteudo { display: inline-block; padding-left: 100%; animation: marqueeInfinita 30s linear infinite; }
-.letreiro-conteudo:hover { animation-play-state: paused; }
-@keyframes marqueeInfinita {
-  0%   { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-100%, 0, 0); }
+#btnVoltarTopo {
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
-.aviso-item::after { content: "•"; margin-left: 2.5rem; margin-right: 2.5rem; color: #fdba74; font-weight: bold; }
-.aviso-item:last-child::after { content: "•"; }
+#btnVoltarTopo:hover {
+  background-color: var(--accent-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
 
-.ol-btn-ativo { background: #FF6B00 !important; color: #fff !important; border-color: #e55300 !important; box-shadow: 0 2px 8px rgba(255,107,0,0.35); }
 
 /* ============================================================
-   EXCLUSÕES DO DARK MODE — elementos que devem manter visual original
+   19. OL / ST BADGES & PAINÉIS
    ============================================================ */
 
-/* Imagens de produto — remove mix-blend-multiply no escuro (ficava invisível) */
-[data-theme="dark"] .group img.object-contain {
-  mix-blend-mode: normal !important;
-  background: transparent !important;
+/* Botão OL ativo */
+.ol-btn-ativo {
+  background-color: var(--accent) !important;
+  color: #FFFFFF !important;
+  border-color: var(--accent-hover) !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.40);
 }
 
-/* Área da imagem do card — fundo mais neutro para produto aparecer bem */
-[data-theme="dark"] [style*="min-height:108px"],
-[data-theme="dark"] .relative.bg-slate-50 {
-  background-color: #1A2535 !important;
+/* Painel OL Danone (dentro da barra de cliente) */
+#painelOL .ol-btn,
+#painelOLOmron .omron-ol-btn {
+  background-color: var(--surface-secondary);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
-/* Logo da Nazária no header — mantém o fundo laranja original */
-[data-theme="dark"] img[alt="Nazária Logo"],
-[data-theme="dark"] img[alt="Nazária"],
-[data-theme="dark"] img[alt="HBN1"] {
+/* ST toggle */
+#btnToggleST {
+  background-color: var(--surface-secondary);
+  border-color: var(--border-default);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+#btnToggleST:hover {
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+/* Botões ST sim/não dentro do painel */
+#btnSTSim,
+#btnSTNao {
+  transition: all var(--transition-fast);
+}
+
+
+/* ============================================================
+   20. UTILITÁRIOS GLOBAIS
+   ============================================================ */
+
+/* Superfícies genéricas mapeadas para tokens */
+.bg-white  { background-color: var(--surface-card)      !important; }
+.bg-slate-50 { background-color: var(--surface-secondary) !important; }
+.bg-slate-100 { background-color: var(--surface-tertiary) !important; }
+.bg-slate-200 { background-color: var(--surface-tertiary) !important; }
+
+/* Bordas genéricas */
+.border-slate-100 { border-color: var(--border-subtle)  !important; }
+.border-slate-200 { border-color: var(--border-default) !important; }
+.border-slate-300 { border-color: var(--border-strong)  !important; }
+
+/* Texto genérico */
+.text-slate-900 { color: var(--text-primary)   !important; }
+.text-slate-800 { color: var(--text-primary)   !important; }
+.text-slate-700 { color: var(--text-primary)   !important; }
+.text-slate-600 { color: var(--text-secondary) !important; }
+.text-slate-500 { color: var(--text-secondary) !important; }
+.text-slate-400 { color: var(--text-muted)     !important; }
+
+/* Hover de superfícies */
+.hover\:bg-slate-50:hover  { background-color: var(--surface-secondary) !important; }
+.hover\:bg-slate-100:hover { background-color: var(--surface-tertiary)  !important; }
+.hover\:bg-slate-200:hover { background-color: var(--surface-tertiary)  !important; }
+
+/* Excepção: a barra do header principal sempre fica escura */
+.bg-slate-900,
+.bg-slate-800 {
+  background-color: var(--surface-header) !important;
+}
+.bg-slate-700 { background-color: var(--surface-secondary) !important; }
+
+.text-slate-200 { color: #B8C9DC !important; }
+.text-slate-300 { color: #7EA8CC !important; }
+.hover\:bg-slate-700:hover { background-color: var(--surface-tertiary) !important; }
+.hover\:bg-slate-800:hover { background-color: var(--surface-header)   !important; }
+
+/* Logo Nazária — nunca fica escurecida */
+img[alt="Nazária Logo"],
+img[alt="Nazária"],
+img[alt="HBN1"] {
   filter: none !important;
   opacity: 1 !important;
 }
 
-/* Mural de avisos — mantém o fundo escuro original (já está bem) */
-[data-theme="dark"] #containerAvisosLetreiro,
-[data-theme="dark"] .letreiro-container {
-  background-color: #0A111C !important;
+/* Divide interno de tabelas */
+.divide-slate-100 > * {
+  border-color: var(--border-subtle) !important;
 }
 
-/* Botão ADICIONAR — mantém o slate escuro com texto branco legível */
-[data-theme="dark"] button[onclick*="alterarQtd"].bg-slate-900,
-[data-theme="dark"] button[onclick*="alterarQtd"].w-full {
-  background-color: #1E3A5F !important;
-  color: #E8EDF5 !important;
-  border-color: #2A4A70 !important;
-}
-[data-theme="dark"] button[onclick*="alterarQtd"].w-full:hover {
-  background-color: #FF6B00 !important;
-  color: #ffffff !important;
-  border-color: #FF6B00 !important;
+/* Backdrop de modais */
+.bg-slate-900\/60 {
+  background-color: var(--surface-overlay) !important;
 }
 
-/* Controles de quantidade +/- — ajuste para dark */
-[data-theme="dark"] .bg-orange-50.border-orange-100,
-[data-theme="dark"] .bg-orange-50.border-orange-200 {
-  background-color: #1A1200 !important;
-  border-color: #7C3300 !important;
-}
-[data-theme="dark"] .bg-orange-50 button.bg-white {
-  background-color: #243347 !important;
-  border-color: #2A4A70 !important;
-  color: #FF6B00 !important;
+/* Resumo de valores mínimos (dentro do carrinho) */
+#resumoValoresMinimos {
+  background-color: var(--surface-secondary) !important;
+  border-color: var(--border-subtle) !important;
 }
