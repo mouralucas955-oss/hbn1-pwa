@@ -1011,6 +1011,7 @@ img[alt="HBN1"] {
 #resumoValoresMinimos {
   background-color: var(--surface-secondary) !important;
   border-color: var(--border-subtle) !important;
+}
 
 /* ============================================================
    MOBILE — Correção de sobreposição no header
@@ -1018,7 +1019,6 @@ img[alt="HBN1"] {
 
 @media (max-width: 768px) {
 
-  /* Header: empilha verticalmente no mobile */
   header .max-w-\[1600px\].h-20 {
     height: auto !important;
     flex-direction: column !important;
@@ -1028,19 +1028,16 @@ img[alt="HBN1"] {
     padding-bottom: 12px !important;
   }
 
-  /* Logo + título: linha horizontal */
   header .flex.items-center.gap-3:first-child {
     width: 100%;
     flex-direction: row;
     align-items: center;
   }
 
-  /* Barra de pesquisa: largura total */
   header .w-full.md\:w-96 {
     width: 100% !important;
   }
 
-  /* Botão dark mode: posição no canto superior direito */
   #btnDarkMode {
     position: absolute;
     top: 14px;
@@ -1048,25 +1045,21 @@ img[alt="HBN1"] {
     z-index: 60;
   }
 
-  /* Mural: garante que fique abaixo do header, sem sobrepor */
   header + div {
     position: relative;
     z-index: 49;
   }
 
-  /* Barra de cliente: empilha corretamente */
   .bg-slate-900.border-b.px-4.py-2 {
     padding: 8px 12px !important;
   }
 
-  /* Faixa do cliente ativo: quebra em múltiplas linhas */
   #faixaClienteSelecionado {
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 2px !important;
   }
 
-  /* Separadores | ficam ocultos no mobile */
   #faixaClienteSelecionado .text-slate-500.shrink-0 {
     display: none !important;
   }
