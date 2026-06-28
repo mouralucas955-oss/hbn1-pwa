@@ -1,0 +1,23 @@
+::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Letreiro de avisos */
+    .letreiro-container { overflow: hidden; white-space: nowrap; display: flex; align-items: center; }
+    .letreiro-conteudo { display: inline-block; padding-left: 100%; animation: marqueeInfinita 30s linear infinite; }
+    .letreiro-conteudo:hover { animation-play-state: paused; }
+    @keyframes marqueeInfinita {
+      0%   { transform: translate3d(0, 0, 0); }
+      100% { transform: translate3d(-100%, 0, 0); }
+    }
+    .aviso-item::after { content: "•"; margin-left: 2.5rem; margin-right: 2.5rem; color: #fdba74; font-weight: bold; }
+    .aviso-item:last-child::after { content: "•"; }
+
+    /* Badge OL ativo */
+    .ol-btn-ativo { background: #FF6B00 !important; color: #fff !important; border-color: #e55300 !important; box-shadow: 0 2px 8px rgba(255,107,0,0.35); }
