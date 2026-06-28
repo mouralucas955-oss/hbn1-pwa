@@ -403,6 +403,10 @@ nav.sticky {
 #miniSwitcherFornecedores .bg-white {
   background-color: #FFFFFF !important;
 }
+/* Logo Nazária no header — fundo sempre branco */
+header .bg-white {
+  background-color: #FFFFFF !important;
+}
 
 
 /* ============================================================
@@ -1008,8 +1012,4 @@ img[alt="HBN1"] {
   background-color: var(--surface-secondary) !important;
   border-color: var(--border-subtle) !important;
 
-   /* Logo Nazária no header — fundo sempre branco */
-header .bg-white {
-  background-color: #FFFFFF !important;
-}
 }
