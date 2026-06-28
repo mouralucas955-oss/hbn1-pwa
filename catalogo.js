@@ -7,6 +7,24 @@
     let CLIENTE_SELECIONADO = null;
     let FILTRO_APENAS_COM_ESTOQUE = false;
 
+    // -----------------------------------------------------------------------
+    // DARK MODE — aplicado antes de qualquer render
+    // -----------------------------------------------------------------------
+    function toggleDarkMode() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const novoTema = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', novoTema);
+      const icon = document.getElementById('iconDarkMode');
+      if (icon) icon.innerText = novoTema === 'dark' ? '☀️' : '🌙';
+      localStorage.setItem('hbn1_tema', novoTema);
+    }
+
+    // Aplica tema salvo imediatamente (antes do DOMContentLoaded)
+    (function() {
+      const t = localStorage.getItem('hbn1_tema') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+
     // UF do usuário logado: vem da URL (?uf=...) ou do localStorage (login feito em index.html)
     const params = new URLSearchParams(window.location.search);
     const UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
@@ -2491,6 +2509,9 @@ const container = document.getElementById('containerST');
     });
     // INICIALIZAÇÃO
     window.addEventListener('DOMContentLoaded', () => {
+      // Sincroniza ícone do dark mode
+      const icon = document.getElementById('iconDarkMode');
+      if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
 
       function atualizarMuralInvisivel() {
         chamarApi('avisos', { uf: UF_USUARIO })
