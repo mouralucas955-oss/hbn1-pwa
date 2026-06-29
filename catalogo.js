@@ -765,10 +765,15 @@
         if (btnFora)   btnFora.classList.add('hidden');
         if (btnMobile) btnMobile.classList.add('hidden');
       }
+
+      // Botão flutuante "Salvar Pedido" — só aparece com itens no carrinho
+      const btnSalvarFlutuante = document.getElementById('btnSalvarPedidoFlutuante');
+      if (btnSalvarFlutuante) {
+        totalItens > 0 ? btnSalvarFlutuante.classList.remove('hidden') : btnSalvarFlutuante.classList.add('hidden');
+      }
     }
 
-    function limparPedidoCompleto() {
-      if (!confirm("Tem certeza que deseja limpar todos os produtos selecionados do seu pedido?")) return;
+    function limparCarrinhoSemConfirmacao() {
       CARRINHO = {};
       BD_PRODUTOS.forEach(p => {
         const c = document.getElementById(`card-btn-${p.id}`);
@@ -776,6 +781,11 @@
         if (c) c.innerHTML = obterHtmlBotaoAcao(p.id, 0, est, est <= 0);
       });
       atualizarIndicadoresFinanceirosGlobais();
+    }
+
+    function limparPedidoCompleto() {
+      if (!confirm("Tem certeza que deseja limpar todos os produtos selecionados do seu pedido?")) return;
+      limparCarrinhoSemConfirmacao();
       if (!document.getElementById('modalCarrinho').classList.contains('hidden')) abrirModalCarrinho();
     }
     // MODAL CARRINHO
@@ -2305,12 +2315,30 @@ const container = document.getElementById('containerST');
       persistirPedidosSalvos(lista);
       atualizarBadgesPedidosSalvos();
 
-      // Feedback visual no botão
-      const btn = document.getElementById('btnSalvarPedido');
-      const htmlOriginal = btn.innerHTML;
-      btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Salvo!';
-      btn.classList.replace('bg-blue-600','bg-blue-800');
-      setTimeout(() => { btn.innerHTML = htmlOriginal; btn.classList.replace('bg-blue-800','bg-blue-600'); }, 2000);
+      // Inicia automaticamente um novo pedido (limpa o carrinho atual)
+      limparCarrinhoSemConfirmacao();
+
+      // Mantém o botão flutuante visível durante o feedback, mesmo com carrinho já vazio
+      const btnFlutuante = document.getElementById('btnSalvarPedidoFlutuante');
+      if (btnFlutuante) btnFlutuante.classList.remove('hidden');
+
+      // Feedback visual nos botões de salvar (modal + flutuante)
+      ['btnSalvarPedido', 'btnSalvarPedidoFlutuante'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const htmlOriginal   = btn.innerHTML;
+        const classeOriginal = btn.className;
+        btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Salvo! Novo pedido iniciado';
+        btn.classList.replace('bg-blue-600', 'bg-blue-800');
+        setTimeout(() => {
+          btn.innerHTML = htmlOriginal;
+          btn.className = classeOriginal;
+          if (id === 'btnSalvarPedidoFlutuante') btn.classList.add('hidden'); // carrinho já está vazio
+        }, 2000);
+      });
+
+      // Atualiza o modal do carrinho se estiver aberto (mostra o pedido novo, vazio)
+      if (!document.getElementById('modalCarrinho').classList.contains('hidden')) abrirModalCarrinho();
     }
 
     function abrirModalPedidosSalvos() {
