@@ -986,6 +986,22 @@
 
     function fecharModalDetalhes()              { document.getElementById('modalDetalhes').classList.add('hidden'); }
     function fecharModalDetalhesNoBackdrop(evt) { if (evt.target.id === 'modalDetalhes') fecharModalDetalhes(); }
+// ZOOM DA IMAGEM DO PRODUTO (lightbox)
+function abrirZoomImagem() {
+  const src = document.getElementById('modalImagem').src;
+  if (!src) return;
+  document.getElementById('modalZoomImg').src = src;
+  document.getElementById('modalZoomImagem').classList.remove('hidden');
+}
+function fecharZoomImagem()              { document.getElementById('modalZoomImagem').classList.add('hidden'); }
+function fecharZoomImagemNoBackdrop(evt) { if (evt.target.id === 'modalZoomImagem') fecharZoomImagem(); }
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const zoom = document.getElementById('modalZoomImagem');
+    if (zoom && !zoom.classList.contains('hidden')) fecharZoomImagem();
+  }
+});
     // DOWNLOAD CSV
 
     // CONSTRÓI O WORKBOOK FORMATADO (compartilhado pelo carrinho normal
