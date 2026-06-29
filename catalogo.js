@@ -562,14 +562,17 @@
       }
     });
     // FILTROS
-    function definirFiltroEstoque(apenasComEstoque) {
-      FILTRO_APENAS_COM_ESTOQUE = apenasComEstoque;
-      const btnSim = document.getElementById('btnEstoqueSim');
-      const btnNao = document.getElementById('btnEstoqueNao');
-      const ativo  = "py-1.5 px-3 text-xs font-bold rounded-lg border bg-orange-600 text-white border-orange-600 shadow-sm transition-all text-center";
-      const inativo= "py-1.5 px-3 text-xs font-bold rounded-lg border bg-white text-slate-700 border-slate-200 hover:bg-slate-50 transition-all text-center";
-      btnSim.className = apenasComEstoque ? ativo : inativo;
-      btnNao.className = apenasComEstoque ? inativo : ativo;
+    function toggleFiltroEstoque() {
+      FILTRO_APENAS_COM_ESTOQUE = !FILTRO_APENAS_COM_ESTOQUE;
+      const btn   = document.getElementById('btnFiltroEstoque');
+      const badge = document.getElementById('badgeFiltroEstoqueAtivo');
+
+      const ativoClass   = "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)] flex items-center gap-1.5";
+      const inativoClass = "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-200 bg-white text-slate-500 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5";
+
+      btn.className = FILTRO_APENAS_COM_ESTOQUE ? ativoClass : inativoClass;
+      badge.classList.toggle('hidden', !FILTRO_APENAS_COM_ESTOQUE);
+
       executarFiltrosGerais();
     }
 
