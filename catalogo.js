@@ -177,15 +177,8 @@
     }
 
     function atualizarBadgesPortais() {
-      const n = carregarPedidosSalvos().length;
       const qtdCarrinho = Object.keys(CARRINHO).reduce((s, k) => s + CARRINHO[k], 0);
-      ['badgePedidosPortais'].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.innerText = n;
-        el.classList.toggle('hidden', n === 0);
-      });
-      const bc = document.getElementById('badgeCarrinhoPortais');
+      const bc = document.getElementById('badgeMenuPedidoPortais');
       if (bc) { bc.innerText = qtdCarrinho; bc.classList.toggle('hidden', qtdCarrinho === 0); }
     }
     // Substituição de renderizarFiltrosLaterais — agora atualiza os portais
@@ -756,14 +749,8 @@
         badge.innerText = totalItens;
         totalItens > 0 ? badge.classList.remove('hidden') : badge.classList.add('hidden');
       }
-      // Badge carrinho nos portais
-      const badgePortais = document.getElementById('badgeCarrinhoPortais');
-      if (badgePortais) {
-        badgePortais.innerText = totalItens;
-        totalItens > 0 ? badgePortais.classList.remove('hidden') : badgePortais.classList.add('hidden');
-      }
-        // Badges do menu lateral
-      ['badgeMenuPedido', 'badgeMenuCarrinho'].forEach(id => {
+      // Badges do menu lateral (catálogo + portais)
+      ['badgeMenuPedido', 'badgeMenuCarrinho', 'badgeMenuPedidoPortais'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.innerText = totalItens;
