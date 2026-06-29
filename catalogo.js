@@ -2294,8 +2294,8 @@ const container = document.getElementById('containerST');
         acBruto   += precoOriginal * qtd;
         acLiquido += precoFinal    * qtd;
         acUnidades += qtd;
-        itens.push({ id: p.id, descricao: p.descricao, marca: p.marca, fornecedor: p.fornecedor,
-          embalagem: p.embalagem, qtd, precoFinal, precoOriginal, percentual });
+        itens.push({ id: p.id, ean: p.ean, descricao: p.descricao, marca: p.marca, fornecedor: p.fornecedor,
+  embalagem: p.embalagem, qtd, precoFinal, precoOriginal, percentual });
       });
 
       const agora = new Date();
@@ -2516,9 +2516,9 @@ const container = document.getElementById('containerST');
           acUnidades += item.qtd;
           // Reconstruímos o objeto "p" mínimo que construirWorkbookPedido espera
           const pFake = {
-            id: item.id, descricao: item.descricao, marca: item.marca,
-            fornecedor: item.fornecedor, embalagem: item.embalagem
-          };
+  id: item.id, ean: item.ean, descricao: item.descricao, marca: item.marca,
+  fornecedor: item.fornecedor, embalagem: item.embalagem
+};
           const forn = (item.fornecedor || 'GERAL').trim().toUpperCase();
           if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
           itensPorFornecedor[forn].push({
