@@ -762,6 +762,13 @@
         badgePortais.innerText = totalItens;
         totalItens > 0 ? badgePortais.classList.remove('hidden') : badgePortais.classList.add('hidden');
       }
+        // Badges do menu lateral
+      ['badgeMenuPedido', 'badgeMenuCarrinho'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerText = totalItens;
+        totalItens > 0 ? el.classList.remove('hidden') : el.classList.add('hidden');
+      });
       const btnFora   = document.getElementById('btnLimparPedidoFora');
       const btnMobile = document.getElementById('btnLimparPedidoMobile');
       if (totalItens > 0) {
@@ -785,6 +792,15 @@
       if (!document.getElementById('modalCarrinho').classList.contains('hidden')) abrirModalCarrinho();
     }
     // MODAL CARRINHO
+// MENU LATERAL DO PEDIDO
+function abrirMenuPedido() {
+  document.getElementById('overlayMenuPedido').classList.remove('hidden');
+  document.getElementById('painelMenuPedido').classList.remove('translate-x-full');
+}
+function fecharMenuPedido() {
+  document.getElementById('overlayMenuPedido').classList.add('hidden');
+  document.getElementById('painelMenuPedido').classList.add('translate-x-full');
+}
     function abrirModalCarrinho() {
       const boxCorpo    = document.getElementById('corpoCarrinho');
       const blocoResumo = document.getElementById('blocoResumoFinanceiro');
@@ -2258,7 +2274,7 @@ const container = document.getElementById('containerST');
     function atualizarBadgesPedidosSalvos() {
       const n = carregarPedidosSalvos().length;
       const mostrar = n > 0;
-      ['badgePedidosSalvos', 'badgePedidosSalvosMobile'].forEach(id => {
+     ['badgePedidosSalvos', 'badgePedidosSalvosMobile', 'badgeMenuPedidosSalvos'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.innerText = n;
