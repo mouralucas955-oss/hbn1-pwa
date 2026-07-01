@@ -313,10 +313,10 @@ nav.sticky {
 #buscaClienteInput {
   background-color: var(--surface-secondary);
   border-color: var(--border-default);
-  color: var(--text-primary);
+  color: #FFFFFF;
 }
 #buscaClienteInput::placeholder {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.5);
 }
 #buscaClienteInput:focus {
   border-color: var(--accent);
