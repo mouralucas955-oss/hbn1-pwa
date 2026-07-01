@@ -458,7 +458,7 @@
         // Atualiza indicador de mínimos na barra
       atualizarIndicadorMinimosBarra();
     }
-    }
+    
 
     function atualizarPaineisOLPorFornecedor(fornecedor) {
       const forn     = String(fornecedor || '').toUpperCase();
@@ -2247,14 +2247,14 @@ document.addEventListener('keydown', function(e) {
 
       mostrarAlertaMinimos(async () => { await _executarDownloadExcel(); }, 'Baixar Mesmo Assim');
     }
-}
+
 
     async function _executarDownloadExcel() {
       const chaves = Object.keys(CARRINHO);
       const btnExcel = document.getElementById('btnBaixarExcel');
       const textoOriginalBtn = btnExcel ? btnExcel.innerHTML : null;
       if (btnExcel) { btnExcel.disabled = true; btnExcel.style.opacity = '0.6'; btnExcel.style.cursor = 'wait'; }
-         }
+        
 
       try {
         let acBruto = 0, acLiquido = 0, acUnidades = 0;
@@ -2529,10 +2529,7 @@ function confirmarAlertaMinimos() {
       if (!secao || !lista) return;
       if (Object.keys(BD_VALORES_MINIMOS).length === 0 || Object.keys(CARRINHO).length === 0) {
           secao.classList.remove('hidden');
-    }
-    // Atualiza também o indicador inline na barra de controles
     atualizarIndicadorMinimosBarra();
-  }
         return;
       }
 
