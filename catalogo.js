@@ -853,6 +853,7 @@
       // Card inteiro precisa re-renderizar para refletir borda/badge "no carrinho"
       _atualizarEstadoVisualCard(idProd);
       atualizarIndicadoresFinanceirosGlobais();
+      atualizarIndicadorMinimosBarra();
     }
 
     function alterarQtd(idProd, mudanca) {
@@ -868,6 +869,7 @@
       if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
       _atualizarEstadoVisualCard(idProd);
       atualizarIndicadoresFinanceirosGlobais();
+    atualizarIndicadorMinimosBarra();
     }
 
     // Atualiza borda/badge do card (estado "no carrinho") sem precisar re-renderizar o grid inteiro
@@ -936,6 +938,7 @@
         _atualizarEstadoVisualCard(p.id);
       });
       atualizarIndicadoresFinanceirosGlobais();
+      atualizarIndicadorMinimosBarra();
     }
 
     function limparPedidoCompleto() {
@@ -2528,7 +2531,7 @@ function confirmarAlertaMinimos() {
       const lista = document.getElementById('listaValoresMinimos');
       if (!secao || !lista) return;
       if (Object.keys(BD_VALORES_MINIMOS).length === 0 || Object.keys(CARRINHO).length === 0) {
-          secao.classList.remove('hidden');
+          secao.classList.add('hidden');
     atualizarIndicadorMinimosBarra();
         return;
       }
@@ -2566,6 +2569,7 @@ function confirmarAlertaMinimos() {
       }).join('');
 
       secao.classList.remove('hidden');
+    atualizarIndicadorMinimosBarra();
     }
     // PEDIDOS SALVOS — localStorage
     // Chave: 'hbn1_pedidos_salvos'
