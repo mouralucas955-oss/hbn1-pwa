@@ -455,6 +455,9 @@
       executarFiltrosGerais();
       atualizarIndicadoresFinanceirosGlobais();
       atualizarResumoValoresMinimos();
+        // Atualiza indicador de mínimos na barra
+      atualizarIndicadorMinimosBarra();
+    }
     }
 
     function atualizarPaineisOLPorFornecedor(fornecedor) {
@@ -655,6 +658,12 @@
       const input    = document.getElementById('buscaClienteInput');
       if (dropdown && input && !dropdown.contains(e.target) && e.target !== input) {
         dropdown.classList.add('hidden');
+          // Fecha popover de mínimos ao clicar fora
+      const popMin  = document.getElementById('popoverMinimos');
+      const btnMin  = document.getElementById('indicadorMinimos');
+      if (popMin && btnMin && !btnMin.contains(e.target) && !popMin.contains(e.target)) {
+        popMin.classList.add('hidden');
+      }
       }
       // Fecha popover do chip de cliente
       const estadoCom = document.getElementById('estadoComCliente');
@@ -2236,9 +2245,16 @@ document.addEventListener('keydown', function(e) {
       const chaves = Object.keys(CARRINHO);
       if (chaves.length === 0) return;
 
+      mostrarAlertaMinimos(async () => { await _executarDownloadExcel(); }, 'Baixar Mesmo Assim');
+    }
+}
+
+    async function _executarDownloadExcel() {
+      const chaves = Object.keys(CARRINHO);
       const btnExcel = document.getElementById('btnBaixarExcel');
       const textoOriginalBtn = btnExcel ? btnExcel.innerHTML : null;
       if (btnExcel) { btnExcel.disabled = true; btnExcel.style.opacity = '0.6'; btnExcel.style.cursor = 'wait'; }
+         }
 
       try {
         let acBruto = 0, acLiquido = 0, acUnidades = 0;
@@ -2343,13 +2359,180 @@ const container = document.getElementById('containerST');
         })
         .catch(e => console.error('Valores mínimos não disponíveis:', e));
     }
+// =========================================================================
+// FATURAMENTOS MÍNIMOS — cálculo, indicador inline e modal de alerta
+// =========================================================================
+
+// Calcula o status de cada grupo de desconto com mínimo configurado.
+// Retorna { pendentes, atingidos } onde cada item tem { chave, label, atual, minimo, faltam }
+function calcularStatusMinimos() {
+  if (Object.keys(BD_VALORES_MINIMOS).length === 0 || Object.keys(CARRINHO).length === 0) {
+    return { pendentes: [], atingidos: [] };
+  }
+  const grupos = {};
+  Object.keys(CARRINHO).forEach(idProd => {
+    const p = BD_PRODUTOS.find(x => x.id === idProd);
+    if (!p) return;
+    const { precoFinal, colunaAtiva } = calcularPrecos(p);
+    if (!colunaAtiva || !BD_VALORES_MINIMOS[colunaAtiva]) return;
+    if (!grupos[colunaAtiva]) grupos[colunaAtiva] = 0;
+    grupos[colunaAtiva] += precoFinal * (CARRINHO[idProd] || 0);
+  });
+
+  const pendentes = [], atingidos = [];
+  Object.keys(grupos).forEach(chave => {
+    const { minimo, label } = BD_VALORES_MINIMOS[chave];
+    const atual  = grupos[chave];
+    const faltam = Math.max(0, minimo - atual);
+    const item   = { chave, label, atual, minimo, faltam };
+    (faltam > 0 ? pendentes : atingidos).push(item);
+  });
+  return { pendentes, atingidos };
+}
+
+// Atualiza o botão/pílula de mínimos na barra de controles
+function atualizarIndicadorMinimosBarra() {
+  const btn = document.getElementById('indicadorMinimos');
+  const pop = document.getElementById('popoverMinimos');
+  if (!btn) return;
+
+  const { pendentes, atingidos } = calcularStatusMinimos();
+  const total = pendentes.length + atingidos.length;
+
+  if (total === 0) {
+    btn.classList.add('hidden');
+    if (pop) pop.classList.add('hidden');
+    return;
+  }
+
+  btn.classList.remove('hidden');
+
+  if (pendentes.length === 0) {
+    // Tudo atingido
+    btn.className = 'text-[10px] font-bold rounded-lg border px-3 py-1 transition-all flex items-center gap-1.5 bg-emerald-50 border-emerald-200 text-emerald-700';
+    btn.innerHTML = total === 1
+      ? `✅ <span class="font-semibold">${atingidos[0].label}</span> <span class="font-medium opacity-75">• Mínimo atingido</span>`
+      : `✅ <span class="font-semibold">${total} mínimos atingidos</span>`;
+  } else if (pendentes.length === 1 && total === 1) {
+    // Um único pendente
+    const p = pendentes[0];
+    btn.className = 'text-[10px] font-bold rounded-lg border px-3 py-1 transition-all flex items-center gap-1.5 bg-amber-50 border-amber-200 text-amber-700';
+    btn.innerHTML = `⚠ <span class="font-semibold">${p.label}</span> <span class="font-medium opacity-75">• Mín: ${formatarParaReal(p.minimo)} • Faltam ${formatarParaReal(p.faltam)}</span>`;
+  } else {
+    // Múltiplos ou misturados — mostra resumo + seta para o popover
+    btn.className = 'text-[10px] font-bold rounded-lg border px-3 py-1 transition-all flex items-center gap-1.5 bg-amber-50 border-amber-200 text-amber-700 cursor-pointer';
+    const chevron = `<svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>`;
+    btn.innerHTML = pendentes.length === 1
+      ? `⚠ <span class="font-semibold">${pendentes[0].label}</span> <span class="font-medium opacity-75">• Faltam ${formatarParaReal(pendentes[0].faltam)}</span> ${chevron}`
+      : `⚠ <span class="font-semibold">${pendentes.length} faturamentos mínimos pendentes</span> ${chevron}`;
+  }
+}
+
+// Abre/fecha o popover com o detalhamento de todos os mínimos
+function togglePopoverMinimos() {
+  const pop = document.getElementById('popoverMinimos');
+  if (!pop) return;
+
+  const { pendentes, atingidos } = calcularStatusMinimos();
+  const todos = [...pendentes, ...atingidos];
+  if (todos.length === 0) return;
+
+  if (!pop.classList.contains('hidden')) {
+    pop.classList.add('hidden');
+    return;
+  }
+
+  pop.innerHTML = `
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Faturamentos Mínimos</p>
+      <button onclick="document.getElementById('popoverMinimos').classList.add('hidden')"
+        class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 transition-colors">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="p-3 space-y-2">
+      ${todos.map(item => {
+        const ok = item.faltam === 0;
+        return `
+          <div class="rounded-xl p-3 border ${ok ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}">
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <span class="text-xs font-black ${ok ? 'text-emerald-700' : 'text-amber-700'}">${ok ? '🟢' : '🟠'} ${item.label}</span>
+              ${ok
+                ? `<span class="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">✓ Atingido</span>`
+                : `<span class="text-[10px] font-black text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">Faltam ${formatarParaReal(item.faltam)}</span>`}
+            </div>
+            <div class="flex gap-4 text-[10px] font-mono">
+              <span class="${ok ? 'text-emerald-600' : 'text-amber-600'}">Atual: <strong>${formatarParaReal(item.atual)}</strong></span>
+              <span class="text-slate-400">Mínimo: <strong>${formatarParaReal(item.minimo)}</strong></span>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+
+  pop.classList.remove('hidden');
+}
+
+// ── Modal de alerta de mínimos (antes de baixar/salvar) ──────────────────
+let _ALERTA_MINIMOS_CALLBACK = null;
+
+function mostrarAlertaMinimos(onProceed, btnLabel = 'Exportar Mesmo Assim') {
+  const { pendentes } = calcularStatusMinimos();
+
+  if (pendentes.length === 0) {
+    // Sem pendências — executa direto
+    onProceed();
+    return;
+  }
+
+  _ALERTA_MINIMOS_CALLBACK = onProceed;
+
+  const titulo = pendentes.length === 1
+    ? '⚠ Faturamento mínimo não atingido'
+    : `⚠ ${pendentes.length} faturamentos mínimos pendentes`;
+
+  const conteudo = pendentes.length === 1
+    ? `<p class="text-slate-600 text-xs mb-3 font-semibold">${pendentes[0].label}</p>
+       <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 space-y-1.5 text-xs">
+         <div class="flex justify-between"><span class="text-slate-500">Atual</span><span class="font-bold text-slate-700">${formatarParaReal(pendentes[0].atual)}</span></div>
+         <div class="flex justify-between"><span class="text-slate-500">Mínimo</span><span class="font-bold text-slate-700">${formatarParaReal(pendentes[0].minimo)}</span></div>
+         <div class="flex justify-between border-t border-amber-200 pt-1.5"><span class="text-red-600 font-bold">Faltam</span><span class="font-black text-red-600">${formatarParaReal(pendentes[0].faltam)}</span></div>
+       </div>`
+    : `<p class="text-slate-400 text-xs mb-2">Os seguintes mínimos ainda não foram atingidos:</p>
+       <div class="space-y-1.5">
+         ${pendentes.map(p => `
+           <div class="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2 border border-amber-100">
+             <span class="text-xs font-bold text-amber-700">🟠 ${p.label}</span>
+             <span class="text-xs font-black text-red-600">Faltam ${formatarParaReal(p.faltam)}</span>
+           </div>`).join('')}
+       </div>`;
+
+  document.getElementById('alertaMinimosTitulo').innerText       = titulo;
+  document.getElementById('alertaMinimosConteudo').innerHTML     = conteudo;
+  document.getElementById('btnAlertaMinimosConfirmar').innerText = btnLabel;
+  document.getElementById('modalAlertaMinimos').classList.remove('hidden');
+}
+
+function fecharAlertaMinimos() {
+  document.getElementById('modalAlertaMinimos').classList.add('hidden');
+  _ALERTA_MINIMOS_CALLBACK = null;
+}
+
+function confirmarAlertaMinimos() {
+  const cb = _ALERTA_MINIMOS_CALLBACK;
+  fecharAlertaMinimos();
+  if (typeof cb === 'function') cb();
+}
 
     function atualizarResumoValoresMinimos() {
       const secao = document.getElementById('resumoValoresMinimos');
       const lista = document.getElementById('listaValoresMinimos');
       if (!secao || !lista) return;
       if (Object.keys(BD_VALORES_MINIMOS).length === 0 || Object.keys(CARRINHO).length === 0) {
-        secao.classList.add('hidden');
+          secao.classList.remove('hidden');
+    }
+    // Atualiza também o indicador inline na barra de controles
+    atualizarIndicadorMinimosBarra();
+  }
         return;
       }
 
@@ -2415,6 +2598,12 @@ const container = document.getElementById('containerST');
     function salvarPedidoAtual() {
       const chaves = Object.keys(CARRINHO);
       if (chaves.length === 0) { mostrarToast('warning', 'Seu carrinho está vazio. Adicione produtos antes de salvar.'); return; }
+      mostrarAlertaMinimos(() => _executarSalvarPedido(), 'Salvar Mesmo Assim');
+    }
+
+    function _executarSalvarPedido() {
+      const chaves = Object.keys(CARRINHO);
+      // todo o resto do corpo original de salvarPedidoAtual
 
       const itens = [];
       let acBruto = 0, acLiquido = 0, acUnidades = 0;
