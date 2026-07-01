@@ -1644,7 +1644,7 @@ document.addEventListener('keydown', function(e) {
     // --- Formato 1 (NAZARIA / planilha estruturada) ---
     // Palavras aceitas no cabeçalho da coluna de quantidade.
     // A busca é por inclusão, não por igualdade exata.
-    const PDF1_COL_CODIGO = ['CODBARRAS', 'EAN', 'BARRAS', 'CÓD.', 'COD.'];
+    const PDF1_COL_CODIGO = ['CODBARRAS', 'EAN', 'BARRAS', 'CÓD.', 'COD.', 'CÓDIGO', 'CODIGO'];
     const PDF1_COL_QTD    = ['PEDIDA', 'QT PEDIDA', 'QTD', 'QTDE', 'QUANTIDADE', 'QUANT'];
     // Obs.: 'PEDIDA' captura "QT Pedida" sem precisar de match exato.
 
