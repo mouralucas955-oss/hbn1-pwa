@@ -18,6 +18,19 @@
       if (icon) icon.innerText = novoTema === 'dark' ? '☀️' : '🌙';
       localStorage.setItem('hbn1_tema', novoTema);
     }
+function encerrarSessao() {
+      mostrarConfirm(
+        'Sair do sistema?',
+        'Você precisará informar usuário e senha novamente para acessar o catálogo.',
+        () => {
+          localStorage.removeItem('hbn1_usuario');
+          localStorage.removeItem('hbn1_uf');
+          localStorage.removeItem('hbn1_nome');
+          localStorage.removeItem('hbn1_login_ts');
+          window.location.href = 'index.html';
+        }
+      );
+    }
 
     // Aplica tema salvo imediatamente (antes do DOMContentLoaded)
     (function() {
