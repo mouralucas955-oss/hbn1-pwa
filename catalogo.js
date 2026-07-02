@@ -2929,7 +2929,7 @@ if (pedido.cliente && pedido.cliente.razao) {
   nome = `${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataStr}.xlsx`;
 } else {
   nome = `Pedido_HBN1_${pedido.uf}_${dataStr}.xlsx`;
-}
+
 
         await baixarWorkbook(workbook, nome);
       } catch(e) {
