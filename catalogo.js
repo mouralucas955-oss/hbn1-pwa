@@ -54,6 +54,7 @@ function encerrarSessao() {
     let OMRON_OL_ATIVO = 0;
     // Valores mínimos por grupo de desconto
     let BD_VALORES_MINIMOS = {}; // { chave: { minimo, label } }
+let BD_CHAVES_VENCIDAS = new Set(); // chaves de desconto cuja validade (coluna D) já passou
 
     // ST (Substituição Tributária): mapa { id_produto -> valor_st_em_reais }
     let BD_ST = {};        // carregado da API
@@ -423,9 +424,14 @@ function encerrarSessao() {
         if (percentual > 0) colunaAtiva = 'descontoPadrao';
       }
 
+      // Desconto vinculado a uma oferta vencida (coluna D da VALOR MINIMO) — zera
+      if (colunaAtiva && BD_CHAVES_VENCIDAS.has(colunaAtiva)) {
+        percentual = 0;
+        colunaAtiva = null;
+      }
+
       const precoFinal = percentual > 0 ? precoBruto * (1 - percentual / 100) : precoBruto;
       return { precoFinal, precoOriginal: precoBruto, percentual, colunaAtiva };
-    }
 
     // Wrapper usado em todo o catálogo
     function calcularPrecos(p) {
@@ -2398,14 +2404,21 @@ const container = document.getElementById('containerST');
         });
     }
     // VALORES MÍNIMOS POR GRUPO DE DESCONTO
-    function carregarValoresMinimos() {
+   function carregarValoresMinimos() {
       chamarApi('valoresMinimos', { uf: UF_USUARIO })
         .then(lista => {
           BD_VALORES_MINIMOS = {};
+          BD_CHAVES_VENCIDAS = new Set();
           (lista || []).forEach(item => {
-            if (item.chave) BD_VALORES_MINIMOS[item.chave] = { minimo: item.minimo, label: item.label };
+            if (!item.chave) return;
+            if (item.vencido) {
+              BD_CHAVES_VENCIDAS.add(item.chave);
+            } else {
+              BD_VALORES_MINIMOS[item.chave] = { minimo: item.minimo, label: item.label };
+            }
           });
-          console.error('Valores mínimos carregados:', Object.keys(BD_VALORES_MINIMOS).length);
+          // Re-renderiza os produtos já visíveis para refletir descontos que venceram
+          executarFiltrosGerais();
         })
         .catch(e => console.error('Valores mínimos não disponíveis:', e));
     }
