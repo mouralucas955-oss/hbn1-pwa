@@ -432,6 +432,7 @@ let BD_CHAVES_VENCIDAS = new Set(); // chaves de desconto cuja validade (coluna 
 
       const precoFinal = percentual > 0 ? precoBruto * (1 - percentual / 100) : precoBruto;
       return { precoFinal, precoOriginal: precoBruto, percentual, colunaAtiva };
+     }   
 
     // Wrapper usado em todo o catálogo
     function calcularPrecos(p) {
