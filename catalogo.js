@@ -2923,9 +2923,14 @@ function confirmarAlertaMinimos() {
         });
 
         const dataStr = new Date(pedido.timestamp).toLocaleDateString('pt-BR').replace(/\//g,'-');
-        let nome = pedido.cliente && pedido.cliente.razao
-          ? limparNomeArquivo(pedido.cliente.razao.toUpperCase()) + ' - ' + dataStr + '.xlsx'
-          : `Pedido_HBN1_${pedido.uf}_${dataStr}.xlsx`;
+let nome;
+if (pedido.cliente && pedido.cliente.razao) {
+  const razaoLimpa = limparNomeArquivo(pedido.cliente.razao.toUpperCase());
+  const cnpjLimpo  = pedido.cliente.cnpj ? limparNomeArquivo(pedido.cliente.cnpj) : '';
+  nome = `${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataStr}.xlsx`;
+} else {
+  nome = `Pedido_HBN1_${pedido.uf}_${dataStr}.xlsx`;
+}
 
         await baixarWorkbook(workbook, nome);
       } catch(e) {
