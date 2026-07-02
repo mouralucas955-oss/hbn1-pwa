@@ -64,6 +64,40 @@
       }
       return { cor1: '#475569', cor2: '#1E293B', logo: '', textoBg: '#F8FAFC' };
     }
+// =========================================================================
+    // SPLASH DE ABERTURA (estilo Netflix) — nome + logos dos fornecedores
+    // =========================================================================
+    function iniciarSplashAbertura() {
+      const splash    = document.getElementById('splashAbertura');
+      const container = document.getElementById('splashLogosFornecedores');
+      if (!splash || !container) return;
+
+      const nomesFornecedores = Object.keys(CONFIG_FORNECEDORES).filter(n => n !== 'NAZARIA');
+
+      container.innerHTML = nomesFornecedores.map(nome => {
+        const cfg = CONFIG_FORNECEDORES[nome];
+        return `
+          <div class="splash-logo-item opacity-0 bg-white/95 rounded-xl px-3 py-2 flex items-center justify-center h-10 min-w-[70px]">
+            <img src="${cfg.logo}" alt="${nome}" class="h-5 max-w-[90px] object-contain" onerror="this.style.display='none'">
+          </div>`;
+      }).join('');
+
+      // Entrada escalonada dos logos — começa logo após o nome aparecer
+      requestAnimationFrame(() => {
+        container.querySelectorAll('.splash-logo-item').forEach((el, i) => {
+          setTimeout(() => {
+            el.style.animation = 'splashFornecedorIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards';
+          }, 500 + i * 90);
+        });
+      });
+
+      // Fecha a splash e revela a tela de portais (que já está carregando por trás)
+      const duracaoTotal = 500 + nomesFornecedores.length * 90 + 550;
+      setTimeout(() => {
+        splash.style.animation = 'splashFadeOut 0.45s ease forwards';
+        setTimeout(() => splash.remove(), 460);
+      }, Math.max(duracaoTotal, 1400));
+    }
 
     // =========================================================================
     // SISTEMA DE TOAST / NOTIFICAÇÕES (substitui alert() nativo)
@@ -2898,6 +2932,7 @@ function confirmarAlertaMinimos() {
       // Sincroniza ícone do dark mode
       const icon = document.getElementById('iconDarkMode');
       if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
+        iniciarSplashAbertura();
 
       // ── MURAL COM FADE ──────────────────────────────────────────────────
       let _AVISOS_LISTA    = [];
