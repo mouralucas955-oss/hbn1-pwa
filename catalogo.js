@@ -32,6 +32,7 @@ function encerrarSessao() {
       );
     }
 
+
     // Aplica tema salvo imediatamente (antes do DOMContentLoaded)
     (function() {
       const t = localStorage.getItem('hbn1_tema') || 'light';
