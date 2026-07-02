@@ -2386,7 +2386,7 @@ const container = document.getElementById('containerST');
     }
     // VALORES MÍNIMOS POR GRUPO DE DESCONTO
     function carregarValoresMinimos() {
-      chamarApi('valoresMinimos')
+      chamarApi('valoresMinimos', { uf: UF_USUARIO })
         .then(lista => {
           BD_VALORES_MINIMOS = {};
           (lista || []).forEach(item => {
