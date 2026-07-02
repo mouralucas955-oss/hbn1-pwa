@@ -138,20 +138,41 @@
   </div>
 
   <script src="api.js"></script>
-  <script>
+<script>
   document.getElementById('anoAtual').innerText = new Date().getFullYear();
 
+  // ── 1. CACHE DE SESSÃO ─────────────────────────────────────────────────
+  // Se já logou nas últimas 8h, redireciona direto sem chamar a API
+  const SESSAO_DURACAO_MS = 8 * 60 * 60 * 1000; // 8 horas
+  const ultimoLoginTs     = parseInt(localStorage.getItem('hbn1_login_ts') || '0');
+  const sessaoValida       = localStorage.getItem('hbn1_usuario') &&
+                             localStorage.getItem('hbn1_uf') &&
+                             (Date.now() - ultimoLoginTs) < SESSAO_DURACAO_MS;
+  if (sessaoValida) {
+    window.location.href = 'catalogo.html?uf=' + encodeURIComponent(localStorage.getItem('hbn1_uf'));
+  }
+
+  // ── 2. PRÉ-AQUECIMENTO DO APPS SCRIPT ──────────────────────────────────
+  // Dispara um ping logo que a página carrega, enquanto o usuário digita.
+  // Quando ele clicar no botão, o cold start já passou.
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'ping' })
+  }).catch(() => {}); // ignora erros — é só aquecimento
+
+  // ── LOGIN ───────────────────────────────────────────────────────────────
   async function iniciarPedido() {
-    const usuario = document.getElementById('inputUsuario').value.trim();
-    const senha   = document.getElementById('inputSenha').value.trim();
-    const msgErro = document.getElementById('msgErroLogin');
-    const btn     = document.getElementById('btnIniciarPedido');
+    const usuario  = document.getElementById('inputUsuario').value.trim();
+    const senha    = document.getElementById('inputSenha').value.trim();
+    const msgErro  = document.getElementById('msgErroLogin');
+    const btn      = document.getElementById('btnIniciarPedido');
     const btnTexto = document.getElementById('btnIniciarTexto');
 
     msgErro.classList.add('hidden');
     msgErro.innerText = '';
 
-    if (usuario === '' || senha === '') {
+    if (!usuario || !senha) {
       msgErro.innerText = 'Preencha usuário e senha para continuar.';
       msgErro.classList.remove('hidden');
       return;
@@ -162,37 +183,31 @@
     btnTexto.innerText = 'VERIFICANDO...';
 
     try {
-      const resposta = await chamarApi('login', { usuario: usuario, senha: senha });
+      const resposta = await chamarApi('login', { usuario, senha });
 
       if (resposta && resposta.sucesso) {
         btnTexto.innerText = 'ACESSO LIBERADO...';
         const uf = resposta.uf || 'PI';
-        localStorage.setItem('hbn1_usuario', usuario);
-        localStorage.setItem('hbn1_uf', uf);
-        localStorage.setItem('hbn1_nome', resposta.nome || usuario);
+        localStorage.setItem('hbn1_usuario',  usuario);
+        localStorage.setItem('hbn1_uf',       uf);
+        localStorage.setItem('hbn1_nome',     resposta.nome || usuario);
+        localStorage.setItem('hbn1_login_ts', Date.now().toString()); // ← timestamp da sessão
         window.location.href = 'catalogo.html?uf=' + encodeURIComponent(uf);
       } else {
-        msgErro.innerText = (resposta && resposta.mensagem) ? resposta.mensagem : 'Usuário ou senha incorretos.';
+        msgErro.innerText = (resposta && resposta.mensagem)
+          ? resposta.mensagem
+          : 'Usuário ou senha incorretos.';
         msgErro.classList.remove('hidden');
         btn.disabled = false;
         btn.classList.remove('opacity-60', 'cursor-wait');
-        btnTexto.innerText = 'INICIAR PEDIDO HBN1!!';
+        btnTexto.innerText = 'Iniciar Pedido HBN1';
       }
     } catch (erro) {
       msgErro.innerText = 'Erro ao validar login. Tente novamente.';
       msgErro.classList.remove('hidden');
       btn.disabled = false;
       btn.classList.remove('opacity-60', 'cursor-wait');
-      btnTexto.innerText = 'INICIAR PEDIDO HBN1!!';
+      btnTexto.innerText = 'Iniciar Pedido HBN1';
     }
   }
 </script>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
-  }
-</script>
-
-</body>
-</html>
