@@ -116,6 +116,7 @@
       <div>
         <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Central de Investimento Adicional</div>
         <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Quanto investir além do desconto já liberado para fechar no valor negociado</div>
+        <div id="negClienteInfo" style="display:none; margin-top:4px; font-size:11.5px; font-weight:700; color:#FF9F52;"></div>
       </div>
     </div>
     <div class="neg-ticker mono">
@@ -289,6 +290,9 @@ let NEG_MODE = 'individual';
 let NEG_GROUP_TARGET_TYPE = 'valor';
 let NEG_GROUP_TARGET_VALUE = '';
 let NEG_PENDING_IMPORT = null;
+let NEG_CLIENTE = null;
+let NEG_PENDING_HANDOFF_CLIENTE = null;
+  
 const NEG_STORAGE_KEY = 'hbn1_negociacao_estado';
 
 const NEG_FIELD_DEFS = [
@@ -308,7 +312,8 @@ function negSaveState() {
   try {
     localStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
       products: NEG_PRODUCTS, mode: NEG_MODE,
-      groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE
+      groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
+      cliente: NEG_CLIENTE
     }));
     const el = document.getElementById('neg-save-status');
     if (el) { el.innerText = 'Salvo'; setTimeout(() => { el.innerText = ''; }, 1200); }
@@ -324,6 +329,7 @@ function negLoadState() {
     if (data.mode) NEG_MODE = data.mode;
     if (data.groupTargetType) NEG_GROUP_TARGET_TYPE = data.groupTargetType;
     if (data.groupTargetValue != null) NEG_GROUP_TARGET_VALUE = data.groupTargetValue;
+    if (data.cliente) NEG_CLIENTE = data.cliente;
   } catch (e) { /* nada salvo ainda */ }
 }
 
@@ -488,8 +494,11 @@ function negCheckHandoff() {
   if (!raw) return;
   localStorage.removeItem('hbn1_negociacao_handoff');
 
-  let itensBrutos;
-  try { itensBrutos = JSON.parse(raw); } catch (e) { return; }
+  let payload;
+  try { payload = JSON.parse(raw); } catch (e) { return; }
+
+  const itensBrutos    = Array.isArray(payload) ? payload : (payload.itens || []);
+  const clienteRecebido = Array.isArray(payload) ? null : (payload.cliente || null);
   if (!Array.isArray(itensBrutos) || itensBrutos.length === 0) return;
 
   const built = itensBrutos.map(it => ({
@@ -505,26 +514,25 @@ function negCheckHandoff() {
 
   if (NEG_PRODUCTS.length === 0) {
     NEG_PRODUCTS = built;
+    if (clienteRecebido) NEG_CLIENTE = clienteRecebido;
     negSaveState();
     negRenderAll();
     return;
   }
 
   NEG_PENDING_HANDOFF = built;
+  NEG_PENDING_HANDOFF_CLIENTE = clienteRecebido;
   document.getElementById('negHandoffSubtitle').innerText =
     built.length + ' produto(s) chegaram de outra tela. Já existem itens na lista atual — o que você quer fazer?';
   document.getElementById('negHandoffModalOverlay').style.display = 'flex';
 }
 
-function negCancelHandoff() {
-  NEG_PENDING_HANDOFF = null;
-  document.getElementById('negHandoffModalOverlay').style.display = 'none';
-}
-
 function negConfirmHandoff(mode) {
   if (!NEG_PENDING_HANDOFF) return;
   NEG_PRODUCTS = mode === 'replace' ? NEG_PENDING_HANDOFF : NEG_PRODUCTS.concat(NEG_PENDING_HANDOFF);
+  if (NEG_PENDING_HANDOFF_CLIENTE) NEG_CLIENTE = NEG_PENDING_HANDOFF_CLIENTE;
   NEG_PENDING_HANDOFF = null;
+  NEG_PENDING_HANDOFF_CLIENTE = null;
   document.getElementById('negHandoffModalOverlay').style.display = 'none';
   negSaveState();
   negRenderAll();
@@ -635,6 +643,7 @@ function negToggleTargetType(id) {
 function negClearAll() {
   if (!confirm('Isso vai apagar todos os produtos da lista (inclusive os salvos). Confirmar?')) return;
   NEG_PRODUCTS = [];
+  NEG_CLIENTE = null;
   try { localStorage.removeItem(NEG_STORAGE_KEY); } catch (e) {}
   negRenderAll();
 }
@@ -682,7 +691,13 @@ function negOnGroupTargetInput(value) {
    EXPORTAÇÃO CSV
    ========================================================================= */
 function negExportCsv() {
-  const rows = [['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', 'Meta (% adicional)', '% Desconto final', 'R$ Investimento', 'Preco final']];
+  const rows = [];
+  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
+    rows.push(['Cliente', NEG_CLIENTE.razao || '']);
+    rows.push(['CNPJ', NEG_CLIENTE.cnpj || '']);
+    rows.push([]);
+  }
+  rows.push(['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', 'Meta (% adicional)', '% Desconto final', 'R$ Investimento', 'Preco final']);
   negFilteredProducts().forEach(p => {
     const c = negComputeIndividual(p);
     rows.push([
@@ -708,10 +723,23 @@ function negFilteredProducts() {
   return NEG_PRODUCTS.filter(p => negNormalize(p.produto).includes(term) || negNormalize(p.cod).includes(term));
 }
 
+function negRenderClienteInfo() {
+  const el = document.getElementById('negClienteInfo');
+  if (!el) return;
+  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
+    el.style.display = 'block';
+    el.innerText = 'Cliente: ' + (NEG_CLIENTE.razao || '—') + (NEG_CLIENTE.cnpj ? ' • CNPJ ' + NEG_CLIENTE.cnpj : '');
+  } else {
+    el.style.display = 'none';
+    el.innerText = '';
+  }
+}
+
 function negRenderAll() {
   negRenderTicker();
   negRenderGroupPanel();
   negRenderTable();
+  negRenderClienteInfo();
 }
 
 function negRenderTicker() {
