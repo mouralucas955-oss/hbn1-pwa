@@ -3083,6 +3083,77 @@ if (pedido.cliente && pedido.cliente.razao) {
       setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
       setInterval(atualizarClientesInvisivel, 300000);  // 5 min
     });
+// =========================================================================
+// ENVIO PARA A CENTRAL DE INVESTIMENTO (negociacao.html)
+// =========================================================================
+function enviarParaCentralInvestimento(itens) {
+  if (!itens || itens.length === 0) { mostrarToast('warning', 'Nenhum item para enviar.'); return; }
+  try {
+    localStorage.setItem('hbn1_negociacao_handoff', JSON.stringify(itens));
+  } catch (e) {
+    mostrarToast('error', 'Não foi possível preparar os dados para a Central de Investimento.');
+    return;
+  }
+  window.location.href = 'negociacao.html';
+}
+
+// Origem 1: carrinho atual (modal "Ver Meu Pedido")
+function enviarCarrinhoParaNegociacao() {
+  const chaves = Object.keys(CARRINHO);
+  const itens = chaves.map(idProd => {
+    const p = BD_PRODUTOS.find(item => item.id === idProd);
+    if (!p) return null;
+    const qtd = CARRINHO[idProd];
+    const { precoOriginal, percentual } = calcularPrecos(p);
+    return { produto: p.descricao || p.id, cod: p.id, ean: p.ean, preco: precoOriginal, qtd, descontoAtual: percentual };
+  }).filter(Boolean);
+  enviarParaCentralInvestimento(itens);
+}
+
+// Origem 2: um pedido salvo específico (não leva os outros salvos)
+function enviarPedidoSalvoParaNegociacao(pedidoId) {
+  const pedido = carregarPedidosSalvos().find(p => p.id === pedidoId);
+  if (!pedido) return;
+  const itens = pedido.itens.map(item => ({
+    produto: item.descricao || item.id, cod: item.id, ean: item.ean,
+    preco: item.precoOriginal, qtd: item.qtd, descontoAtual: item.percentual
+  }));
+  enviarParaCentralInvestimento(itens);
+}
+
+// Origem 3: resultado da importação (Ver Meu Valor do Pedido) — soma entre CNPJs
+// e separa qtd atendida / não atendida em linhas diferentes
+function enviarImportacaoParaNegociacao() {
+  if (!IMPORT_RESULTADO || IMPORT_RESULTADO.pedidos.length === 0) return;
+
+  const mapa = {}; // chave = código interno do produto
+  IMPORT_RESULTADO.pedidos.forEach(pedido => {
+    Object.keys(pedido.itensPorFornecedor).forEach(forn => {
+      pedido.itensPorFornecedor[forn].forEach(({ p, precoOriginal, percentual, qtdAtendida, qtdNaoAtendida }) => {
+        if (!mapa[p.id]) {
+          mapa[p.id] = {
+            produto: p.descricao || p.id, cod: p.id, ean: p.ean,
+            preco: precoOriginal, descontoAtual: percentual,
+            qtdAtendida: 0, qtdNaoAtendida: 0
+          };
+        }
+        mapa[p.id].qtdAtendida    += (qtdAtendida    || 0);
+        mapa[p.id].qtdNaoAtendida += (qtdNaoAtendida || 0);
+      });
+    });
+  });
+
+  const itens = [];
+  Object.values(mapa).forEach(item => {
+    if (item.qtdAtendida > 0) {
+      itens.push({ produto: item.produto + ' (com estoque)', cod: item.cod, ean: item.ean, preco: item.preco, qtd: item.qtdAtendida, descontoAtual: item.descontoAtual });
+    }
+    if (item.qtdNaoAtendida > 0) {
+      itens.push({ produto: item.produto + ' (sem estoque)', cod: item.cod, ean: item.ean, preco: item.preco, qtd: item.qtdNaoAtendida, descontoAtual: item.descontoAtual });
+    }
+  });
+  enviarParaCentralInvestimento(itens);
+}
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
