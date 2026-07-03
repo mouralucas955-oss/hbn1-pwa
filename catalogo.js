@@ -2820,6 +2820,11 @@ function confirmarAlertaMinimos() {
                   </svg>
                   Ver
                 </button>
+                <button onclick="enviarPedidoSalvoParaNegociacao('${p.id}')"
+                  class="px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
+                  Negociação
+                </button>
                 <button onclick="baixarPedidoSalvo('${p.id}')"
                   class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
