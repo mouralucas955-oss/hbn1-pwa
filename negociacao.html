@@ -189,7 +189,7 @@
       <div class="neg-panel">
         <div class="neg-panel-title">Ações</div>
         <div class="neg-row">
-          <button type="button" class="neg-btn neg-btn-sm" onclick="negExportCsv()">Exportar CSV</button>
+         <button type="button" class="neg-btn neg-btn-sm" onclick="negExportExcel()">Exportar Excel</button>
           <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negClearAll()">Limpar tudo</button>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
@@ -761,6 +761,197 @@ function negExportCsv() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+/* =========================================================================
+   EXPORTAÇÃO EXCEL (formatado, mesma linha visual dos outros arquivos)
+   ========================================================================= */
+async function negExportExcel() {
+  const LARANJA      = 'FFFF6B00';
+  const LARANJA_ESC   = 'FFE55300';
+  const CINZA_CLARO   = 'FFF4F4F4';
+  const BORDA_CINZA   = { style: 'thin', color: { argb: 'FFE2E2E2' } };
+
+  const temColunaPrecoDesejado = NEG_MODE === 'individual';
+  const totalCols = temColunaPrecoDesejado ? 10 : 9;
+  const colLetra = n => String.fromCharCode(64 + n);
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'HBN1 - Nazária Distribuidora Farmacêutica';
+  workbook.created = new Date();
+  const ws = workbook.addWorksheet('Central de Investimento', { views: [{ showGridLines: false }] });
+
+  const colunasBase = [
+    { key: 'produto', width: 34 }, { key: 'cod', width: 11 }, { key: 'preco', width: 12 },
+    { key: 'qtd', width: 7 }, { key: 'descAtual', width: 11 },
+    { key: NEG_MODE === 'individual' ? 'metaAdic' : 'adicUniforme', width: 13 },
+    { key: 'descFinal', width: 11 }, { key: 'invest', width: 13 }, { key: 'precoFinal', width: 12 }
+  ];
+  if (temColunaPrecoDesejado) colunasBase.push({ key: 'precoDesejado', width: 15 });
+  ws.columns = colunasBase;
+
+  const mesclarEEstilizar = (linha, texto, opts = {}) => {
+    ws.mergeCells(`A${linha}:${colLetra(totalCols)}${linha}`);
+    const cel = ws.getCell(`A${linha}`);
+    cel.value = texto;
+    cel.font = { bold: true, color: { argb: opts.corTexto || 'FFFFFFFF' }, size: opts.tamanho || 11, name: 'Calibri' };
+    cel.alignment = { horizontal: opts.alinhamento || 'center', vertical: 'middle', wrapText: !!opts.wrap };
+    cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: opts.corFundo || LARANJA } };
+    ws.getRow(linha).height = opts.altura || 20;
+    return cel;
+  };
+
+  ws.mergeCells(`A1:${colLetra(totalCols)}3`);
+  const cabecalho = ws.getCell('A1');
+  const dataHoraAgora = new Date().toLocaleString('pt-BR');
+  cabecalho.value = {
+    richText: [
+      { font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Calibri' }, text: 'CENTRAL DE INVESTIMENTO\n' },
+      { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: 'INVESTIMENTO ADICIONAL NA NEGOCIAÇÃO — HBN1\n' },
+      { font: { size: 9, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: `${dataHoraAgora} • Modo: ${NEG_MODE === 'individual' ? 'Por item' : 'Por grupo'}` }
+    ]
+  };
+  cabecalho.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  cabecalho.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA } };
+  ws.getRow(1).height = 18; ws.getRow(2).height = 16; ws.getRow(3).height = 16;
+
+  let linhaAtual = 5;
+
+  const adicionarLinhaInfo = (rotulo, valor) => {
+    if (!valor) return;
+    const lblCel = ws.getCell(`A${linhaAtual}`);
+    lblCel.value = rotulo;
+    lblCel.font = { bold: true, size: 10, color: { argb: 'FF555555' } };
+    ws.mergeCells(`B${linhaAtual}:${colLetra(totalCols)}${linhaAtual}`);
+    const valCel = ws.getCell(`B${linhaAtual}`);
+    valCel.value = valor;
+    valCel.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+    ws.getRow(linhaAtual).height = 16;
+    linhaAtual++;
+  };
+
+  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
+    mesclarEEstilizar(linhaAtual, 'DADOS DO CLIENTE', { corFundo: LARANJA });
+    linhaAtual++;
+    adicionarLinhaInfo('Nome', NEG_CLIENTE.razao ? NEG_CLIENTE.razao.toUpperCase() : '');
+    adicionarLinhaInfo('CNPJ', NEG_CLIENTE.cnpj || '');
+    linhaAtual++;
+  }
+
+  let somaPrecoCheio = 0, somaAtual = 0, somaInvestIndividual = 0;
+  NEG_PRODUCTS.forEach(p => {
+    const c = negComputeIndividual(p);
+    somaPrecoCheio += c.preco * c.qtd;
+    somaAtual += c.preco * c.qtd * (1 - c.descontoAtual / 100);
+    somaInvestIndividual += c.investimento;
+  });
+  const selecionadosResumo = NEG_PRODUCTS.filter(p => p.selected);
+  const grResumo = negComputeGroup(selecionadosResumo, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
+  const investimentoTotalResumo = NEG_MODE === 'individual' ? somaInvestIndividual : Math.max(0, grResumo.investimentoTotal);
+
+  mesclarEEstilizar(linhaAtual, 'RESUMO GERAL', { corFundo: LARANJA });
+  linhaAtual++;
+  adicionarLinhaInfo('Total de Produtos', NEG_PRODUCTS.length);
+  adicionarLinhaInfo('Valor Cheio', negFormatBRL(somaPrecoCheio));
+  adicionarLinhaInfo('Valor com Desconto Atual', negFormatBRL(somaAtual));
+  adicionarLinhaInfo(NEG_MODE === 'individual' ? 'Investimento p/ Metas' : 'Investimento do Grupo', negFormatBRL(investimentoTotalResumo));
+  if (NEG_MODE === 'grupo') {
+    adicionarLinhaInfo('% Adicional Uniforme', negFormatPct(grResumo.xAdicionalPct));
+  }
+  linhaAtual++;
+
+  mesclarEEstilizar(linhaAtual, 'ITENS', { corFundo: LARANJA_ESC, tamanho: 10.5 });
+  linhaAtual++;
+
+  const cabecalhosColunas = [
+    'PRODUTO', 'COD.', 'PREÇO CHEIO', 'QTD', '% DESC. ATUAL',
+    NEG_MODE === 'individual' ? 'META (% ADIC.)' : '% ADIC. UNIFORME',
+    '% DESC. FINAL', 'INVESTIMENTO', 'PREÇO FINAL'
+  ];
+  if (temColunaPrecoDesejado) cabecalhosColunas.push('PREÇO FINAL DESEJADO');
+
+  const linhaCab = ws.getRow(linhaAtual);
+  cabecalhosColunas.forEach((titulo, i) => {
+    const cel = linhaCab.getCell(i + 1);
+    cel.value = titulo;
+    cel.font = { bold: true, size: 9.5, color: { argb: 'FFFFFFFF' } };
+    cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA } };
+    cel.alignment = { horizontal: 'center', vertical: 'middle' };
+    cel.border = { top: BORDA_CINZA, bottom: BORDA_CINZA, left: BORDA_CINZA, right: BORDA_CINZA };
+  });
+  linhaCab.height = 17;
+  linhaAtual++;
+
+  const listaItens = negFilteredProducts();
+  const grupoMapExport = {};
+  let grAtualParaExport = null;
+  if (NEG_MODE === 'grupo') {
+    grAtualParaExport = negComputeGroup(NEG_PRODUCTS.filter(x => x.selected), NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
+    grAtualParaExport.perItem.forEach(it => { grupoMapExport[it.id] = it; });
+  }
+
+  listaItens.forEach((p, idx) => {
+    const corFundoLinha = (idx % 2 === 0) ? 'FFFFFFFF' : CINZA_CLARO;
+    const linha = ws.getRow(linhaAtual);
+    let valores;
+
+    if (NEG_MODE === 'individual') {
+      const c = negComputeIndividual(p);
+      const precoDesejadoNum = p.precoFinalDesejado ? negParseNumberBR(p.precoFinalDesejado) : null;
+      valores = [
+        p.produto, p.cod, c.preco, c.qtd, c.descontoAtual / 100,
+        c.pctAdicional / 100, c.pctNecessario / 100, c.investimento, c.precoFinal,
+        (precoDesejadoNum != null && !isNaN(precoDesejadoNum)) ? precoDesejadoNum : null
+      ];
+    } else {
+      const gc = grupoMapExport[p.id];
+      if (!gc) {
+        valores = [p.produto, p.cod, negParseNumberBR(p.preco) || 0, negParseNumberBR(p.qtd) || 0, (negParseNumberBR(p.descontoAtual) || 0) / 100, null, null, null, null];
+      } else {
+        valores = [p.produto, p.cod, gc.preco, gc.qtd, gc.descontoAtual / 100, grAtualParaExport.xAdicionalPct / 100, gc.pctFinal / 100, gc.investimentoItem, gc.precoFinal];
+      }
+    }
+
+    valores.forEach((val, i) => {
+      const cel = linha.getCell(i + 1);
+      cel.value = (val === null || val === undefined) ? '—' : val;
+      cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corFundoLinha } };
+      cel.border = { top: BORDA_CINZA, bottom: BORDA_CINZA, left: BORDA_CINZA, right: BORDA_CINZA };
+      cel.font = { size: 9.5, color: { argb: 'FF1E1E1E' } };
+      cel.alignment = { vertical: 'middle', horizontal: (i === 0) ? 'left' : 'center', wrapText: (i === 0) };
+      if ((i === 2 || i === 7 || i === 8 || i === 9) && val !== null && val !== undefined) cel.numFmt = '"R$" #,##0.00';
+      if ((i === 4 || i === 5 || i === 6) && val !== null && val !== undefined) cel.numFmt = '0.00%';
+    });
+    linha.height = 16;
+    linhaAtual++;
+  });
+
+  linhaAtual++;
+  const rodapeCel = ws.getCell(`A${linhaAtual}`);
+  ws.mergeCells(`A${linhaAtual}:${colLetra(totalCols)}${linhaAtual}`);
+  rodapeCel.value = `HBN1 - Nazária Distribuidora Farmacêutica  •  Gerado em ${dataHoraAgora}`;
+  rodapeCel.font = { italic: true, size: 8, color: { argb: 'FF9CA3AF' } };
+  rodapeCel.alignment = { horizontal: 'center' };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  let nomeArquivo;
+  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
+    const razaoLimpa = String(NEG_CLIENTE.razao || '').toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
+    const cnpjLimpo = String(NEG_CLIENTE.cnpj || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
+    nomeArquivo = `Negociacao - ${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataHoje}.xlsx`;
+  } else {
+    nomeArquivo = `negociacao-investimento-${dataHoje}.xlsx`;
+  }
+  const link = document.createElement('a');
+  link.href = url; link.download = nomeArquivo; link.style.visibility = 'hidden';
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+  
 
 /* =========================================================================
    RENDER
