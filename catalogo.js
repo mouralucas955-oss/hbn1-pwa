@@ -3091,10 +3091,10 @@ if (pedido.cliente && pedido.cliente.razao) {
 // =========================================================================
 // ENVIO PARA A CENTRAL DE INVESTIMENTO (negociacao.html)
 // =========================================================================
-function enviarParaCentralInvestimento(itens) {
+function enviarParaCentralInvestimento(itens, clienteInfo) {
   if (!itens || itens.length === 0) { mostrarToast('warning', 'Nenhum item para enviar.'); return; }
   try {
-    localStorage.setItem('hbn1_negociacao_handoff', JSON.stringify(itens));
+    localStorage.setItem('hbn1_negociacao_handoff', JSON.stringify({ itens, cliente: clienteInfo || null }));
   } catch (e) {
     mostrarToast('error', 'Não foi possível preparar os dados para a Central de Investimento.');
     return;
@@ -3112,7 +3112,8 @@ function enviarCarrinhoParaNegociacao() {
     const { precoOriginal, percentual } = calcularPrecos(p);
     return { produto: p.descricao || p.id, cod: p.id, ean: p.ean, preco: precoOriginal, qtd, descontoAtual: percentual };
   }).filter(Boolean);
-  enviarParaCentralInvestimento(itens);
+  const clienteInfo = CLIENTE_SELECIONADO ? { razao: CLIENTE_SELECIONADO.razao, cnpj: CLIENTE_SELECIONADO.cnpj } : null;
+  enviarParaCentralInvestimento(itens, clienteInfo);
 }
 
 // Origem 2: um pedido salvo específico (não leva os outros salvos)
@@ -3123,7 +3124,8 @@ function enviarPedidoSalvoParaNegociacao(pedidoId) {
     produto: item.descricao || item.id, cod: item.id, ean: item.ean,
     preco: item.precoOriginal, qtd: item.qtd, descontoAtual: item.percentual
   }));
-  enviarParaCentralInvestimento(itens);
+  const clienteInfo = pedido.cliente ? { razao: pedido.cliente.razao, cnpj: pedido.cliente.cnpj } : null;
+  enviarParaCentralInvestimento(itens, clienteInfo);
 }
 
 // Origem 3: resultado da importação (Ver Meu Valor do Pedido) — soma entre CNPJs
