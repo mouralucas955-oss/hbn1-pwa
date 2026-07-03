@@ -697,15 +697,37 @@ function negExportCsv() {
     rows.push(['CNPJ', NEG_CLIENTE.cnpj || '']);
     rows.push([]);
   }
-  rows.push(['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', 'Meta (% adicional)', '% Desconto final', 'R$ Investimento', 'Preco final']);
-  negFilteredProducts().forEach(p => {
-    const c = negComputeIndividual(p);
-    rows.push([
-      p.produto, p.cod, negFormatNum(c.preco), negFormatNum(c.qtd, 0), negFormatNum(c.descontoAtual),
-      p.targetType === 'pct' ? negFormatNum(c.pctAdicional) + '%' : negFormatBRL(negParseNumberBR(p.targetValue) || 0),
-      negFormatNum(c.pctNecessario), negFormatNum(c.investimento), negFormatNum(c.precoFinal)
-    ]);
-  });
+
+  if (NEG_MODE === 'grupo') {
+    const selecionados = NEG_PRODUCTS.filter(p => p.selected);
+    const gr = negComputeGroup(selecionados, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
+    const grupoMap = {};
+    gr.perItem.forEach(it => { grupoMap[it.id] = it; });
+
+    rows.push(['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', '% Adicional uniforme (grupo)', '% Desconto final', 'R$ Investimento', 'Preco final']);
+    negFilteredProducts().forEach(p => {
+      const gc = grupoMap[p.id];
+      if (!gc) {
+        rows.push([p.produto, p.cod, negFormatNum(negParseNumberBR(p.preco) || 0), negFormatNum(negParseNumberBR(p.qtd) || 0, 0), negFormatNum(negParseNumberBR(p.descontoAtual) || 0), 'não selecionado', '—', '—', '—']);
+        return;
+      }
+      rows.push([
+        p.produto, p.cod, negFormatNum(gc.preco), negFormatNum(gc.qtd, 0), negFormatNum(gc.descontoAtual),
+        negFormatNum(gr.xAdicionalPct) + '%', negFormatNum(gc.pctFinal), negFormatNum(gc.investimentoItem), negFormatNum(gc.precoFinal)
+      ]);
+    });
+  } else {
+    rows.push(['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', 'Meta (% adicional)', '% Desconto final', 'R$ Investimento', 'Preco final']);
+    negFilteredProducts().forEach(p => {
+      const c = negComputeIndividual(p);
+      rows.push([
+        p.produto, p.cod, negFormatNum(c.preco), negFormatNum(c.qtd, 0), negFormatNum(c.descontoAtual),
+        p.targetType === 'pct' ? negFormatNum(c.pctAdicional) + '%' : negFormatBRL(negParseNumberBR(p.targetValue) || 0),
+        negFormatNum(c.pctNecessario), negFormatNum(c.investimento), negFormatNum(c.precoFinal)
+      ]);
+    });
+  }
+
   const csv = rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(';')).join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
