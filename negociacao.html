@@ -226,6 +226,9 @@
   </div>
 
 <script>
+  if (!localStorage.getItem('hbn1_usuario')) {
+  window.location.href = 'index.html';
+}
 /* =========================================================================
    HELPERS
    ========================================================================= */
@@ -740,9 +743,6 @@ function negRenderTable() {
         <tbody>${rows}</tbody>
       </table>
     </div>`;
-if (!localStorage.getItem('hbn1_usuario')) {
-  window.location.href = 'index.html';
-}
 }
 
 /* =========================================================================
