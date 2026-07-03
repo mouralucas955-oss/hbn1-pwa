@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central de Investimento — HBN1</title>
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="catalogo.css">
+<style>
+  /* ===== Reaproveita os tokens de tema do catalogo.css (light/dark) ===== */
+  .negdesk {
+    --gold: #FF6B00;
+    --gold-soft: var(--accent-soft);
+    --gold-border: var(--accent-border);
+    --pink: #e8637e;
+    --green: var(--success);
+    --red: var(--danger);
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--surface-page);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+  .negdesk * { box-sizing: border-box; }
+  .disp { font-family: 'Space Grotesk', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .neg-topbar {
+    background: var(--surface-header);
+    color: #fff;
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .neg-back {
+    display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15); color:#fff; padding:8px 12px; border-radius:10px;
+    font-size:12.5px; font-weight:700; cursor:pointer; transition:background .15s;
+  }
+  .neg-back:hover { background: rgba(255,255,255,0.16); }
+
+  .neg-ticker { display:flex; gap:22px; flex-wrap:wrap; }
+  .neg-ticker-item { min-width:110px; }
+  .neg-ticker-label { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin-bottom:2px; }
+  .neg-ticker-value { font-size:17px; font-weight:700; }
+  .neg-ticker-value.gold { color: var(--gold); }
+
+  .neg-workspace { display:flex; gap:16px; align-items:flex-start; padding:16px 20px 40px; max-width:1500px; margin:0 auto; }
+  .neg-rail { width: 300px; flex-shrink:0; display:flex; flex-direction:column; gap:14px; }
+  .neg-main { flex:1; min-width:0; }
+  @media (max-width: 880px) { .neg-workspace { flex-direction: column; } .neg-rail { width:100%; } }
+
+  .neg-panel { background: var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; }
+  .neg-panel-title { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); margin-bottom:10px; font-weight:700; }
+
+  .neg-btn { font-family:inherit; font-size:12.5px; font-weight:700; border-radius:8px; padding:8px 12px; border:1px solid var(--border-default); background:var(--surface-secondary); color:var(--text-primary); cursor:pointer; transition:border-color .15s,background .15s; }
+  .neg-btn:hover { border-color: var(--gold); }
+  .neg-btn:disabled { opacity:.5; cursor:not-allowed; }
+  .neg-btn-gold { background: var(--gold); color:#fff; border-color:var(--gold); }
+  .neg-btn-gold:hover { filter:brightness(1.06); }
+  .neg-btn-danger { color: var(--red); }
+  .neg-btn-sm { padding:5px 9px; font-size:11.5px; }
+  .neg-row { display:flex; gap:8px; flex-wrap:wrap; }
+
+  .neg-label { font-size:11px; color:var(--text-secondary); margin-bottom:4px; display:block; }
+  .neg-input { width:100%; background:var(--surface-secondary); border:1px solid var(--border-default); color:var(--text-primary); border-radius:7px; padding:7px 9px; font-size:13px; font-family:inherit; }
+  .neg-input:focus { border-color: var(--gold); outline:none; }
+  textarea.neg-input { resize:vertical; min-height:90px; font-family:'IBM Plex Mono', monospace; font-size:12px; }
+
+  .neg-seg { display:flex; background:var(--surface-secondary); border:1px solid var(--border-default); border-radius:8px; padding:3px; gap:3px; }
+  .neg-seg-btn { flex:1; font-family:inherit; font-size:12px; font-weight:700; padding:6px 8px; border:none; background:transparent; color:var(--text-secondary); border-radius:6px; cursor:pointer; }
+  .neg-seg-btn-active { background: var(--gold-soft); color: var(--gold); }
+
+  .neg-checkbox { width:15px; height:15px; accent-color: var(--gold); }
+
+  .neg-table-scroll { overflow-x:auto; border:1px solid var(--border-subtle); border-radius:12px; }
+  .neg-table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:920px; }
+  .neg-table thead th { position:sticky; top:0; background:var(--surface-secondary); color:var(--text-secondary); text-transform:uppercase; letter-spacing:.04em; font-size:10px; font-weight:700; text-align:left; padding:9px 10px; border-bottom:1px solid var(--border-subtle); white-space:nowrap; }
+  .neg-table tbody td { padding:7px 10px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; }
+  .neg-table tbody tr:hover { background: var(--accent-soft); }
+  .neg-table tbody tr:last-child td { border-bottom:none; }
+  .neg-num { text-align:right; }
+  .neg-cell-input { width:76px; }
+  .neg-produto-input { width:190px; }
+
+  .neg-gauge { width:100px; }
+  .neg-gauge-track { position:relative; height:7px; background:var(--surface-secondary); border-radius:5px; }
+  .neg-gauge-current { position:absolute; top:0; left:0; bottom:0; background:var(--pink); border-radius:5px; }
+  .neg-gauge-gap { position:absolute; top:0; bottom:0; background: var(--gold); }
+  .neg-gauge-marker { position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--text-primary); }
+
+  .neg-empty { text-align:center; padding:46px 20px; color:var(--text-secondary); }
+  .neg-empty .disp { font-size:16px; color:var(--text-primary); margin-bottom:6px; }
+
+  .neg-modal-overlay { position:fixed; inset:0; background:rgba(8,9,13,0.6); display:flex; align-items:center; justify-content:center; z-index:80; padding:20px; }
+  .neg-modal { background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:20px; width:100%; max-width:640px; max-height:85vh; overflow:auto; }
+  .neg-map-row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; padding:6px 0; border-bottom:1px solid var(--border-subtle); }
+  .neg-map-row:last-child { border-bottom:none; }
+
+  .neg-save-indicator { font-size:11px; color: #4ade80; }
+  .neg-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+</style>
+</head>
+<body class="negdesk">
+
+  <div class="neg-topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="catalogo.html" class="neg-back">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        Voltar ao Catálogo
+      </a>
+      <div>
+        <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Central de Investimento Adicional</div>
+        <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Quanto investir além do desconto já liberado para fechar no valor negociado</div>
+      </div>
+    </div>
+    <div class="neg-ticker mono">
+      <div class="neg-ticker-item">
+        <div class="neg-ticker-label">Produtos</div>
+        <div class="neg-ticker-value" id="tkProdutos">0</div>
+      </div>
+      <div class="neg-ticker-item">
+        <div class="neg-ticker-label">Pedido cheio</div>
+        <div class="neg-ticker-value" id="tkPedidoCheio">R$ 0,00</div>
+      </div>
+      <div class="neg-ticker-item">
+        <div class="neg-ticker-label">Com desconto atual</div>
+        <div class="neg-ticker-value" id="tkComDesconto">R$ 0,00</div>
+      </div>
+      <div class="neg-ticker-item">
+        <div class="neg-ticker-label" id="tkInvestLabel">Investimento p/ metas</div>
+        <div class="neg-ticker-value gold" id="tkInvest">R$ 0,00</div>
+      </div>
+      <div class="neg-ticker-item"><div class="neg-save-indicator" id="neg-save-status"></div></div>
+    </div>
+  </div>
+
+  <div class="neg-workspace">
+    <!-- RAIL -->
+    <div class="neg-rail">
+      <div class="neg-panel">
+        <div class="neg-panel-title">Importar produtos</div>
+        <div class="neg-row">
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negTogglePaste()">Colar do Excel</button>
+          <button type="button" class="neg-btn neg-btn-sm" onclick="document.getElementById('negFileInput').click()">Importar arquivo</button>
+          <input id="negFileInput" type="file" accept=".csv,.xlsx,.xls" style="display:none" onchange="negHandleFile(event)">
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negAddManualRow()">+ Linha manual</button>
+        </div>
+        <div id="negPasteBox" style="display:none; margin-top:10px;">
+          <span class="neg-label">Cole aqui (com cabeçalho, direto do Excel)</span>
+          <textarea id="negPasteText" class="neg-input" placeholder="PRODUTO&#9;COD.&#9;PREÇO&#9;QTD&#9;DESCONTO TOTAL"></textarea>
+          <div class="neg-row" style="margin-top:8px;">
+            <button type="button" class="neg-btn neg-btn-gold neg-btn-sm" onclick="negProcessPaste()">Processar colagem</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="neg-panel">
+        <div class="neg-panel-title">Modo de cálculo</div>
+        <div class="neg-seg">
+          <button type="button" id="negSegIndividual" class="neg-seg-btn neg-seg-btn-active" onclick="negSetMode('individual')">Por item</button>
+          <button type="button" id="negSegGrupo" class="neg-seg-btn" onclick="negSetMode('grupo')">Por grupo</button>
+        </div>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:10px; line-height:1.5;" id="negModeDesc">
+          Defina uma meta (% ou R$) para cada produto. O investimento adicional é calculado linha a linha.
+        </p>
+      </div>
+
+      <div class="neg-panel" id="negGroupPanel" style="display:none;">
+        <div class="neg-panel-title" id="negGroupTitle">Meta do grupo</div>
+        <div class="neg-seg" style="margin-bottom:10px;">
+          <button type="button" id="negSegValor" class="neg-seg-btn neg-seg-btn-active" onclick="negSetGroupTargetType('valor')">Valor total (R$)</button>
+          <button type="button" id="negSegPct" class="neg-seg-btn" onclick="negSetGroupTargetType('pct')">% Desconto médio</button>
+        </div>
+        <span class="neg-label" id="negGroupInputLabel">Valor total desejado do grupo</span>
+        <input id="negGroupTargetValue" class="neg-input mono" placeholder="Ex.: 21500,00" oninput="negOnGroupTargetInput(this.value)">
+        <div id="negGroupSummary" style="margin-top:14px; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <div class="neg-panel">
+        <div class="neg-panel-title">Ações</div>
+        <div class="neg-row">
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negExportCsv()">Exportar CSV</button>
+          <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negClearAll()">Limpar tudo</button>
+        </div>
+        <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
+          A lista fica salva automaticamente neste navegador (localStorage), só nesse aparelho.
+        </p>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="neg-main">
+      <div class="neg-toolbar">
+        <input id="negSearch" class="neg-input" style="max-width:260px;" placeholder="Buscar por produto ou código..." oninput="negRenderTable()">
+        <div class="neg-row" id="negBulkSelectRow" style="display:none;">
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(true)">Selecionar tudo</button>
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(false)">Limpar seleção</button>
+        </div>
+      </div>
+      <div id="negTableWrap"></div>
+    </div>
+  </div>
+
+  <!-- MODAL DE MAPEAMENTO -->
+  <div id="negMapModalOverlay" class="neg-modal-overlay" style="display:none;" onclick="if(event.target===this) negCancelImport()">
+    <div class="neg-modal" onclick="event.stopPropagation()">
+      <div class="disp" style="font-size:16px; margin-bottom:4px;">Conferir colunas importadas</div>
+      <p id="negMapSubtitle" style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px;"></p>
+      <div id="negMapRows"></div>
+      <div style="margin-top:16px;">
+        <span class="neg-label">Se já existem produtos na lista</span>
+        <div class="neg-seg">
+          <button type="button" id="negSegAdd" class="neg-seg-btn" onclick="negSetReplaceMode('add')">Adicionar aos existentes</button>
+          <button type="button" id="negSegReplace" class="neg-seg-btn" onclick="negSetReplaceMode('replace')">Substituir lista atual</button>
+        </div>
+      </div>
+      <div class="neg-row" style="margin-top:18px; justify-content:flex-end;">
+        <button type="button" class="neg-btn" onclick="negCancelImport()">Cancelar</button>
+        <button type="button" class="neg-btn neg-btn-gold" onclick="negConfirmImport()">Confirmar importação</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+function negUid() { return Math.random().toString(36).slice(2, 10); }
+function negClamp(v, min, max) { return Math.min(max, Math.max(min, v)); }
+
+function negNormalize(str) {
+  return String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function negParseNumberBR(input) {
+  if (typeof input === 'number') return input;
+  if (input == null) return NaN;
+  let s = String(input).trim();
+  if (!s) return NaN;
+  s = s.replace(/r\$/gi, '').replace(/%/g, '').trim();
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  const n = parseFloat(s);
+  return isNaN(n) ? NaN : n;
+}
+
+function negFormatBRL(n) {
+  if (!isFinite(n)) n = 0;
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+function negFormatPct(n, digits) {
+  digits = digits == null ? 2 : digits;
+  if (!isFinite(n)) n = 0;
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }) + '%';
+}
+function negFormatNum(n, digits) {
+  digits = digits == null ? 2 : digits;
+  if (!isFinite(n)) n = 0;
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+function negFormatInputNumber(n) {
+  if (n == null || isNaN(n)) return '';
+  return n.toLocaleString('pt-BR', { maximumFractionDigits: 4 });
+}
+
+/* =========================================================================
+   ESTADO GLOBAL
+   ========================================================================= */
+let NEG_PRODUCTS = [];
+let NEG_MODE = 'individual';
+let NEG_GROUP_TARGET_TYPE = 'valor';
+let NEG_GROUP_TARGET_VALUE = '';
+let NEG_PENDING_IMPORT = null;
+const NEG_STORAGE_KEY = 'hbn1_negociacao_estado';
+
+const NEG_FIELD_DEFS = [
+  { key: 'produto', label: 'Produto', required: true, patterns: ['produto', 'descricao', 'nome', 'item'] },
+  { key: 'cod', label: 'Código', required: false, patterns: ['cod.', 'cod', 'codigo'] },
+  { key: 'ean', label: 'EAN', required: false, patterns: ['ean'] },
+  { key: 'preco', label: 'Preço cheio', required: true, patterns: ['preco'], exclude: ['cdesc', 'com desconto'] },
+  { key: 'qtd', label: 'Quantidade', required: true, patterns: ['qtd', 'quantidade'] },
+  { key: 'descontoAtual', label: '% Desconto atual', required: false, patterns: ['desconto total', 'desconto atual', 'desconto liberado', 'desconto'] },
+  { key: 'precoComDesc', label: 'Preço com desconto (opcional)', required: false, patterns: ['cdesc', 'com desconto'] },
+];
+
+/* =========================================================================
+   PERSISTÊNCIA (localStorage)
+   ========================================================================= */
+function negSaveState() {
+  try {
+    localStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
+      products: NEG_PRODUCTS, mode: NEG_MODE,
+      groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE
+    }));
+    const el = document.getElementById('neg-save-status');
+    if (el) { el.innerText = 'Salvo'; setTimeout(() => { el.innerText = ''; }, 1200); }
+  } catch (e) { /* localStorage indisponível */ }
+}
+
+function negLoadState() {
+  try {
+    const raw = localStorage.getItem(NEG_STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data.products)) NEG_PRODUCTS = data.products;
+    if (data.mode) NEG_MODE = data.mode;
+    if (data.groupTargetType) NEG_GROUP_TARGET_TYPE = data.groupTargetType;
+    if (data.groupTargetValue != null) NEG_GROUP_TARGET_VALUE = data.groupTargetValue;
+  } catch (e) { /* nada salvo ainda */ }
+}
+
+/* =========================================================================
+   IMPORTAÇÃO
+   ========================================================================= */
+function negDetectDelimiter(line) {
+  const counts = { '\t': (line.match(/\t/g) || []).length, ';': (line.match(/;/g) || []).length, ',': (line.match(/,/g) || []).length };
+  let best = '\t', bestCount = counts['\t'];
+  if (counts[';'] > bestCount) { best = ';'; bestCount = counts[';']; }
+  if (counts[','] > bestCount) { best = ','; bestCount = counts[',']; }
+  return best;
+}
+
+function negParsePastedText(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (lines.length === 0) return { headers: [], rows: [] };
+  const delim = negDetectDelimiter(lines[0]);
+  const split = l => l.split(delim).map(c => c.trim());
+  return { headers: split(lines[0]), rows: lines.slice(1).map(split) };
+}
+
+function negGuessMapping(headers) {
+  const norm = headers.map(negNormalize);
+  const mapping = {};
+  NEG_FIELD_DEFS.forEach(f => {
+    let idx = -1;
+    for (let i = 0; i < norm.length; i++) {
+      const h = norm[i];
+      if (f.exclude && f.exclude.some(ex => h.includes(negNormalize(ex)))) continue;
+      if (f.patterns.some(p => h.includes(negNormalize(p)))) { idx = i; break; }
+    }
+    mapping[f.key] = idx;
+  });
+  return mapping;
+}
+
+function negBuildProducts(headers, rows, mapping) {
+  return rows.map(row => {
+    const get = key => { const idx = mapping[key]; return idx >= 0 && idx < row.length ? row[idx] : ''; };
+    const preco = negParseNumberBR(get('preco'));
+    const qtd = negParseNumberBR(get('qtd'));
+    let descontoAtual = negParseNumberBR(get('descontoAtual'));
+    const precoComDesc = negParseNumberBR(get('precoComDesc'));
+    if (isNaN(descontoAtual) && !isNaN(precoComDesc) && preco > 0) descontoAtual = ((preco - precoComDesc) / preco) * 100;
+    if (isNaN(descontoAtual)) descontoAtual = 0;
+    const precoOk = isNaN(preco) ? 0 : preco;
+    return {
+      id: negUid(), produto: String(get('produto') || '').trim() || 'Produto sem nome',
+      cod: String(get('cod') || '').trim(), ean: String(get('ean') || '').trim(),
+      preco: negFormatInputNumber(precoOk), qtd: negFormatInputNumber(isNaN(qtd) ? 0 : qtd),
+      descontoAtual: negFormatInputNumber(Math.round(descontoAtual * 100) / 100),
+      targetType: 'pct', targetValue: negFormatInputNumber(Math.round(descontoAtual * 100) / 100),
+      selected: true
+    };
+  }).filter(p => p.produto);
+}
+
+function negTogglePaste() {
+  const box = document.getElementById('negPasteBox');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+function negOpenMappingFromParsed(parsed) {
+  if (!parsed.headers.length) { alert('Não consegui identificar colunas nesse conteúdo.'); return; }
+  const mapping = negGuessMapping(parsed.headers);
+  NEG_PENDING_IMPORT = { headers: parsed.headers, rows: parsed.rows, mapping, replaceMode: NEG_PRODUCTS.length === 0 ? 'replace' : 'add' };
+  negRenderMappingModal();
+}
+
+function negProcessPaste() {
+  const text = document.getElementById('negPasteText').value;
+  if (!text.trim()) return;
+  negOpenMappingFromParsed(negParsePastedText(text));
+}
+
+function negHandleFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows2d = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: '' });
+      const headers = (rows2d[0] || []).map(h => String(h));
+      const rows = rows2d.slice(1).map(r => r.map(c => (c == null ? '' : String(c))));
+      negOpenMappingFromParsed({ headers, rows });
+    } catch (err) {
+      alert('Não consegui ler esse arquivo. Confira se é um .xlsx, .xls ou .csv válido.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+
+function negRenderMappingModal() {
+  const p = NEG_PENDING_IMPORT;
+  document.getElementById('negMapSubtitle').innerText = p.rows.length + ' linha(s) encontrada(s). Confirme qual coluna do arquivo corresponde a cada campo.';
+  const rowsHtml = NEG_FIELD_DEFS.map(f => {
+    const options = ['<option value="-1">— não usar —</option>'].concat(
+      p.headers.map((h, i) => `<option value="${i}" ${p.mapping[f.key] === i ? 'selected' : ''}>${h || ('Coluna ' + (i + 1))}</option>`)
+    ).join('');
+    return `
+      <div class="neg-map-row">
+        <span style="font-size:13px;">${f.label}${f.required ? ' <span style="color:var(--red)">*</span>' : ''}</span>
+        <select class="neg-input" onchange="negUpdateMapping('${f.key}', this.value)">${options}</select>
+      </div>`;
+  }).join('');
+  document.getElementById('negMapRows').innerHTML = rowsHtml;
+  negSetReplaceMode(p.replaceMode);
+  document.getElementById('negMapModalOverlay').style.display = 'flex';
+}
+
+function negUpdateMapping(key, value) {
+  NEG_PENDING_IMPORT.mapping[key] = Number(value);
+}
+
+function negSetReplaceMode(mode) {
+  NEG_PENDING_IMPORT.replaceMode = mode;
+  document.getElementById('negSegAdd').classList.toggle('neg-seg-btn-active', mode === 'add');
+  document.getElementById('negSegReplace').classList.toggle('neg-seg-btn-active', mode === 'replace');
+}
+
+function negCancelImport() {
+  NEG_PENDING_IMPORT = null;
+  document.getElementById('negMapModalOverlay').style.display = 'none';
+}
+
+function negConfirmImport() {
+  const { headers, rows, mapping, replaceMode } = NEG_PENDING_IMPORT;
+  const missing = NEG_FIELD_DEFS.filter(f => f.required && (mapping[f.key] == null || mapping[f.key] < 0));
+  if (missing.length > 0) { alert('Antes de confirmar, defina a coluna de: ' + missing.map(f => f.label).join(', ')); return; }
+  const built = negBuildProducts(headers, rows, mapping);
+  NEG_PRODUCTS = replaceMode === 'replace' ? built : NEG_PRODUCTS.concat(built);
+  NEG_PENDING_IMPORT = null;
+  document.getElementById('negMapModalOverlay').style.display = 'none';
+  document.getElementById('negPasteText').value = '';
+  document.getElementById('negPasteBox').style.display = 'none';
+  negSaveState();
+  negRenderAll();
+}
+
+/* =========================================================================
+   CÁLCULOS
+   ========================================================================= */
+function negComputeIndividual(p) {
+  const preco = negParseNumberBR(p.preco) || 0;
+  const qtd = negParseNumberBR(p.qtd) || 0;
+  const descontoAtual = negParseNumberBR(p.descontoAtual) || 0;
+  const targetRaw = negParseNumberBR(p.targetValue);
+  let pctNecessario;
+  if (p.targetType === 'pct') {
+    pctNecessario = isNaN(targetRaw) ? 0 : targetRaw;
+  } else {
+    const precoAlvo = isNaN(targetRaw) ? preco : targetRaw;
+    pctNecessario = preco > 0 ? ((preco - precoAlvo) / preco) * 100 : 0;
+  }
+  const pctAdicional = pctNecessario - descontoAtual;
+  const investimento = Math.max(0, pctAdicional / 100) * preco * qtd;
+  const precoFinal = preco * (1 - pctNecessario / 100);
+  const totalPedido = precoFinal * qtd;
+  return { preco, qtd, descontoAtual, pctNecessario, pctAdicional, investimento, precoFinal, totalPedido };
+}
+
+function negComputeGroup(selectedProducts, groupTargetType, groupTargetValue) {
+  const somaPrecoCheio = selectedProducts.reduce((s, p) => s + (negParseNumberBR(p.preco) || 0) * (negParseNumberBR(p.qtd) || 0), 0);
+  const valorAtual = selectedProducts.reduce((s, p) => {
+    const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, desc = negParseNumberBR(p.descontoAtual) || 0;
+    return s + preco * qtd * (1 - desc / 100);
+  }, 0);
+  const targetRaw = negParseNumberBR(groupTargetValue);
+  let valorAlvo;
+  if (groupTargetType === 'valor') valorAlvo = isNaN(targetRaw) ? valorAtual : targetRaw;
+  else valorAlvo = somaPrecoCheio * (1 - (isNaN(targetRaw) ? 0 : targetRaw) / 100);
+  const investimentoTotal = valorAtual - valorAlvo;
+  const xAdicionalPct = somaPrecoCheio > 0 ? (investimentoTotal / somaPrecoCheio) * 100 : 0;
+  const perItem = selectedProducts.map(p => {
+    const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, descontoAtual = negParseNumberBR(p.descontoAtual) || 0;
+    const pctFinal = descontoAtual + xAdicionalPct;
+    const investimentoItem = Math.max(0, xAdicionalPct / 100) * preco * qtd;
+    const precoFinal = preco * (1 - pctFinal / 100);
+    return { id: p.id, produto: p.produto, preco, qtd, descontoAtual, pctFinal, investimentoItem, precoFinal };
+  });
+  return { somaPrecoCheio, valorAtual, valorAlvo, investimentoTotal, xAdicionalPct, perItem };
+}
+
+/* =========================================================================
+   MUTAÇÕES
+   ========================================================================= */
+function negUpdateProduct(id, key, value) {
+  const p = NEG_PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  p[key] = value;
+  negSaveState();
+  negRenderAll();
+}
+
+function negRemoveProduct(id) {
+  NEG_PRODUCTS = NEG_PRODUCTS.filter(p => p.id !== id);
+  negSaveState();
+  negRenderAll();
+}
+
+function negAddManualRow() {
+  NEG_PRODUCTS.push({ id: negUid(), produto: '', cod: '', ean: '', preco: '', qtd: '1', descontoAtual: '0', targetType: 'pct', targetValue: '0', selected: true });
+  negSaveState();
+  negRenderAll();
+}
+
+function negToggleTargetType(id) {
+  const p = NEG_PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  const calc = negComputeIndividual(p);
+  if (p.targetType === 'pct') {
+    p.targetType = 'valor';
+    p.targetValue = negFormatInputNumber(Math.round(calc.precoFinal * 100) / 100);
+  } else {
+    p.targetType = 'pct';
+    p.targetValue = negFormatInputNumber(Math.round(calc.pctNecessario * 100) / 100);
+  }
+  negSaveState();
+  negRenderAll();
+}
+
+function negClearAll() {
+  if (!confirm('Isso vai apagar todos os produtos da lista (inclusive os salvos). Confirmar?')) return;
+  NEG_PRODUCTS = [];
+  try { localStorage.removeItem(NEG_STORAGE_KEY); } catch (e) {}
+  negRenderAll();
+}
+
+function negToggleSelectAll(value) {
+  NEG_PRODUCTS.forEach(p => { p.selected = value; });
+  negSaveState();
+  negRenderAll();
+}
+
+/* =========================================================================
+   MODO / META DE GRUPO
+   ========================================================================= */
+function negSetMode(mode) {
+  NEG_MODE = mode;
+  document.getElementById('negSegIndividual').classList.toggle('neg-seg-btn-active', mode === 'individual');
+  document.getElementById('negSegGrupo').classList.toggle('neg-seg-btn-active', mode === 'grupo');
+  document.getElementById('negGroupPanel').style.display = mode === 'grupo' ? 'block' : 'none';
+  document.getElementById('negBulkSelectRow').style.display = mode === 'grupo' ? 'flex' : 'none';
+  document.getElementById('negModeDesc').innerText = mode === 'individual'
+    ? 'Defina uma meta (% ou R$) para cada produto. O investimento adicional é calculado linha a linha.'
+    : 'Selecione os produtos na tabela e defina uma única meta para o conjunto — em valor total ou em % de desconto médio.';
+  document.getElementById('tkInvestLabel').innerText = mode === 'individual' ? 'Investimento p/ metas' : 'Investimento do grupo';
+  negSaveState();
+  negRenderAll();
+}
+
+function negSetGroupTargetType(type) {
+  NEG_GROUP_TARGET_TYPE = type;
+  document.getElementById('negSegValor').classList.toggle('neg-seg-btn-active', type === 'valor');
+  document.getElementById('negSegPct').classList.toggle('neg-seg-btn-active', type === 'pct');
+  document.getElementById('negGroupInputLabel').innerText = type === 'valor' ? 'Valor total desejado do grupo' : '% de desconto desejado (sobre o preço cheio)';
+  document.getElementById('negGroupTargetValue').placeholder = type === 'valor' ? 'Ex.: 21500,00' : 'Ex.: 22,5';
+  negSaveState();
+  negRenderAll();
+}
+
+function negOnGroupTargetInput(value) {
+  NEG_GROUP_TARGET_VALUE = value;
+  negSaveState();
+  negRenderAll();
+}
+
+/* =========================================================================
+   EXPORTAÇÃO CSV
+   ========================================================================= */
+function negExportCsv() {
+  const rows = [['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', 'Meta', '% Adicional necessario', 'R$ Investimento', 'Preco final']];
+  negFilteredProducts().forEach(p => {
+    const c = negComputeIndividual(p);
+    rows.push([
+      p.produto, p.cod, negFormatNum(c.preco), negFormatNum(c.qtd, 0), negFormatNum(c.descontoAtual),
+      p.targetType === 'pct' ? negFormatNum(c.pctNecessario) + '%' : negFormatBRL(negParseNumberBR(p.targetValue) || 0),
+      negFormatNum(c.pctAdicional), negFormatNum(c.investimento), negFormatNum(c.precoFinal)
+    ]);
+  });
+  const csv = rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(';')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'negociacao-investimento.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+function negFilteredProducts() {
+  const term = negNormalize(document.getElementById('negSearch').value);
+  if (!term) return NEG_PRODUCTS;
+  return NEG_PRODUCTS.filter(p => negNormalize(p.produto).includes(term) || negNormalize(p.cod).includes(term));
+}
+
+function negRenderAll() {
+  negRenderTicker();
+  negRenderGroupPanel();
+  negRenderTable();
+}
+
+function negRenderTicker() {
+  let somaPrecoCheio = 0, somaAtual = 0, somaInvestIndividual = 0;
+  NEG_PRODUCTS.forEach(p => {
+    const c = negComputeIndividual(p);
+    somaPrecoCheio += c.preco * c.qtd;
+    somaAtual += c.preco * c.qtd * (1 - c.descontoAtual / 100);
+    somaInvestIndividual += c.investimento;
+  });
+  document.getElementById('tkProdutos').innerText = NEG_PRODUCTS.length;
+  document.getElementById('tkPedidoCheio').innerText = negFormatBRL(somaPrecoCheio);
+  document.getElementById('tkComDesconto').innerText = negFormatBRL(somaAtual);
+
+  const selected = NEG_PRODUCTS.filter(p => p.selected);
+  const groupResult = negComputeGroup(selected, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
+  document.getElementById('tkInvest').innerText = negFormatBRL(NEG_MODE === 'individual' ? somaInvestIndividual : Math.max(0, groupResult.investimentoTotal));
+}
+
+function negRenderGroupPanel() {
+  if (NEG_MODE !== 'grupo') return;
+  const selected = NEG_PRODUCTS.filter(p => p.selected);
+  document.getElementById('negGroupTitle').innerText = `Meta do grupo (${selected.length} selecionado${selected.length === 1 ? '' : 's'})`;
+  const gr = negComputeGroup(selected, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
+  const el = document.getElementById('negGroupSummary');
+  el.innerHTML = `
+    <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+      <span style="color:var(--text-secondary);">Valor cheio do grupo</span><span class="mono">${negFormatBRL(gr.somaPrecoCheio)}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+      <span style="color:var(--text-secondary);">Valor com desconto atual</span><span class="mono">${negFormatBRL(gr.valorAtual)}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+      <span style="color:var(--text-secondary);">Valor alvo</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:12.5px;">
+      <span style="color:var(--text-secondary);">% adicional uniforme</span>
+      <span class="mono" style="color:${gr.xAdicionalPct > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatPct(gr.xAdicionalPct)}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:13.5px; border-top:1px solid var(--border-subtle); padding-top:8px; margin-top:2px;">
+      <span style="font-weight:700;">Investimento necessário</span>
+      <span class="mono" style="font-weight:800; color:var(--gold);">${negFormatBRL(Math.max(0, gr.investimentoTotal))}</span>
+    </div>
+    ${gr.investimentoTotal <= 0 && selected.length > 0 ? '<div style="font-size:11.5px; color:var(--green);">Meta já atingida com o desconto atual.</div>' : ''}
+  `;
+}
+
+function negGaugeSvg(currentPct, targetPct) {
+  const cur = negClamp(currentPct || 0, 0, 100), tgt = negClamp(targetPct || 0, 0, 100);
+  const gapStart = Math.min(cur, tgt), gapWidth = Math.abs(tgt - cur), atingida = tgt <= cur;
+  return `
+    <div class="neg-gauge" title="Atual ${negFormatPct(currentPct)} · Meta ${negFormatPct(targetPct)}">
+      <div class="neg-gauge-track">
+        <div class="neg-gauge-current" style="width:${cur}%"></div>
+        ${!atingida ? `<div class="neg-gauge-gap" style="left:${gapStart}%; width:${gapWidth}%"></div>` : ''}
+        <div class="neg-gauge-marker" style="left:${tgt}%"></div>
+      </div>
+    </div>`;
+}
+
+function negRenderTable() {
+  const wrap = document.getElementById('negTableWrap');
+  const list = negFilteredProducts();
+
+  if (NEG_PRODUCTS.length === 0) {
+    wrap.innerHTML = `<div class="neg-panel neg-empty"><div class="disp">Nenhum produto ainda</div><div>Cole uma lista do Excel, importe um arquivo ou adicione uma linha manual para começar.</div></div>`;
+    return;
+  }
+
+  const grupoSelecionados = NEG_MODE === 'grupo' ? NEG_PRODUCTS.filter(p => p.selected) : [];
+  const grupoResult = NEG_MODE === 'grupo' ? negComputeGroup(grupoSelecionados, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE) : null;
+  const grupoMap = {};
+  if (grupoResult) grupoResult.perItem.forEach(it => { grupoMap[it.id] = it; });
+
+  const headCols = NEG_MODE === 'individual'
+    ? `<th></th><th>Produto</th><th>Cód.</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">Meta</th><th class="neg-num">Progresso</th><th class="neg-num">% Adicional</th><th class="neg-num">Investimento</th><th class="neg-num">Preço final</th><th></th>`
+    : `<th></th><th>Produto</th><th>Cód.</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% final estimado</th><th class="neg-num">Investimento no item</th><th class="neg-num">Preço final</th><th></th>`;
+
+  const rows = list.map(p => {
+    const c = negComputeIndividual(p);
+    const selCell = NEG_MODE === 'grupo'
+      ? `<td><input type="checkbox" class="neg-checkbox" ${p.selected ? 'checked' : ''} onchange="negUpdateProduct('${p.id}','selected',this.checked)"></td>`
+      : `<td></td>`;
+
+    const commonCols = `
+      <td><input class="neg-input neg-produto-input" value="${(p.produto || '').replace(/"/g, '&quot;')}" onchange="negUpdateProduct('${p.id}','produto',this.value)"></td>
+      <td><input class="neg-input neg-cell-input" value="${(p.cod || '').replace(/"/g, '&quot;')}" onchange="negUpdateProduct('${p.id}','cod',this.value)"></td>
+      <td class="neg-num"><input class="neg-input mono neg-cell-input" style="text-align:right" value="${p.preco}" onchange="negUpdateProduct('${p.id}','preco',this.value)"></td>
+      <td class="neg-num"><input class="neg-input mono neg-cell-input" style="width:56px;text-align:right" value="${p.qtd}" onchange="negUpdateProduct('${p.id}','qtd',this.value)"></td>
+      <td class="neg-num"><input class="neg-input mono neg-cell-input" style="text-align:right" value="${p.descontoAtual}" onchange="negUpdateProduct('${p.id}','descontoAtual',this.value)"></td>`;
+
+    let modeCols;
+    if (NEG_MODE === 'individual') {
+      modeCols = `
+        <td class="neg-num">
+          <div style="display:flex; gap:4px; justify-content:flex-end;">
+            <input class="neg-input mono neg-cell-input" style="text-align:right" value="${p.targetValue}" onchange="negUpdateProduct('${p.id}','targetValue',this.value)">
+            <button type="button" class="neg-btn neg-btn-sm" style="padding:5px 7px;" onclick="negToggleTargetType('${p.id}')">${p.targetType === 'pct' ? '%' : 'R$'}</button>
+          </div>
+        </td>
+        <td class="neg-num">${negGaugeSvg(c.descontoAtual, c.pctNecessario)}</td>
+        <td class="neg-num mono" style="color:${c.pctAdicional > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatPct(c.pctAdicional)}</td>
+        <td class="neg-num mono" style="font-weight:700; color:${c.investimento > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatBRL(c.investimento)}</td>
+        <td class="neg-num mono">${negFormatBRL(c.precoFinal)}</td>`;
+    } else {
+      const gc = grupoMap[p.id];
+      modeCols = gc ? `
+        <td class="neg-num mono">${negFormatPct(gc.pctFinal)}</td>
+        <td class="neg-num mono" style="font-weight:700; color:${gc.investimentoItem > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatBRL(gc.investimentoItem)}</td>
+        <td class="neg-num mono">${negFormatBRL(gc.precoFinal)}</td>` : `
+        <td class="neg-num" style="color:var(--text-secondary)">—</td>
+        <td class="neg-num" style="color:var(--text-secondary)">—</td>
+        <td class="neg-num" style="color:var(--text-secondary)">—</td>`;
+    }
+
+    return `<tr>${selCell}${commonCols}${modeCols}<td><button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negRemoveProduct('${p.id}')">✕</button></td></tr>`;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="neg-table-scroll">
+      <table class="neg-table">
+        <thead><tr>${headCols}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+if (!localStorage.getItem('hbn1_usuario')) {
+  window.location.href = 'index.html';
+}
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  // Aplica o mesmo tema salvo pelo catálogo (light/dark)
+  const tema = localStorage.getItem('hbn1_tema') || 'light';
+  document.documentElement.setAttribute('data-theme', tema);
+
+  negLoadState();
+  document.getElementById('negGroupTargetValue').value = NEG_GROUP_TARGET_VALUE || '';
+  negSetMode(NEG_MODE);
+  negSetGroupTargetType(NEG_GROUP_TARGET_TYPE);
+  negRenderAll();
+});
+</script>
+</body>
+</html>
