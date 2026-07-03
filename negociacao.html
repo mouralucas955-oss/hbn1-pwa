@@ -355,16 +355,26 @@ function negBuildProducts(headers, rows, mapping) {
     const preco = negParseNumberBR(get('preco'));
     const qtd = negParseNumberBR(get('qtd'));
     let descontoAtual = negParseNumberBR(get('descontoAtual'));
-    const precoComDesc = negParseNumberBR(get('precoComDesc'));
-    if (isNaN(descontoAtual) && !isNaN(precoComDesc) && preco > 0) descontoAtual = ((preco - precoComDesc) / preco) * 100;
     if (isNaN(descontoAtual)) descontoAtual = 0;
     const precoOk = isNaN(preco) ? 0 : preco;
+
+    // "Preço com desconto (opcional)" = preço FINAL DESEJADO, não o preço atual
+    const precoComDesc = negParseNumberBR(get('precoComDesc'));
+    let precoFinalDesejado = '';
+    let targetValue = '0';
+    if (!isNaN(precoComDesc) && precoOk > 0) {
+      precoFinalDesejado = negFormatInputNumber(precoComDesc);
+      const pctTotalNecessario = ((precoOk - precoComDesc) / precoOk) * 100;
+      const pctAdicional = pctTotalNecessario - descontoAtual;
+      targetValue = negFormatInputNumber(Math.round(pctAdicional * 100) / 100);
+    }
+
     return {
       id: negUid(), produto: String(get('produto') || '').trim() || 'Produto sem nome',
       cod: String(get('cod') || '').trim(), ean: String(get('ean') || '').trim(),
       preco: negFormatInputNumber(precoOk), qtd: negFormatInputNumber(isNaN(qtd) ? 0 : qtd),
       descontoAtual: negFormatInputNumber(Math.round(descontoAtual * 100) / 100),
-      targetType: 'pct', targetValue: '0', precoFinalDesejado: '',
+      targetType: 'pct', targetValue, precoFinalDesejado,
       selected: true
     };
   }).filter(p => p.produto);
