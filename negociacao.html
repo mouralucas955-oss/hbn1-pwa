@@ -744,7 +744,20 @@ function negExportCsv() {
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'negociacao-investimento.csv'; a.click();
+  a.href = url;
+  const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  let nomeArquivo;
+  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
+    const razaoLimpa = String(NEG_CLIENTE.razao || '').toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
+    const cnpjLimpo = String(NEG_CLIENTE.cnpj || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
+    nomeArquivo = `Negociacao - ${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataHoje}.csv`;
+  } else {
+    nomeArquivo = `negociacao-investimento-${dataHoje}.csv`;
+  }
+  a.download = nomeArquivo;
+  a.click();
   URL.revokeObjectURL(url);
 }
 
