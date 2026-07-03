@@ -224,6 +224,17 @@
       </div>
     </div>
   </div>
+  <div id="negHandoffModalOverlay" class="neg-modal-overlay" style="display:none;">
+    <div class="neg-modal" style="max-width:420px;">
+      <div class="disp" style="font-size:16px; margin-bottom:8px;">Produtos recebidos</div>
+      <p id="negHandoffSubtitle" style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;"></p>
+      <div class="neg-row" style="justify-content:flex-end;">
+        <button type="button" class="neg-btn" onclick="negCancelHandoff()">Cancelar</button>
+        <button type="button" class="neg-btn" onclick="negConfirmHandoff('add')">Adicionar aos existentes</button>
+        <button type="button" class="neg-btn neg-btn-gold" onclick="negConfirmHandoff('replace')">Substituir lista atual</button>
+      </div>
+    </div>
+  </div>
 
 <script>
   if (!localStorage.getItem('hbn1_usuario')) {
@@ -462,6 +473,58 @@ function negConfirmImport() {
   document.getElementById('negMapModalOverlay').style.display = 'none';
   document.getElementById('negPasteText').value = '';
   document.getElementById('negPasteBox').style.display = 'none';
+  negSaveState();
+  negRenderAll();
+}
+  /* =========================================================================
+   RECEBIMENTO VINDO DE OUTRAS TELAS (catálogo)
+   ========================================================================= */
+let NEG_PENDING_HANDOFF = null;
+
+function negCheckHandoff() {
+  let raw;
+  try { raw = localStorage.getItem('hbn1_negociacao_handoff'); } catch (e) { raw = null; }
+  if (!raw) return;
+  localStorage.removeItem('hbn1_negociacao_handoff');
+
+  let itensBrutos;
+  try { itensBrutos = JSON.parse(raw); } catch (e) { return; }
+  if (!Array.isArray(itensBrutos) || itensBrutos.length === 0) return;
+
+  const built = itensBrutos.map(it => ({
+    id: negUid(),
+    produto: it.produto || 'Produto sem nome',
+    cod: it.cod || '', ean: it.ean || '',
+    preco: negFormatInputNumber(it.preco || 0),
+    qtd: negFormatInputNumber(it.qtd || 0),
+    descontoAtual: negFormatInputNumber(Math.round((it.descontoAtual || 0) * 100) / 100),
+    targetType: 'pct', targetValue: '0', precoFinalDesejado: '',
+    selected: true
+  }));
+
+  if (NEG_PRODUCTS.length === 0) {
+    NEG_PRODUCTS = built;
+    negSaveState();
+    negRenderAll();
+    return;
+  }
+
+  NEG_PENDING_HANDOFF = built;
+  document.getElementById('negHandoffSubtitle').innerText =
+    built.length + ' produto(s) chegaram de outra tela. Já existem itens na lista atual — o que você quer fazer?';
+  document.getElementById('negHandoffModalOverlay').style.display = 'flex';
+}
+
+function negCancelHandoff() {
+  NEG_PENDING_HANDOFF = null;
+  document.getElementById('negHandoffModalOverlay').style.display = 'none';
+}
+
+function negConfirmHandoff(mode) {
+  if (!NEG_PENDING_HANDOFF) return;
+  NEG_PRODUCTS = mode === 'replace' ? NEG_PENDING_HANDOFF : NEG_PRODUCTS.concat(NEG_PENDING_HANDOFF);
+  NEG_PENDING_HANDOFF = null;
+  document.getElementById('negHandoffModalOverlay').style.display = 'none';
   negSaveState();
   negRenderAll();
 }
@@ -791,6 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
   negSetMode(NEG_MODE);
   negSetGroupTargetType(NEG_GROUP_TARGET_TYPE);
   negRenderAll();
+  negCheckHandoff();
 });
 </script>
 </body>
