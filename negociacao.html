@@ -134,7 +134,10 @@
       </div>
       <div class="neg-ticker-item">
         <div class="neg-ticker-label" id="tkInvestLabel">Investimento p/ metas</div>
-        <div class="neg-ticker-value gold" id="tkInvest">R$ 0,00</div>
+        <div class="neg-ticker-value gold">
+          <span id="tkInvest">R$ 0,00</span>
+          <span id="tkInvestPct" style="font-size:11px; font-weight:700; opacity:.75; margin-left:2px;"></span>
+        </div>
       </div>
       <div class="neg-ticker-item"><div class="neg-save-indicator" id="neg-save-status"></div></div>
     </div>
@@ -203,6 +206,10 @@
           <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(false)">Limpar seleção</button>
         </div>
       </div>
+      <p id="negGroupTip" style="display:none; font-size:11px; color:var(--text-secondary); margin:-4px 0 10px 2px; line-height:1.5;">
+        💡 Para aplicar a meta só numa marca/linha (ex.: "Aptamil"): 1) <strong>Limpar seleção</strong> pra zerar,
+        2) digite o nome na busca, 3) <strong>Selecionar tudo</strong> — só os itens filtrados entram na seleção.
+      </p>
       <div id="negTableWrap"></div>
     </div>
   </div>
@@ -649,7 +656,11 @@ function negClearAll() {
 }
 
 function negToggleSelectAll(value) {
-  NEG_PRODUCTS.forEach(p => { p.selected = value; });
+  // Respeita a busca atual: só mexe na seleção dos itens visíveis no momento.
+  // É assim que dá pra aplicar a meta de grupo só numa marca/linha de produto:
+  // busca "aptamil", clica Selecionar tudo, e só esses entram no cálculo.
+  const visiveisIds = new Set(negFilteredProducts().map(p => p.id));
+  NEG_PRODUCTS.forEach(p => { if (visiveisIds.has(p.id)) p.selected = value; });
   negSaveState();
   negRenderAll();
 }
@@ -663,6 +674,7 @@ function negSetMode(mode) {
   document.getElementById('negSegGrupo').classList.toggle('neg-seg-btn-active', mode === 'grupo');
   document.getElementById('negGroupPanel').style.display = mode === 'grupo' ? 'block' : 'none';
   document.getElementById('negBulkSelectRow').style.display = mode === 'grupo' ? 'flex' : 'none';
+  document.getElementById('negGroupTip').style.display = mode === 'grupo' ? 'block' : 'none';
   document.getElementById('negModeDesc').innerText = mode === 'individual'
     ? 'Defina uma meta (% ou R$) para cada produto. O investimento adicional é calculado linha a linha.'
     : 'Selecione os produtos na tabela e defina uma única meta para o conjunto — em valor total ou em % de desconto médio.';
@@ -778,7 +790,16 @@ function negRenderTicker() {
 
   const selected = NEG_PRODUCTS.filter(p => p.selected);
   const groupResult = negComputeGroup(selected, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
-  document.getElementById('tkInvest').innerText = negFormatBRL(NEG_MODE === 'individual' ? somaInvestIndividual : Math.max(0, groupResult.investimentoTotal));
+
+  const investTotal = NEG_MODE === 'individual' ? somaInvestIndividual : Math.max(0, groupResult.investimentoTotal);
+  // Base de comparação: no modo individual, o pedido inteiro (com desconto atual);
+  // no modo grupo, o valor atual só do grupo selecionado (é sobre isso que o investimento pesa)
+  const baseComparacao = NEG_MODE === 'individual' ? somaAtual : groupResult.valorAtual;
+  const pctRepresentatividade = baseComparacao > 0 ? (investTotal / baseComparacao) * 100 : 0;
+  const rotuloBase = NEG_MODE === 'individual' ? 'do pedido' : 'do grupo';
+
+  document.getElementById('tkInvest').innerText = negFormatBRL(investTotal);
+  document.getElementById('tkInvestPct').innerText = investTotal > 0 ? `(${negFormatPct(pctRepresentatividade)} ${rotuloBase})` : '';
 }
 
 function negRenderGroupPanel() {
