@@ -192,6 +192,7 @@
         localStorage.setItem('hbn1_uf',       uf);
         localStorage.setItem('hbn1_nome',     resposta.nome || usuario);
         localStorage.setItem('hbn1_login_ts', Date.now().toString()); // ← timestamp da sessão
+        localStorage.setItem('hbn1_session', resposta.sessionToken);
         window.location.href = 'catalogo.html?uf=' + encodeURIComponent(uf);
       } else {
         msgErro.innerText = (resposta && resposta.mensagem)
