@@ -1627,6 +1627,14 @@ document.addEventListener('keydown', function(e) {
     // CNPJ da própria Nazária (distribuidora) — nunca deve ser tratado como CNPJ
     // do cliente, mesmo que apareça no meio do arquivo (ex: linha "Fornecedor ...").
     const CNPJS_IGNORAR_COMO_CLIENTE = ['07224991002189'];
+// Linhas de metadado do pedido (cabeçalho/rodapé entre um CNPJ e outro) nunca
+    // devem ser lidas como linha de produto — mesmo que por acaso contenham um
+    // número que pareça código/quantidade (ex: "Código: 1.749.801 Status: ...").
+    const MARCADORES_METADADO_PEDIDO = ['CÓDIGO:', 'STATUS:', 'USUÁRIO:', 'UNIDADE:', 'COTAÇÃO:', 'IMPRESSÃO:', 'COND.', 'DATA'];
+    function ehLinhaMetadadoPedido(tokensLinha) {
+      const up = tokensLinha.join(' ').toUpperCase();
+      return MARCADORES_METADADO_PEDIDO.some(m => up.includes(m));
+    }
 
     // Identifica a quantidade correta de uma linha cruzando com os valores
     // decimais (preço unitário x quantidade ≈ total). Mais confiável que pegar
@@ -1651,7 +1659,7 @@ document.addEventListener('keydown', function(e) {
       if (decimais.length >= 2) {
         const preco = Math.min(...decimais);
         const total = Math.max(...decimais);
-        if (preco > 0 && total > preco) {
+       if (preco > 0 && total >= preco) {   // >= cobre qtd=1, onde preço == total
           const qtdCalculada = total / preco;
           // Tenta achar um candidato curto (1-9999) que bata com o cálculo (tolerância ±0.6)
           const candidatoValido = candidatosQtd.find(c => Math.abs(parseInt(c, 10) - qtdCalculada) < 0.6);
@@ -1771,11 +1779,11 @@ const PDF1_COL_QTD     = ['PEDIDA', 'QT PEDIDA', 'QTDE', 'QUANTIDADE', 'QUANT', 
       }
 
       // Passo 2: percorre as linhas de dados após o cabeçalho
+      // Passo 2: percorre as linhas de dados após o cabeçalho
       for (let i = cabecalho.linhaCab + 1; i < linhas.length; i++) {
         const linha = linhas[i];
         if (!linha || linha.length === 0) continue;
 
-        // Atualiza CNPJ se a linha trouxer um novo (mudança de pedido/cliente)
         const tokensLinha = linha.map(t => String(t).trim());
         const linhaTextoUp = tokensLinha.join(' ').toUpperCase();
         if (!linhaTextoUp.includes('FORNECEDOR')) {
@@ -1786,30 +1794,32 @@ const PDF1_COL_QTD     = ['PEDIDA', 'QT PEDIDA', 'QTDE', 'QUANTIDADE', 'QUANT', 
           if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
 
-        const codigoInterno = cabecalho.idxCodigo >= 0 ? String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, '') : '';
-        const eanBruto      = cabecalho.idxEan    >= 0 ? String(linha[cabecalho.idxEan]    || '').trim().replace(/\.0$/, '') : '';
-        const ean = eanBruto ? normalizarEAN(eanBruto) : '';
+        // Nunca tenta extrair produto de linha de metadado (Código:/Status:/Usuário: etc.)
+        if (ehLinhaMetadadoPedido(tokensLinha)) continue;
 
-        // QUANTIDADE: a leitura POSICIONAL (linha[idxQtd]) não é confiável em PDFs.
-        // O pdf.js não preserva colunas reais — só agrupa texto por posição vertical (Y).
-        // Quando uma linha tem mais (ou menos) tokens que o esperado (ex: descrição de
-        // produto com mais palavras), TODAS as colunas seguintes daquela linha desalinham,
-        // e o índice acaba pegando outro número qualquer (pedaço de código, etc.),
-        // gerando quantidades absurdas. Por isso cruza preço × qtd ≈ total primeiro
-        // (matematicamente confiável, independe de posição) e só usa a leitura
-        // posicional como último recurso, caso o cruzamento não seja possível.
+        const codigoInterno = cabecalho.idxCodigo >= 0 ? String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, '') : '';
+        let eanBruto        = cabecalho.idxEan    >= 0 ? String(linha[cabecalho.idxEan]    || '').trim().replace(/\.0$/, '') : '';
+
+        // Valida se o valor posicional é mesmo um EAN puro (6-13 dígitos, sem pontuação).
+        // Se não for (coluna desalinhada por quebra de linha do Produto/Fabricante),
+        // busca qualquer token da linha que tenha esse formato.
+        if (!/^\d{6,13}$/.test(eanBruto)) {
+          const achado = tokensLinha.find(t => /^\d{6,13}$/.test(t));
+          if (achado) eanBruto = achado;
+        }
+
+        const eanValido    = /^\d{6,13}$/.test(eanBruto);
+        const codigoValido = /^\d{6,13}$/.test(normalizarSoDigitos(codigoInterno));
+        const ean = eanValido ? normalizarEAN(eanBruto) : '';
+
         const candidatosQtd = tokensLinha.filter(t => /^\d{1,4}$/.test(t));
         let qtd = extrairQuantidadeConfiavel(tokensLinha, candidatosQtd);
         if (isNaN(qtd) || qtd <= 0) {
           const qtdPosicional = parseInt(String(linha[cabecalho.idxQtd] || '').replace(/[^\d]/g, ''), 10);
-          // Sanidade: uma quantidade pedida realista não passa de 99.999 un.
-          // Se o fallback posicional vier maior que isso, é sinal de coluna
-          // desalinhada (pegou pedaço de código/EAN) — descarta em vez de aceitar.
           qtd = (!isNaN(qtdPosicional) && qtdPosicional > 0 && qtdPosicional < 100000) ? qtdPosicional : NaN;
         }
 
-        if ((codigoInterno || ean) && qtd > 0) {
-          // Usa placeholder quando não há CNPJ — será tratado como "sem cadastro"
+        if ((codigoValido || eanValido) && qtd > 0) {
           itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo: codigoInterno, ean, qtd });
         }
       }
