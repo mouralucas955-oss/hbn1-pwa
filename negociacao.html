@@ -11,6 +11,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="api.js"></script>
 <link rel="stylesheet" href="catalogo.css">
 <style>
   /* ===== Reaproveita os tokens de tema do catalogo.css (light/dark) ===== */
@@ -36,7 +37,7 @@
     padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
   }
-  
+
   .neg-back {
     display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08);
     border:1px solid rgba(255,255,255,0.15); color:#fff; padding:8px 12px; border-radius:10px;
@@ -162,6 +163,9 @@
             <button type="button" class="neg-btn neg-btn-gold neg-btn-sm" onclick="negProcessPaste()">Processar colagem</button>
           </div>
         </div>
+        <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
+          Preço e desconto são opcionais: se não vierem no arquivo, eu busco no catálogo pela sua UF (e pelo cliente, se identificado). Só preciso do <strong>EAN ou Código</strong> + Qtd.
+        </p>
       </div>
 
       <div class="neg-panel">
@@ -172,6 +176,17 @@
         </div>
         <p style="font-size:12px; color:var(--text-secondary); margin-top:10px; line-height:1.5;" id="negModeDesc">
           Defina uma meta (% ou R$) para cada produto. O investimento adicional é calculado linha a linha.
+        </p>
+      </div>
+
+      <div class="neg-panel">
+        <div class="neg-panel-title">ST (Substituição Tributária)</div>
+        <div class="neg-seg">
+          <button type="button" id="negSegSTNao" class="neg-seg-btn neg-seg-btn-active" onclick="negSetSTAtivo(false)">Sem ST</button>
+          <button type="button" id="negSegSTSim" class="neg-seg-btn" onclick="negSetSTAtivo(true)">Com ST</button>
+        </div>
+        <p style="font-size:11px; color:var(--text-secondary); margin-top:8px; line-height:1.5;">
+          Quando ligado, o ST é somado ao preço cheio antes do desconto — igual ao catálogo. Só afeta itens buscados no catálogo (com EAN/Código reconhecidos).
         </p>
       </div>
 
@@ -189,7 +204,10 @@
       <div class="neg-panel">
         <div class="neg-panel-title">Ações</div>
         <div class="neg-row">
-         <button type="button" class="neg-btn neg-btn-sm" onclick="negExportExcel()">Exportar Excel</button>
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negAtualizarPrecosCatalogo()">Atualizar preços do catálogo</button>
+        </div>
+        <div class="neg-row" style="margin-top:8px;">
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negExportExcel()">Exportar Excel</button>
           <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negClearAll()">Limpar tudo</button>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
@@ -250,6 +268,154 @@
   if (!localStorage.getItem('hbn1_usuario')) {
   window.location.href = 'index.html';
 }
+
+/* =========================================================================
+   UF DO USUÁRIO + ACESSO AO CATÁLOGO (via api.js, já carregado)
+   ========================================================================= */
+const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+let NEG_CATALOGO_CACHE = null;
+let NEG_ST_CACHE = null;
+
+function negBuscarCatalogo() {
+  if (NEG_CATALOGO_CACHE) return Promise.resolve(NEG_CATALOGO_CACHE);
+  return chamarApi('produtos', { uf: UF_USUARIO })
+    .then(lista => { NEG_CATALOGO_CACHE = lista || []; return NEG_CATALOGO_CACHE; })
+    .catch(() => []);
+}
+
+function negBuscarST() {
+  if (NEG_ST_CACHE) return Promise.resolve(NEG_ST_CACHE);
+  return chamarApi('st', { uf: UF_USUARIO })
+    .then(lista => {
+      NEG_ST_CACHE = {};
+      (lista || []).forEach(item => { if (item.id) NEG_ST_CACHE[item.id] = item.st || 0; });
+      return NEG_ST_CACHE;
+    })
+    .catch(() => ({}));
+}
+
+function negConverterPercentual(texto) {
+  if (!texto && texto !== 0) return 0;
+  let s = String(texto).replace('%', '').replace(',', '.').trim();
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+// Versão simplificada de calcularPrecosPara do catálogo (sem OL Danone/Omron,
+// já que a Central de Investimento não tem esses controles inline)
+function negCalcularDescontoCatalogo(p, cliente) {
+  const forn = String(p.fornecedor || '').toUpperCase().trim();
+  if (!cliente) return negConverterPercentual(p.descontoPadrao);
+  if (forn.includes('UNILEVER')) {
+    const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
+    if (grupo === 'GRUPO1' || grupo === '1') return negConverterPercentual(p.descUniG1);
+    if (grupo === 'GRUPO2' || grupo === '2') return negConverterPercentual(p.descUniG2);
+    if (grupo === 'GRUPO3' || grupo === '3') return negConverterPercentual(p.descUniG3);
+    return 0;
+  }
+  if (forn.includes('KENVUE')) {
+    if (String(cliente.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE') return negConverterPercentual(p.descTransfer);
+    const equipe = String(cliente.equipe || '').toUpperCase().trim();
+    if (equipe === 'DEDICADO' && p.kenuveDedicado) return negConverterPercentual(p.kenuveDedicado);
+    if (equipe === 'FARMA' && p.kenuveFarma) return negConverterPercentual(p.kenuveFarma);
+    return 0;
+  }
+  if (forn.includes('OMRON')) {
+    const equipe = String(cliente.equipe || '').toUpperCase().trim();
+    if (equipe === 'DEDICADO' && p.omronDedicado) return negConverterPercentual(p.omronDedicado);
+    if (equipe === 'FARMA' && p.omronFarma) return negConverterPercentual(p.omronFarma);
+    return 0;
+  }
+  if (forn.includes('KIMBERLY')) {
+    const equipe = String(cliente.equipe || '').toUpperCase().trim();
+    if (equipe === 'DEDICADO' && p.kimberlyDedicado) return negConverterPercentual(p.kimberlyDedicado);
+    if (equipe === 'FARMA' && p.kimberlyFarma) return negConverterPercentual(p.kimberlyFarma);
+    return 0;
+  }
+  return negConverterPercentual(p.descontoPadrao);
+}
+
+async function negGarantirClienteCompleto() {
+  if (NEG_CLIENTE && NEG_CLIENTE.cnpj && !NEG_CLIENTE._completo) {
+    try {
+      const c = await chamarApi('clientePorCnpj', { cnpj: String(NEG_CLIENTE.cnpj).replace(/\D/g, '') });
+      if (c) { NEG_CLIENTE = Object.assign({}, NEG_CLIENTE, c, { _completo: true }); }
+    } catch (e) { /* segue sem perfil de desconto do cliente */ }
+  }
+}
+
+// Preenche preço + % desconto de itens sem preço, buscando no catálogo da UF do usuário.
+// Guarda catalogoId/catalogoPrecoBase para permitir religar/desligar ST sem nova chamada à API.
+async function negResolverPrecosPendentes(lista) {
+  const pendentes = lista.filter(p => !p.preco || negParseNumberBR(p.preco) === 0);
+  if (pendentes.length === 0) return { resolvidos: 0, naoEncontrados: 0 };
+  await negGarantirClienteCompleto();
+  const catalogo = await negBuscarCatalogo();
+  let resolvidos = 0, naoEncontrados = 0;
+  pendentes.forEach(item => {
+    const eanDigits = (item.ean || '').replace(/\D/g, '');
+    const codDigits = (item.cod || '').trim();
+    let prod = null;
+    if (eanDigits) prod = catalogo.find(pr => String(pr.ean || '').replace(/\D/g, '') === eanDigits);
+    if (!prod && codDigits) prod = catalogo.find(pr => String(pr.id || '').trim() === codDigits);
+    if (!prod && eanDigits) prod = catalogo.find(pr => String(pr.id || '').trim() === eanDigits);
+    if (!prod) { naoEncontrados++; return; }
+    const precoBase = negParseNumberBR(prod.preco) || 0;
+    const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE);
+    item.catalogoId = prod.id;
+    item.catalogoPrecoBase = precoBase;
+    item.preco = negFormatInputNumber(precoBase); // ST (se ligado) é aplicado depois via negReaplicarST()
+    item.descontoAtual = negFormatInputNumber(Math.round(percentual * 100) / 100);
+    if (!item.produto || item.produto === 'Produto sem nome') item.produto = prod.descricao || item.produto;
+    resolvidos++;
+  });
+  return { resolvidos, naoEncontrados };
+}
+
+// Botão "Atualizar preços do catálogo" — reroda a busca para TODOS os itens
+// que vieram do catálogo (não só os pendentes), útil após trocar cliente/UF.
+async function negAtualizarPrecosCatalogo() {
+  const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId);
+  if (comCatalogo.length === 0) {
+    alert('Nenhum item desta lista foi importado via EAN/Código reconhecido pelo catálogo ainda.');
+    return;
+  }
+  NEG_CATALOGO_CACHE = null; // força nova busca
+  comCatalogo.forEach(p => { p.preco = ''; }); // marca como pendente para o resolver reprocessar
+  const { resolvidos, naoEncontrados } = await negResolverPrecosPendentes(comCatalogo);
+  if (NEG_ST_ATIVO) await negReaplicarST();
+  negSaveState();
+  negRenderAll();
+  alert(`Preços atualizados (UF ${UF_USUARIO}): ${resolvidos} atualizados${naoEncontrados > 0 ? `, ${naoEncontrados} não localizados` : ''}.`);
+}
+
+/* =========================================================================
+   ST (SUBSTITUIÇÃO TRIBUTÁRIA)
+   ========================================================================= */
+let NEG_ST_ATIVO = false;
+
+function negSetSTAtivo(ativo) {
+  NEG_ST_ATIVO = ativo;
+  document.getElementById('negSegSTNao').classList.toggle('neg-seg-btn-active', !ativo);
+  document.getElementById('negSegSTSim').classList.toggle('neg-seg-btn-active', ativo);
+  negReaplicarST();
+  negSaveState();
+}
+
+// Recalcula o preço cheio de todo item que veio do catálogo (tem catalogoId salvo),
+// somando ou removendo o ST sem precisar chamar a API de novo.
+async function negReaplicarST() {
+  const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId);
+  if (comCatalogo.length === 0) return;
+  const mapaST = await negBuscarST();
+  comCatalogo.forEach(p => {
+    const stValor = NEG_ST_ATIVO ? (mapaST[p.catalogoId] || 0) : 0;
+    p.preco = negFormatInputNumber((p.catalogoPrecoBase || 0) + stValor);
+  });
+  negSaveState();
+  negRenderAll();
+}
+
 /* =========================================================================
    HELPERS
    ========================================================================= */
@@ -300,14 +466,14 @@ let NEG_GROUP_TARGET_VALUE = '';
 let NEG_PENDING_IMPORT = null;
 let NEG_CLIENTE = null;
 let NEG_PENDING_HANDOFF_CLIENTE = null;
-  
+
 const NEG_STORAGE_KEY = 'hbn1_negociacao_estado';
 
 const NEG_FIELD_DEFS = [
   { key: 'produto', label: 'Produto', required: true, patterns: ['produto', 'descricao', 'nome', 'item'] },
   { key: 'cod', label: 'Código', required: false, patterns: ['cod.', 'cod', 'codigo'] },
   { key: 'ean', label: 'EAN', required: false, patterns: ['ean'] },
-  { key: 'preco', label: 'Preço cheio', required: true, patterns: ['preco'], exclude: ['cdesc', 'com desconto'] },
+  { key: 'preco', label: 'Preço cheio (opcional — se vazio, busco no catálogo)', required: false, patterns: ['preco'], exclude: ['cdesc', 'com desconto'] },
   { key: 'qtd', label: 'Quantidade', required: true, patterns: ['qtd', 'quantidade'] },
   { key: 'descontoAtual', label: '% Desconto atual', required: false, patterns: ['desconto total', 'desconto atual', 'desconto liberado', 'desconto'] },
   { key: 'precoComDesc', label: 'Preço com desconto (opcional)', required: false, patterns: ['cdesc', 'com desconto'] },
@@ -321,7 +487,7 @@ function negSaveState() {
     localStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
       products: NEG_PRODUCTS, mode: NEG_MODE,
       groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
-      cliente: NEG_CLIENTE
+      cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO
     }));
     const el = document.getElementById('neg-save-status');
     if (el) { el.innerText = 'Salvo'; setTimeout(() => { el.innerText = ''; }, 1200); }
@@ -338,6 +504,7 @@ function negLoadState() {
     if (data.groupTargetType) NEG_GROUP_TARGET_TYPE = data.groupTargetType;
     if (data.groupTargetValue != null) NEG_GROUP_TARGET_VALUE = data.groupTargetValue;
     if (data.cliente) NEG_CLIENTE = data.cliente;
+    if (data.stAtivo != null) NEG_ST_ATIVO = data.stAtivo;
   } catch (e) { /* nada salvo ainda */ }
 }
 
@@ -478,10 +645,14 @@ function negCancelImport() {
   document.getElementById('negMapModalOverlay').style.display = 'none';
 }
 
-function negConfirmImport() {
+async function negConfirmImport() {
   const { headers, rows, mapping, replaceMode } = NEG_PENDING_IMPORT;
   const missing = NEG_FIELD_DEFS.filter(f => f.required && (mapping[f.key] == null || mapping[f.key] < 0));
   if (missing.length > 0) { alert('Antes de confirmar, defina a coluna de: ' + missing.map(f => f.label).join(', ')); return; }
+  if ((mapping.cod == null || mapping.cod < 0) && (mapping.ean == null || mapping.ean < 0)) {
+    alert('Defina pelo menos a coluna de Código ou de EAN — preciso de um dos dois para buscar o preço no catálogo.');
+    return;
+  }
   const built = negBuildProducts(headers, rows, mapping);
   NEG_PRODUCTS = replaceMode === 'replace' ? built : NEG_PRODUCTS.concat(built);
   NEG_PENDING_IMPORT = null;
@@ -490,8 +661,17 @@ function negConfirmImport() {
   document.getElementById('negPasteBox').style.display = 'none';
   negSaveState();
   negRenderAll();
+
+  const { resolvidos, naoEncontrados } = await negResolverPrecosPendentes(built);
+  if (resolvidos > 0 || naoEncontrados > 0) {
+    if (NEG_ST_ATIVO) await negReaplicarST();
+    negSaveState();
+    negRenderAll();
+    alert(`Preços buscados no catálogo (UF ${UF_USUARIO}): ${resolvidos} encontrados${naoEncontrados > 0 ? `, ${naoEncontrados} não localizados (preencha o preço manualmente nesses)` : ''}.`);
+  }
 }
-  /* =========================================================================
+
+/* =========================================================================
    RECEBIMENTO VINDO DE OUTRAS TELAS (catálogo)
    ========================================================================= */
 let NEG_PENDING_HANDOFF = null;
@@ -544,6 +724,12 @@ function negConfirmHandoff(mode) {
   document.getElementById('negHandoffModalOverlay').style.display = 'none';
   negSaveState();
   negRenderAll();
+}
+
+function negCancelHandoff() {
+  NEG_PENDING_HANDOFF = null;
+  NEG_PENDING_HANDOFF_CLIENTE = null;
+  document.getElementById('negHandoffModalOverlay').style.display = 'none';
 }
 
 /* =========================================================================
@@ -701,68 +887,6 @@ function negOnGroupTargetInput(value) {
 }
 
 /* =========================================================================
-   EXPORTAÇÃO CSV
-   ========================================================================= */
-function negExportCsv() {
-  const rows = [];
-  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
-    rows.push(['Cliente', NEG_CLIENTE.razao || '']);
-    rows.push(['CNPJ', NEG_CLIENTE.cnpj || '']);
-    rows.push([]);
-  }
-
-  if (NEG_MODE === 'grupo') {
-    const selecionados = NEG_PRODUCTS.filter(p => p.selected);
-    const gr = negComputeGroup(selecionados, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
-    const grupoMap = {};
-    gr.perItem.forEach(it => { grupoMap[it.id] = it; });
-
-    rows.push(['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', '% Adicional uniforme (grupo)', '% Desconto final', 'R$ Investimento', 'Preco final']);
-    negFilteredProducts().forEach(p => {
-      const gc = grupoMap[p.id];
-      if (!gc) {
-        rows.push([p.produto, p.cod, negFormatNum(negParseNumberBR(p.preco) || 0), negFormatNum(negParseNumberBR(p.qtd) || 0, 0), negFormatNum(negParseNumberBR(p.descontoAtual) || 0), 'não selecionado', '—', '—', '—']);
-        return;
-      }
-      rows.push([
-        p.produto, p.cod, negFormatNum(gc.preco), negFormatNum(gc.qtd, 0), negFormatNum(gc.descontoAtual),
-        negFormatNum(gr.xAdicionalPct) + '%', negFormatNum(gc.pctFinal), negFormatNum(gc.investimentoItem), negFormatNum(gc.precoFinal)
-      ]);
-    });
-  } else {
-    rows.push(['Produto', 'Cod', 'Preco cheio', 'Qtd', '% Desconto atual', 'Meta (% adicional)', '% Desconto final', 'R$ Investimento', 'Preco final']);
-    negFilteredProducts().forEach(p => {
-      const c = negComputeIndividual(p);
-      rows.push([
-        p.produto, p.cod, negFormatNum(c.preco), negFormatNum(c.qtd, 0), negFormatNum(c.descontoAtual),
-        p.targetType === 'pct' ? negFormatNum(c.pctAdicional) + '%' : negFormatBRL(negParseNumberBR(p.targetValue) || 0),
-        negFormatNum(c.pctNecessario), negFormatNum(c.investimento), negFormatNum(c.precoFinal)
-      ]);
-    });
-  }
-
-  const csv = rows.map(r => r.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(';')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-  let nomeArquivo;
-  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
-    const razaoLimpa = String(NEG_CLIENTE.razao || '').toUpperCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
-    const cnpjLimpo = String(NEG_CLIENTE.cnpj || '')
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
-    nomeArquivo = `Negociacao - ${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataHoje}.csv`;
-  } else {
-    nomeArquivo = `negociacao-investimento-${dataHoje}.csv`;
-  }
-  a.download = nomeArquivo;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* =========================================================================
    EXPORTAÇÃO EXCEL (formatado, mesma linha visual dos outros arquivos)
    ========================================================================= */
 async function negExportExcel() {
@@ -807,7 +931,7 @@ async function negExportExcel() {
     richText: [
       { font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Calibri' }, text: 'CENTRAL DE INVESTIMENTO\n' },
       { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: 'INVESTIMENTO ADICIONAL NA NEGOCIAÇÃO — HBN1\n' },
-      { font: { size: 9, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: `${dataHoraAgora} • Modo: ${NEG_MODE === 'individual' ? 'Por item' : 'Por grupo'}` }
+      { font: { size: 9, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: `${dataHoraAgora} • Modo: ${NEG_MODE === 'individual' ? 'Por item' : 'Por grupo'}${NEG_ST_ATIVO ? ' • Com ST' : ''}` }
     ]
   };
   cabecalho.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
@@ -951,7 +1075,7 @@ async function negExportExcel() {
   document.body.appendChild(link); link.click(); document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-  
+
 
 /* =========================================================================
    RENDER
@@ -1130,6 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('negGroupTargetValue').value = NEG_GROUP_TARGET_VALUE || '';
   negSetMode(NEG_MODE);
   negSetGroupTargetType(NEG_GROUP_TARGET_TYPE);
+  negSetSTAtivo(NEG_ST_ATIVO); // atualiza botões e reaplica ST se já estava ligado
   negRenderAll();
   negCheckHandoff();
 });
