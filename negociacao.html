@@ -219,7 +219,7 @@
     <!-- MAIN -->
     <div class="neg-main">
       <div class="neg-toolbar">
-        <input id="negSearch" class="neg-input" style="max-width:260px;" placeholder="Buscar por produto ou código..." oninput="negRenderTable()">
+        <input id="negSearch" class="neg-input" style="max-width:260px;" placeholder="Buscar por produto, código ou EAN..." oninput="negRenderTable()">
         <div class="neg-row" id="negBulkSelectRow" style="display:none;">
           <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(true)">Selecionar tudo</button>
           <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(false)">Limpar seleção</button>
@@ -367,6 +367,7 @@ async function negResolverPrecosPendentes(lista) {
     item.preco = negFormatInputNumber(precoBase); // ST (se ligado) é aplicado depois via negReaplicarST()
     item.descontoAtual = negFormatInputNumber(Math.round(percentual * 100) / 100);
     if (!item.produto || item.produto === 'Produto sem nome') item.produto = prod.descricao || item.produto;
+    if (!item.ean && prod.ean) item.ean = String(prod.ean);
     resolvidos++;
   });
   return { resolvidos, naoEncontrados };
@@ -903,7 +904,7 @@ async function negExportExcel() {
   const BORDA_CINZA   = { style: 'thin', color: { argb: 'FFE2E2E2' } };
 
   const temColunaPrecoDesejado = NEG_MODE === 'individual';
-  const totalCols = temColunaPrecoDesejado ? 10 : 9;
+  const totalCols = temColunaPrecoDesejado ? 11 : 10;
   const colLetra = n => String.fromCharCode(64 + n);
 
   const workbook = new ExcelJS.Workbook();
@@ -912,7 +913,7 @@ async function negExportExcel() {
   const ws = workbook.addWorksheet('Central de Investimento', { views: [{ showGridLines: false }] });
 
   const colunasBase = [
-    { key: 'produto', width: 34 }, { key: 'cod', width: 11 }, { key: 'preco', width: 12 },
+    { key: 'produto', width: 34 }, { key: 'cod', width: 11 }, { key: 'ean', width: 15 }, { key: 'preco', width: 12 },
     { key: 'qtd', width: 7 }, { key: 'descAtual', width: 11 },
     { key: NEG_MODE === 'individual' ? 'metaAdic' : 'adicUniforme', width: 13 },
     { key: 'descFinal', width: 11 }, { key: 'invest', width: 13 }, { key: 'precoFinal', width: 12 }
@@ -994,7 +995,7 @@ async function negExportExcel() {
   linhaAtual++;
 
   const cabecalhosColunas = [
-    'PRODUTO', 'COD.', 'PREÇO CHEIO', 'QTD', '% DESC. ATUAL',
+    'PRODUTO', 'COD.', 'EAN', 'PREÇO CHEIO', 'QTD', '% DESC. ATUAL',
     NEG_MODE === 'individual' ? 'META (% ADIC.)' : '% ADIC. UNIFORME',
     '% DESC. FINAL', 'INVESTIMENTO', 'PREÇO FINAL'
   ];
@@ -1029,28 +1030,28 @@ async function negExportExcel() {
       const c = negComputeIndividual(p);
       const precoDesejadoNum = p.precoFinalDesejado ? negParseNumberBR(p.precoFinalDesejado) : null;
       valores = [
-        p.produto, p.cod, c.preco, c.qtd, c.descontoAtual / 100,
+        p.produto, p.cod, p.ean, c.preco, c.qtd, c.descontoAtual / 100,
         c.pctAdicional / 100, c.pctNecessario / 100, c.investimento, c.precoFinal,
         (precoDesejadoNum != null && !isNaN(precoDesejadoNum)) ? precoDesejadoNum : null
       ];
     } else {
       const gc = grupoMapExport[p.id];
       if (!gc) {
-        valores = [p.produto, p.cod, negParseNumberBR(p.preco) || 0, negParseNumberBR(p.qtd) || 0, (negParseNumberBR(p.descontoAtual) || 0) / 100, null, null, null, null];
+        valores = [p.produto, p.cod, p.ean, negParseNumberBR(p.preco) || 0, negParseNumberBR(p.qtd) || 0, (negParseNumberBR(p.descontoAtual) || 0) / 100, null, null, null, null];
       } else {
-        valores = [p.produto, p.cod, gc.preco, gc.qtd, gc.descontoAtual / 100, grAtualParaExport.xAdicionalPct / 100, gc.pctFinal / 100, gc.investimentoItem, gc.precoFinal];
+        valores = [p.produto, p.cod, p.ean, gc.preco, gc.qtd, gc.descontoAtual / 100, grAtualParaExport.xAdicionalPct / 100, gc.pctFinal / 100, gc.investimentoItem, gc.precoFinal];
       }
     }
 
     valores.forEach((val, i) => {
       const cel = linha.getCell(i + 1);
-      cel.value = (val === null || val === undefined) ? '—' : val;
+      cel.value = (val === null || val === undefined || val === '') ? '—' : val;
       cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corFundoLinha } };
       cel.border = { top: BORDA_CINZA, bottom: BORDA_CINZA, left: BORDA_CINZA, right: BORDA_CINZA };
       cel.font = { size: 9.5, color: { argb: 'FF1E1E1E' } };
       cel.alignment = { vertical: 'middle', horizontal: (i === 0) ? 'left' : 'center', wrapText: (i === 0) };
-      if ((i === 2 || i === 7 || i === 8 || i === 9) && val !== null && val !== undefined) cel.numFmt = '"R$" #,##0.00';
-      if ((i === 4 || i === 5 || i === 6) && val !== null && val !== undefined) cel.numFmt = '0.00%';
+      if ((i === 3 || i === 8 || i === 9 || i === 10) && val !== null && val !== undefined && val !== '') cel.numFmt = '"R$" #,##0.00';
+      if ((i === 5 || i === 6 || i === 7) && val !== null && val !== undefined && val !== '') cel.numFmt = '0.00%';
     });
     linha.height = 16;
     linhaAtual++;
@@ -1090,7 +1091,11 @@ async function negExportExcel() {
 function negFilteredProducts() {
   const term = negNormalize(document.getElementById('negSearch').value);
   if (!term) return NEG_PRODUCTS;
-  return NEG_PRODUCTS.filter(p => negNormalize(p.produto).includes(term) || negNormalize(p.cod).includes(term));
+  return NEG_PRODUCTS.filter(p =>
+    negNormalize(p.produto).includes(term) ||
+    negNormalize(p.cod).includes(term) ||
+    negNormalize(p.ean).includes(term)
+  );
 }
 
 function negRenderClienteInfo() {
