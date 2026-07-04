@@ -375,9 +375,9 @@ async function negResolverPrecosPendentes(lista) {
 // Botão "Atualizar preços do catálogo" — reroda a busca para TODOS os itens
 // que vieram do catálogo (não só os pendentes), útil após trocar cliente/UF.
 async function negAtualizarPrecosCatalogo() {
-  const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId);
+  const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId || p.cod || p.ean);
   if (comCatalogo.length === 0) {
-    alert('Nenhum item desta lista foi importado via EAN/Código reconhecido pelo catálogo ainda.');
+    alert('Nenhum item desta lista tem Código ou EAN para buscar no catálogo.');
     return;
   }
   NEG_CATALOGO_CACHE = null; // força nova busca
@@ -689,6 +689,9 @@ function negCheckHandoff() {
   const clienteRecebido = Array.isArray(payload) ? null : (payload.cliente || null);
   if (!Array.isArray(itensBrutos) || itensBrutos.length === 0) return;
 
+  // "cod" que chega do catálogo é o ID interno do produto — o mesmo usado na
+  // tabela de ST (chamarApi('st', ...)). Guardando aqui, o botão de ST
+  // (negReaplicarST) passa a funcionar também para esses itens.
   const built = itensBrutos.map(it => ({
     id: negUid(),
     produto: it.produto || 'Produto sem nome',
@@ -697,6 +700,8 @@ function negCheckHandoff() {
     qtd: negFormatInputNumber(it.qtd || 0),
     descontoAtual: negFormatInputNumber(Math.round((it.descontoAtual || 0) * 100) / 100),
     targetType: 'pct', targetValue: '0', precoFinalDesejado: '',
+    catalogoId: it.cod || null,
+    catalogoPrecoBase: Number(it.preco) || 0,
     selected: true
   }));
 
@@ -705,6 +710,7 @@ function negCheckHandoff() {
     if (clienteRecebido) NEG_CLIENTE = clienteRecebido;
     negSaveState();
     negRenderAll();
+    if (NEG_ST_ATIVO) negReaplicarST();
     return;
   }
 
@@ -724,6 +730,7 @@ function negConfirmHandoff(mode) {
   document.getElementById('negHandoffModalOverlay').style.display = 'none';
   negSaveState();
   negRenderAll();
+  if (NEG_ST_ATIVO) negReaplicarST();
 }
 
 function negCancelHandoff() {
