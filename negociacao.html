@@ -438,18 +438,6 @@ function negParseNumberBR(input) {
   return isNaN(n) ? NaN : n;
 }
 
-// Muitas planilhas guardam uma célula formatada como "10%" internamente como
-// a fração 0,10 (é assim que o Excel armazena percentuais). Quando o SheetJS lê
-// essa célula em modo "raw", devolve 0.1, não 10. Já um valor digitado como texto
-// puro "10" (sem formatação de %) chega como 10 mesmo. Essa função normaliza os
-// dois casos para a mesma escala (pontos percentuais), só na hora de IMPORTAR —
-// nunca aplicada em campos digitados manualmente na tabela.
-function negNormalizarPercentualImportado(n) {
-  if (!isFinite(n)) return 0;
-  if (Math.abs(n) > 0 && Math.abs(n) < 1) return n * 100;
-  return n;
-}
-
 function negFormatBRL(n) {
   if (!isFinite(n)) n = 0;
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -562,7 +550,6 @@ function negBuildProducts(headers, rows, mapping) {
     const qtd = negParseNumberBR(get('qtd'));
     let descontoAtual = negParseNumberBR(get('descontoAtual'));
     if (isNaN(descontoAtual)) descontoAtual = 0;
-    descontoAtual = negNormalizarPercentualImportado(descontoAtual);
     const precoOk = isNaN(preco) ? 0 : preco;
 
     // "Preço com desconto (opcional)" = preço FINAL DESEJADO, não o preço atual
