@@ -1701,8 +1701,9 @@ document.addEventListener('keydown', function(e) {
     // --- Formato 1 (NAZARIA / planilha estruturada) ---
     // Palavras aceitas no cabeçalho da coluna de quantidade.
     // A busca é por inclusão, não por igualdade exata.
-    const PDF1_COL_CODIGO = ['CODBARRAS', 'EAN', 'BARRAS', 'CÓD.', 'COD.', 'CÓDIGO', 'CODIGO'];
-    const PDF1_COL_QTD    = ['PEDIDA', 'QT PEDIDA', 'QTD', 'QTDE', 'QUANTIDADE', 'QUANT'];
+    const PDF1_COL_EAN     = ['CODBARRAS', 'EAN', 'BARRAS'];
+const PDF1_COL_CODIGO  = ['CÓD.', 'COD.', 'CÓDIGO', 'CODIGO', 'COD'];
+const PDF1_COL_QTD     = ['PEDIDA', 'QT PEDIDA', 'QTDE', 'QUANTIDADE', 'QUANT', 'QTD', 'QT'];
     // Obs.: 'PEDIDA' captura "QT Pedida" sem precisar de match exato.
 
     // --- Formato 2 (A7 Pharma / Kenvue — texto concatenado) ---
@@ -1722,31 +1723,26 @@ document.addEventListener('keydown', function(e) {
     // O pdf.js às vezes divide o cabeçalho em 2 linhas (ex: "QT" numa linha
     // e "Pedida" na seguinte). Por isso a busca olha também a linha seguinte
     // ao índice corrente ao procurar pela coluna de quantidade.
-    function detectarCabecalho(linhas) {
-      for (let i = 0; i < Math.min(linhas.length, 40); i++) {
-        const linha = linhas[i].map(c => String(c).toUpperCase().trim());
+   function detectarCabecalho(linhas) {
+  for (let i = 0; i < Math.min(linhas.length, 40); i++) {
+    const linha = linhas[i].map(c => String(c).toUpperCase().trim());
 
-        const idxCodigo = linha.findIndex(c =>
-          PDF1_COL_CODIGO.some(p => c === p || c.includes(p)) && !c.includes('CNPJ')
-        );
-        if (idxCodigo === -1) continue; // sem coluna de código, próxima linha
+    const idxEan = linha.findIndex(c => PDF1_COL_EAN.some(p => c === p || c.includes(p)) && !c.includes('CNPJ'));
+    const idxCodigo = linha.findIndex(c => PDF1_COL_CODIGO.some(p => c === p || c.includes(p)) && !c.includes('CNPJ'));
+    if (idxEan === -1 && idxCodigo === -1) continue; // precisa de pelo menos um identificador de produto
 
-        // Procura coluna QTD na linha atual OU na imediatamente seguinte
-        // (o pdf.js às vezes parte "QT" e "Pedida" em linhas distintas)
-        const linhasSeguintes = [linha];
-        if (linhas[i + 1]) linhasSeguintes.push(linhas[i + 1].map(c => String(c).toUpperCase().trim()));
+    const linhasSeguintes = [linha];
+    if (linhas[i + 1]) linhasSeguintes.push(linhas[i + 1].map(c => String(c).toUpperCase().trim()));
 
-        for (const linhaBusca of linhasSeguintes) {
-          const idxQtd = linhaBusca.findIndex(c =>
-            PDF1_COL_QTD.some(p => c.includes(p))
-          );
-          if (idxQtd !== -1) {
-            return { linhaCab: i, idxCodigo, idxQtd };
-          }
-        }
+    for (const linhaBusca of linhasSeguintes) {
+      const idxQtd = linhaBusca.findIndex(c => PDF1_COL_QTD.some(p => c === p || c.includes(p)));
+      if (idxQtd !== -1) {
+        return { linhaCab: i, idxCodigo, idxEan, idxQtd };
       }
-      return null; // não encontrou → cai no Tipo 2
     }
+  }
+  return null;
+}
     // TIPO 1 — PDF estruturado (ex: NAZARIA)
     // Lê a quantidade diretamente da célula na coluna PDF1_COL_QTD.
     // O CNPJ do cliente aparece nas linhas de cabeçalho de cada pedido,
@@ -1790,7 +1786,9 @@ document.addEventListener('keydown', function(e) {
           if (tokenCnpj) ultimoCnpjValido = normalizarCNPJ(normalizarSoDigitos(tokenCnpj));
         }
 
-        const codigo = normalizarEAN(String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, ''));
+        const codigoInterno = cabecalho.idxCodigo >= 0 ? String(linha[cabecalho.idxCodigo] || '').trim().replace(/\.0$/, '') : '';
+        const eanBruto      = cabecalho.idxEan    >= 0 ? String(linha[cabecalho.idxEan]    || '').trim().replace(/\.0$/, '') : '';
+        const ean = eanBruto ? normalizarEAN(eanBruto) : '';
 
         // QUANTIDADE: a leitura POSICIONAL (linha[idxQtd]) não é confiável em PDFs.
         // O pdf.js não preserva colunas reais — só agrupa texto por posição vertical (Y).
@@ -1810,9 +1808,9 @@ document.addEventListener('keydown', function(e) {
           qtd = (!isNaN(qtdPosicional) && qtdPosicional > 0 && qtdPosicional < 100000) ? qtdPosicional : NaN;
         }
 
-        if (codigo && /^\d{6,13}$/.test(codigo.replace(/\D/g, '')) && qtd > 0) {
+        if ((codigoInterno || ean) && qtd > 0) {
           // Usa placeholder quando não há CNPJ — será tratado como "sem cadastro"
-          itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo, qtd });
+          itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo: codigoInterno, ean, qtd });
         }
       }
       return itens;
@@ -1916,10 +1914,12 @@ document.addEventListener('keydown', function(e) {
       const itensCasados = [];
 
       naoEnc.itensOriginais.forEach(it => {
-        const codigoDigits = normalizarSoDigitos(it.codigo);
-        let p = produtosDaUF.find(prod => normalizarSoDigitos(prod.ean) === codigoDigits && codigoDigits !== '');
-        if (!p) p = produtosDaUF.find(prod => String(prod.id).trim() === String(it.codigo).trim());
-        if (!p) { codigosNaoEncontradosSet.add(it.codigo); return; }
+        const eanDigits = normalizarSoDigitos(it.ean);
+        let p = null;
+        if (eanDigits) p = produtosDaUF.find(prod => normalizarSoDigitos(prod.ean) === eanDigits);
+        if (!p && it.codigo) p = produtosDaUF.find(prod => String(prod.id).trim() === String(it.codigo).trim());
+        if (!p && eanDigits) p = produtosDaUF.find(prod => String(prod.id).trim() === eanDigits); // fallback: às vezes o "EAN" do arquivo do cliente é na verdade o código interno
+        if (!p) { codigosNaoEncontradosSet.add(it.codigo || it.ean); return; }
         itensCasados.push({ p, qtd: it.qtd });
         if (String(p.fornecedor || '').toUpperCase().includes('DANONE')) totalDanoneQtd += it.qtd;
       });
@@ -2004,10 +2004,12 @@ document.addEventListener('keydown', function(e) {
         let totalDanoneQtd = 0;
         const itensCasados = [];
         itensDoGrupo.forEach(it => {
-          const codigoDigits = normalizarSoDigitos(it.codigo);
-          let p = produtosDaUF.find(prod => normalizarSoDigitos(prod.ean) === codigoDigits && codigoDigits !== '');
-          if (!p) p = produtosDaUF.find(prod => String(prod.id).trim() === String(it.codigo).trim());
-          if (!p) { codigosNaoEncontradosSet.add(it.codigo); return; }
+          const eanDigits = normalizarSoDigitos(it.ean);
+          let p = null;
+          if (eanDigits) p = produtosDaUF.find(prod => normalizarSoDigitos(prod.ean) === eanDigits);
+          if (!p && it.codigo) p = produtosDaUF.find(prod => String(prod.id).trim() === String(it.codigo).trim());
+          if (!p && eanDigits) p = produtosDaUF.find(prod => String(prod.id).trim() === eanDigits); // fallback: às vezes o "EAN" do arquivo do cliente é na verdade o código interno
+          if (!p) { codigosNaoEncontradosSet.add(it.codigo || it.ean); return; }
 
           itensCasados.push({ p, qtd: it.qtd });
           if (String(p.fornecedor || '').toUpperCase().includes('DANONE')) totalDanoneQtd += it.qtd;
