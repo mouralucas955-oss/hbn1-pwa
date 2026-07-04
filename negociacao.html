@@ -56,7 +56,7 @@
   .neg-main { flex:1; min-width:0; }
   @media (max-width: 880px) { .neg-workspace { flex-direction: column; } .neg-rail { width:100%; } }
 
-  .neg-panel { background: var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; }
+  .neg-panel { background: var(--surface-card); border:1px solid var(--border-subtle); border-radius:12px; padding:14px; position:relative; }
   .neg-panel-title { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); margin-bottom:10px; font-weight:700; }
 
   .neg-btn { font-family:inherit; font-size:12.5px; font-weight:700; border-radius:8px; padding:8px 12px; border:1px solid var(--border-default); background:var(--surface-secondary); color:var(--text-primary); cursor:pointer; transition:border-color .15s,background .15s; }
@@ -105,6 +105,11 @@
 
   .neg-save-indicator { font-size:11px; color: #4ade80; }
   .neg-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+
+  .neg-dropdown-cliente { position:absolute; top:100%; left:0; right:0; margin-top:4px; background:var(--surface-card); border:1px solid var(--border-default); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.18); max-height:220px; overflow-y:auto; z-index:50; }
+  .neg-dropdown-cliente-item { padding:8px 10px; cursor:pointer; border-bottom:1px solid var(--border-subtle); }
+  .neg-dropdown-cliente-item:last-child { border-bottom:none; }
+  .neg-dropdown-cliente-item:hover { background: var(--accent-soft); }
 </style>
 </head>
 <body class="negdesk">
@@ -148,6 +153,47 @@
   <div class="neg-workspace">
     <!-- RAIL -->
     <div class="neg-rail">
+
+      <div class="neg-panel">
+        <div class="neg-panel-title">Cliente</div>
+        <div id="negClienteBuscaWrap">
+          <input id="negBuscaCliente" class="neg-input" placeholder="🔍 Buscar cliente (Razão, CNPJ ou ID)..." oninput="negFiltrarClientes()">
+          <div id="negDropdownClientes" class="neg-dropdown-cliente" style="display:none;"></div>
+        </div>
+        <div id="negClienteChipWrap" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--surface-secondary); border:1px solid var(--border-default); border-radius:8px; padding:8px 10px;">
+            <div style="min-width:0;">
+              <div id="negClienteChipNome" style="font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+              <div id="negClienteChipCnpj" style="font-size:10.5px; color:var(--text-secondary);"></div>
+            </div>
+            <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negLimparClienteNeg()">✕</button>
+          </div>
+        </div>
+
+        <div id="negOfertaDanoneWrap" style="display:none; margin-top:10px;">
+          <span class="neg-label">Oferta Danone (OL)</span>
+          <div class="neg-seg" id="negSegOLDanone">
+            <button type="button" class="neg-seg-btn neg-seg-btn-active" onclick="negSetOLDanone(0)">Nenhuma</button>
+            <button type="button" class="neg-seg-btn" data-ol="250" onclick="negSetOLDanone(250)">250</button>
+            <button type="button" class="neg-seg-btn" data-ol="500" onclick="negSetOLDanone(500)">500</button>
+            <button type="button" class="neg-seg-btn" data-ol="1000" onclick="negSetOLDanone(1000)">1000</button>
+          </div>
+        </div>
+
+        <div id="negOfertaOmronWrap" style="display:none; margin-top:10px;">
+          <span class="neg-label">Oferta Omron (OL)</span>
+          <div class="neg-seg" id="negSegOLOmron">
+            <button type="button" class="neg-seg-btn neg-seg-btn-active" onclick="negSetOLOmron(0)">Nenhuma</button>
+            <button type="button" class="neg-seg-btn" data-ol="500" onclick="negSetOLOmron(500)">500</button>
+            <button type="button" class="neg-seg-btn" data-ol="1000" onclick="negSetOLOmron(1000)">1000</button>
+          </div>
+        </div>
+
+        <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
+          Ao escolher cliente e oferta, o % desconto atual dos itens sem desconto definido manualmente é recalculado automaticamente.
+        </p>
+      </div>
+
       <div class="neg-panel">
         <div class="neg-panel-title">Importar produtos</div>
         <div class="neg-row">
@@ -164,7 +210,7 @@
           </div>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
-          Preço e desconto são opcionais: se não vierem no arquivo, eu busco no catálogo pela sua UF (e pelo cliente, se identificado). Só preciso do <strong>EAN ou Código</strong> + Qtd.
+          Preço e desconto são opcionais: se não vierem no arquivo, eu busco no catálogo pela sua UF (e pelo cliente/oferta, se identificados). Só preciso do <strong>EAN ou Código</strong> + Qtd.
         </p>
       </div>
 
@@ -275,6 +321,9 @@
 const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 let NEG_CATALOGO_CACHE = null;
 let NEG_ST_CACHE = null;
+let NEG_BD_CLIENTES = [];
+let NEG_OL_DANONE = 0;
+let NEG_OL_OMRON = 0;
 
 function negBuscarCatalogo() {
   if (NEG_CATALOGO_CACHE) return Promise.resolve(NEG_CATALOGO_CACHE);
@@ -294,6 +343,12 @@ function negBuscarST() {
     .catch(() => ({}));
 }
 
+function negBuscarClientes() {
+  return chamarApi('clientes', { uf: UF_USUARIO })
+    .then(lista => { NEG_BD_CLIENTES = lista || []; return NEG_BD_CLIENTES; })
+    .catch(() => []);
+}
+
 function negConverterPercentual(texto) {
   if (!texto && texto !== 0) return 0;
   let s = String(texto).replace('%', '').replace(',', '.').trim();
@@ -301,11 +356,170 @@ function negConverterPercentual(texto) {
   return isNaN(n) ? 0 : n;
 }
 
-// Versão simplificada de calcularPrecosPara do catálogo (sem OL Danone/Omron,
-// já que a Central de Investimento não tem esses controles inline)
-function negCalcularDescontoCatalogo(p, cliente) {
+/* =========================================================================
+   CLIENTE + OFERTA ATIVA (busca, chip e painéis de OL)
+   ========================================================================= */
+function negFiltrarClientes() {
+  const termo = document.getElementById('negBuscaCliente').value.trim().toLowerCase();
+  const dd = document.getElementById('negDropdownClientes');
+  if (!termo) { dd.style.display = 'none'; dd.innerHTML = ''; return; }
+
+  const filtrados = NEG_BD_CLIENTES.filter(c =>
+    String(c.id).toLowerCase().includes(termo) ||
+    String(c.cnpj).replace(/\D/g, '').includes(termo) ||
+    String(c.razao).toLowerCase().includes(termo)
+  ).slice(0, 10);
+
+  dd.innerHTML = filtrados.length === 0
+    ? '<div class="neg-dropdown-cliente-item" style="color:var(--text-secondary); cursor:default;">Nenhum cliente encontrado</div>'
+    : filtrados.map(c => `
+        <div class="neg-dropdown-cliente-item" onclick="negSelecionarCliente('${c.id}')">
+          <div style="font-size:12px; font-weight:700;">${String(c.razao).toUpperCase()}</div>
+          <div style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between; margin-top:2px;">
+            <span>ID: ${c.id}</span><span>CNPJ: ${c.cnpj}</span>
+          </div>
+        </div>`).join('');
+  dd.style.display = 'block';
+}
+
+async function negSelecionarCliente(id) {
+  const cliente = NEG_BD_CLIENTES.find(c => String(c.id) === String(id));
+  if (!cliente) return;
+  NEG_CLIENTE = cliente;
+  NEG_OL_DANONE = 0;
+  NEG_OL_OMRON = 0;
+  document.getElementById('negBuscaCliente').value = '';
+  document.getElementById('negDropdownClientes').style.display = 'none';
+  document.getElementById('negDropdownClientes').innerHTML = '';
+  await negAtualizarPainelOfertas();
+  await negRecalcularDescontosAutomaticos();
+  if (NEG_ST_ATIVO) await negReaplicarST();
+  negSaveState();
+  negRenderAll();
+}
+
+async function negLimparClienteNeg() {
+  NEG_CLIENTE = null;
+  NEG_OL_DANONE = 0;
+  NEG_OL_OMRON = 0;
+  await negAtualizarPainelOfertas();
+  await negRecalcularDescontosAutomaticos();
+  negSaveState();
+  negRenderAll();
+}
+
+async function negAtualizarPainelOfertas() {
+  const chipWrap = document.getElementById('negClienteChipWrap');
+  const buscaWrap = document.getElementById('negClienteBuscaWrap');
+  const danoneWrap = document.getElementById('negOfertaDanoneWrap');
+  const omronWrap = document.getElementById('negOfertaOmronWrap');
+
+  if (!NEG_CLIENTE) {
+    chipWrap.style.display = 'none';
+    buscaWrap.style.display = 'block';
+    danoneWrap.style.display = 'none';
+    omronWrap.style.display = 'none';
+    return;
+  }
+
+  buscaWrap.style.display = 'none';
+  chipWrap.style.display = 'block';
+  document.getElementById('negClienteChipNome').innerText = (NEG_CLIENTE.razao || '').toUpperCase();
+  document.getElementById('negClienteChipCnpj').innerText = 'CNPJ: ' + (NEG_CLIENTE.cnpj || '—');
+
+  // Painel Danone: só aparece se o cliente tiver perfil configurado (Associativismo/PNV)
+  const perfilDanone = String(NEG_CLIENTE.perfilDanone || '').toUpperCase().trim();
+  if (perfilDanone === 'ASSOCIATIVISMO' || perfilDanone === 'PNV') {
+    danoneWrap.style.display = 'block';
+    negAtualizarBotoesOL('negSegOLDanone', NEG_OL_DANONE);
+  } else {
+    danoneWrap.style.display = 'none';
+  }
+
+  // Painel Omron: só aparece se existir produto Omron com essas colunas de OL no catálogo,
+  // igual à checagem que o catálogo principal faz (atualizarBotoesOLDanone/painelOLOmron).
+  const catalogo = await negBuscarCatalogo();
+  const temOL500 = catalogo.some(p => String(p.fornecedor || '').toUpperCase().includes('OMRON') && negConverterPercentual(p.omronOL500) > 0);
+  const temOL1000 = catalogo.some(p => String(p.fornecedor || '').toUpperCase().includes('OMRON') && negConverterPercentual(p.omronOL1000) > 0);
+  if (temOL500 || temOL1000) {
+    omronWrap.style.display = 'block';
+    const btn500 = document.querySelector('#negSegOLOmron [data-ol="500"]');
+    const btn1000 = document.querySelector('#negSegOLOmron [data-ol="1000"]');
+    if (btn500) btn500.style.display = temOL500 ? '' : 'none';
+    if (btn1000) btn1000.style.display = temOL1000 ? '' : 'none';
+    negAtualizarBotoesOL('negSegOLOmron', NEG_OL_OMRON);
+  } else {
+    omronWrap.style.display = 'none';
+  }
+}
+
+function negAtualizarBotoesOL(segId, valorAtivo) {
+  const seg = document.getElementById(segId);
+  if (!seg) return;
+  seg.querySelectorAll('.neg-seg-btn').forEach(btn => {
+    const v = btn.dataset.ol ? Number(btn.dataset.ol) : 0;
+    btn.classList.toggle('neg-seg-btn-active', v === valorAtivo);
+  });
+}
+
+async function negSetOLDanone(valor) {
+  NEG_OL_DANONE = valor;
+  negAtualizarBotoesOL('negSegOLDanone', valor);
+  await negRecalcularDescontosAutomaticos();
+  negSaveState();
+  negRenderAll();
+}
+
+async function negSetOLOmron(valor) {
+  NEG_OL_OMRON = valor;
+  negAtualizarBotoesOL('negSegOLOmron', valor);
+  await negRecalcularDescontosAutomaticos();
+  negSaveState();
+  negRenderAll();
+}
+
+// Fecha o dropdown de clientes ao clicar fora
+document.addEventListener('click', function(e) {
+  const dd = document.getElementById('negDropdownClientes');
+  const input = document.getElementById('negBuscaCliente');
+  if (dd && input && !dd.contains(e.target) && e.target !== input) {
+    dd.style.display = 'none';
+  }
+});
+
+// Versão simplificada de calcularPrecosPara do catálogo, mas agora com Danone
+// (via OL escolhido no painel) e Omron OL priorizado sobre desconto de equipe —
+// igual ao comportamento do catálogo principal.
+function negCalcularDescontoCatalogo(p, cliente, olDanone, olOmron) {
   const forn = String(p.fornecedor || '').toUpperCase().trim();
+
+  if (forn.includes('DANONE')) {
+    if (!cliente || !olDanone) return 0;
+    const perfil = String(cliente.perfilDanone || '').toUpperCase().trim();
+    if (perfil === 'ASSOCIATIVISMO') {
+      if (olDanone === 250) return negConverterPercentual(p.olAssoc250);
+      if (olDanone === 500) return negConverterPercentual(p.olAssoc500);
+      if (olDanone === 1000) return negConverterPercentual(p.olAssoc1000);
+    } else if (perfil === 'PNV') {
+      if (olDanone === 250) return negConverterPercentual(p.olPnv250);
+      if (olDanone === 500) return negConverterPercentual(p.olPnv500);
+      if (olDanone === 1000) return negConverterPercentual(p.olPnv1000);
+    }
+    return 0;
+  }
+
+  if (forn.includes('OMRON')) {
+    if (!cliente) return 0;
+    if (olOmron === 500 && p.omronOL500) return negConverterPercentual(p.omronOL500);
+    if (olOmron === 1000 && p.omronOL1000) return negConverterPercentual(p.omronOL1000);
+    const equipe = String(cliente.equipe || '').toUpperCase().trim();
+    if (equipe === 'DEDICADO' && p.omronDedicado) return negConverterPercentual(p.omronDedicado);
+    if (equipe === 'FARMA' && p.omronFarma) return negConverterPercentual(p.omronFarma);
+    return 0;
+  }
+
   if (!cliente) return negConverterPercentual(p.descontoPadrao);
+
   if (forn.includes('UNILEVER')) {
     const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
     if (grupo === 'GRUPO1' || grupo === '1') return negConverterPercentual(p.descUniG1);
@@ -320,12 +534,6 @@ function negCalcularDescontoCatalogo(p, cliente) {
     if (equipe === 'FARMA' && p.kenuveFarma) return negConverterPercentual(p.kenuveFarma);
     return 0;
   }
-  if (forn.includes('OMRON')) {
-    const equipe = String(cliente.equipe || '').toUpperCase().trim();
-    if (equipe === 'DEDICADO' && p.omronDedicado) return negConverterPercentual(p.omronDedicado);
-    if (equipe === 'FARMA' && p.omronFarma) return negConverterPercentual(p.omronFarma);
-    return 0;
-  }
   if (forn.includes('KIMBERLY')) {
     const equipe = String(cliente.equipe || '').toUpperCase().trim();
     if (equipe === 'DEDICADO' && p.kimberlyDedicado) return negConverterPercentual(p.kimberlyDedicado);
@@ -333,6 +541,26 @@ function negCalcularDescontoCatalogo(p, cliente) {
     return 0;
   }
   return negConverterPercentual(p.descontoPadrao);
+}
+
+// Recalcula o % desconto atual de todo item cujo desconto NÃO foi definido manualmente
+// (nem veio de mapeamento explícito na importação, nem editado à mão na tabela).
+// Roda sempre que o cliente ou a oferta ativa (OL Danone/Omron) mudam.
+async function negRecalcularDescontosAutomaticos() {
+  const alvo = NEG_PRODUCTS.filter(p => !p.descontoManual && (p.catalogoId || p.cod || p.ean));
+  if (alvo.length === 0) return;
+  const catalogo = await negBuscarCatalogo();
+  alvo.forEach(item => {
+    const eanDigits = (item.ean || '').replace(/\D/g, '');
+    const codDigits = (item.cod || '').trim();
+    let prod = null;
+    if (eanDigits) prod = catalogo.find(pr => String(pr.ean || '').replace(/\D/g, '') === eanDigits);
+    if (!prod && codDigits) prod = catalogo.find(pr => String(pr.id || '').trim() === codDigits);
+    if (!prod && eanDigits) prod = catalogo.find(pr => String(pr.id || '').trim() === eanDigits);
+    if (!prod) return;
+    const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE, NEG_OL_DANONE, NEG_OL_OMRON);
+    item.descontoAtual = negFormatInputNumber(Math.round(percentual * 100) / 100);
+  });
 }
 
 async function negGarantirClienteCompleto() {
@@ -379,7 +607,7 @@ async function negResolverPrecosPendentes(lista) {
       item.preco = negFormatInputNumber(precoBase); // ST (se ligado) é aplicado depois via negReaplicarST()
     }
     if (semDesconto) {
-      const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE);
+      const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE, NEG_OL_DANONE, NEG_OL_OMRON);
       item.descontoAtual = negFormatInputNumber(Math.round(percentual * 100) / 100);
     }
     if (!item.produto || item.produto === 'Produto sem nome') item.produto = prod.descricao || item.produto;
@@ -517,7 +745,8 @@ function negSaveState() {
     localStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
       products: NEG_PRODUCTS, mode: NEG_MODE,
       groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
-      cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO
+      cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO,
+      olDanone: NEG_OL_DANONE, olOmron: NEG_OL_OMRON
     }));
     const el = document.getElementById('neg-save-status');
     if (el) { el.innerText = 'Salvo'; setTimeout(() => { el.innerText = ''; }, 1200); }
@@ -535,6 +764,8 @@ function negLoadState() {
     if (data.groupTargetValue != null) NEG_GROUP_TARGET_VALUE = data.groupTargetValue;
     if (data.cliente) NEG_CLIENTE = data.cliente;
     if (data.stAtivo != null) NEG_ST_ATIVO = data.stAtivo;
+    if (data.olDanone != null) NEG_OL_DANONE = data.olDanone;
+    if (data.olOmron != null) NEG_OL_OMRON = data.olOmron;
   } catch (e) { /* nada salvo ainda */ }
 }
 
@@ -768,6 +999,7 @@ function negConfirmHandoff(mode) {
   NEG_PENDING_HANDOFF = null;
   NEG_PENDING_HANDOFF_CLIENTE = null;
   document.getElementById('negHandoffModalOverlay').style.display = 'none';
+  negAtualizarPainelOfertas();
   negSaveState();
   negRenderAll();
   if (NEG_ST_ATIVO) negReaplicarST();
@@ -888,7 +1120,10 @@ function negClearAll() {
   if (!confirm('Isso vai apagar todos os produtos da lista (inclusive os salvos). Confirmar?')) return;
   NEG_PRODUCTS = [];
   NEG_CLIENTE = null;
+  NEG_OL_DANONE = 0;
+  NEG_OL_OMRON = 0;
   try { localStorage.removeItem(NEG_STORAGE_KEY); } catch (e) {}
+  negAtualizarPainelOfertas();
   negRenderAll();
 }
 
@@ -1008,6 +1243,8 @@ async function negExportExcel() {
     linhaAtual++;
     adicionarLinhaInfo('Nome', NEG_CLIENTE.razao ? NEG_CLIENTE.razao.toUpperCase() : '');
     adicionarLinhaInfo('CNPJ', NEG_CLIENTE.cnpj || '');
+    if (NEG_OL_DANONE > 0) adicionarLinhaInfo('OL Danone Ativo', `${NEG_OL_DANONE} caixas`);
+    if (NEG_OL_OMRON > 0) adicionarLinhaInfo('OL Omron Ativo', `${NEG_OL_OMRON} caixas`);
     linhaAtual++;
   }
 
@@ -1299,7 +1536,7 @@ function negRenderTable() {
 /* =========================================================================
    INIT
    ========================================================================= */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Aplica o mesmo tema salvo pelo catálogo (light/dark)
   const tema = localStorage.getItem('hbn1_tema') || 'light';
   document.documentElement.setAttribute('data-theme', tema);
@@ -1309,6 +1546,8 @@ document.addEventListener('DOMContentLoaded', () => {
   negSetMode(NEG_MODE);
   negSetGroupTargetType(NEG_GROUP_TARGET_TYPE);
   negSetSTAtivo(NEG_ST_ATIVO); // atualiza botões e reaplica ST se já estava ligado
+  await negBuscarClientes();
+  await negAtualizarPainelOfertas(); // reflete cliente/oferta já salvos, se houver
   negRenderAll();
   negCheckHandoff();
 });
