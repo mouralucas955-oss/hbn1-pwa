@@ -168,6 +168,7 @@
             </div>
             <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negLimparClienteNeg()">✕</button>
           </div>
+          <div id="negClienteBadges" style="display:none; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
         </div>
 
         <div id="negOfertaDanoneWrap" style="display:none; margin-top:10px;">
@@ -419,6 +420,7 @@ async function negAtualizarPainelOfertas() {
     buscaWrap.style.display = 'block';
     danoneWrap.style.display = 'none';
     omronWrap.style.display = 'none';
+    negRenderBadgesCliente();
     return;
   }
 
@@ -426,6 +428,7 @@ async function negAtualizarPainelOfertas() {
   chipWrap.style.display = 'block';
   document.getElementById('negClienteChipNome').innerText = (NEG_CLIENTE.razao || '').toUpperCase();
   document.getElementById('negClienteChipCnpj').innerText = 'CNPJ: ' + (NEG_CLIENTE.cnpj || '—');
+  negRenderBadgesCliente();
 
   // Painel Danone: só aparece se o cliente tiver perfil configurado (Associativismo/PNV)
   const perfilDanone = String(NEG_CLIENTE.perfilDanone || '').toUpperCase().trim();
@@ -460,6 +463,33 @@ function negAtualizarBotoesOL(segId, valorAtivo) {
     const v = btn.dataset.ol ? Number(btn.dataset.ol) : 0;
     btn.classList.toggle('neg-seg-btn-active', v === valorAtivo);
   });
+}
+
+// Monta badges de perfil/desconto ativo do cliente selecionado — mesmo
+// visual (cores, ícones) do popover de cliente no catálogo (popCliBadges).
+function negRenderBadgesCliente() {
+  const el = document.getElementById('negClienteBadges');
+  if (!el) return;
+
+  if (!NEG_CLIENTE) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  const badges = [
+    NEG_CLIENTE.grupoUnilever
+      ? { txt: '🔵 UNI: ' + NEG_CLIENTE.grupoUnilever, bg: 'rgba(30,58,138,0.4)', fg: '#93c5fd', bd: 'rgba(59,130,246,0.5)' } : null,
+    NEG_CLIENTE.perfilDanone
+      ? { txt: '🟣 DAN: ' + NEG_CLIENTE.perfilDanone, bg: 'rgba(88,28,135,0.4)', fg: '#d8b4fe', bd: 'rgba(147,51,234,0.5)' } : null,
+    String(NEG_CLIENTE.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE'
+      ? { txt: '🟠 KEN: TRANSFER', bg: 'rgba(154,52,18,0.4)', fg: '#fdba74', bd: 'rgba(234,88,12,0.5)' } : null,
+    NEG_CLIENTE.equipe
+      ? { txt: '🟢 EQ: ' + NEG_CLIENTE.equipe, bg: 'rgba(6,78,59,0.4)', fg: '#6ee7b7', bd: 'rgba(16,185,129,0.5)' } : null,
+  ].filter(Boolean);
+
+  if (badges.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  el.innerHTML = badges.map(b =>
+    `<span style="font-size:9.5px; font-weight:800; padding:3px 9px; border-radius:999px; background:${b.bg}; color:${b.fg}; border:1px solid ${b.bd}; white-space:nowrap;">${b.txt}</span>`
+  ).join('');
+  el.style.display = 'flex';
 }
 
 async function negSetOLDanone(valor) {
