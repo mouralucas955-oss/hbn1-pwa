@@ -344,15 +344,27 @@ async function negGarantirClienteCompleto() {
   }
 }
 
-// Preenche preço + % desconto de itens sem preço, buscando no catálogo da UF do usuário.
-// Guarda catalogoId/catalogoPrecoBase para permitir religar/desligar ST sem nova chamada à API.
+// Preenche preço e/ou % desconto de itens, buscando no catálogo da UF do usuário.
+// As duas buscas são INDEPENDENTES:
+//  - Preço só é buscado se o item não tiver preço (veio vazio/0 do import).
+//  - Desconto só é buscado se o item NÃO tiver vindo de uma coluna mapeada
+//    manualmente (descontoManual === false) — ou seja, se o usuário selecionou
+//    a coluna de desconto atual na importação, esse valor nunca é sobrescrito.
+// Guarda catalogoId/catalogoPrecoBase (só quando o preço veio do catálogo) para
+// permitir religar/desligar ST sem nova chamada à API.
 async function negResolverPrecosPendentes(lista) {
-  const pendentes = lista.filter(p => !p.preco || negParseNumberBR(p.preco) === 0);
-  if (pendentes.length === 0) return { resolvidos: 0, naoEncontrados: 0 };
+  const itensParaBuscar = lista.filter(p => {
+    const semPreco = !p.preco || negParseNumberBR(p.preco) === 0;
+    const semDesconto = !p.descontoManual;
+    return semPreco || semDesconto;
+  });
+  if (itensParaBuscar.length === 0) return { resolvidos: 0, naoEncontrados: 0 };
   await negGarantirClienteCompleto();
   const catalogo = await negBuscarCatalogo();
   let resolvidos = 0, naoEncontrados = 0;
-  pendentes.forEach(item => {
+  itensParaBuscar.forEach(item => {
+    const semPreco = !item.preco || negParseNumberBR(item.preco) === 0;
+    const semDesconto = !item.descontoManual;
     const eanDigits = (item.ean || '').replace(/\D/g, '');
     const codDigits = (item.cod || '').trim();
     let prod = null;
@@ -360,12 +372,16 @@ async function negResolverPrecosPendentes(lista) {
     if (!prod && codDigits) prod = catalogo.find(pr => String(pr.id || '').trim() === codDigits);
     if (!prod && eanDigits) prod = catalogo.find(pr => String(pr.id || '').trim() === eanDigits);
     if (!prod) { naoEncontrados++; return; }
-    const precoBase = negParseNumberBR(prod.preco) || 0;
-    const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE);
-    item.catalogoId = prod.id;
-    item.catalogoPrecoBase = precoBase;
-    item.preco = negFormatInputNumber(precoBase); // ST (se ligado) é aplicado depois via negReaplicarST()
-    item.descontoAtual = negFormatInputNumber(Math.round(percentual * 100) / 100);
+    if (semPreco) {
+      const precoBase = negParseNumberBR(prod.preco) || 0;
+      item.catalogoId = prod.id;
+      item.catalogoPrecoBase = precoBase;
+      item.preco = negFormatInputNumber(precoBase); // ST (se ligado) é aplicado depois via negReaplicarST()
+    }
+    if (semDesconto) {
+      const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE);
+      item.descontoAtual = negFormatInputNumber(Math.round(percentual * 100) / 100);
+    }
     if (!item.produto || item.produto === 'Produto sem nome') item.produto = prod.descricao || item.produto;
     if (!item.ean && prod.ean) item.ean = String(prod.ean);
     resolvidos++;
@@ -375,6 +391,7 @@ async function negResolverPrecosPendentes(lista) {
 
 // Botão "Atualizar preços do catálogo" — reroda a busca para TODOS os itens
 // que vieram do catálogo (não só os pendentes), útil após trocar cliente/UF.
+// Mantém o desconto atual se ele foi definido manualmente (descontoManual).
 async function negAtualizarPrecosCatalogo() {
   const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId || p.cod || p.ean);
   if (comCatalogo.length === 0) {
@@ -382,7 +399,7 @@ async function negAtualizarPrecosCatalogo() {
     return;
   }
   NEG_CATALOGO_CACHE = null; // força nova busca
-  comCatalogo.forEach(p => { p.preco = ''; }); // marca como pendente para o resolver reprocessar
+  comCatalogo.forEach(p => { p.preco = ''; }); // marca como pendente para o resolver reprocessar o preço
   const { resolvidos, naoEncontrados } = await negResolverPrecosPendentes(comCatalogo);
   if (NEG_ST_ATIVO) await negReaplicarST();
   negSaveState();
@@ -488,7 +505,7 @@ const NEG_FIELD_DEFS = [
   { key: 'ean', label: 'EAN', required: false, patterns: ['ean'] },
   { key: 'preco', label: 'Preço cheio (opcional — se vazio, busco no catálogo)', required: false, patterns: ['preco'], exclude: ['cdesc', 'com desconto'] },
   { key: 'qtd', label: 'Quantidade', required: true, patterns: ['qtd', 'quantidade'] },
-  { key: 'descontoAtual', label: '% Desconto atual', required: false, patterns: ['desconto total', 'desconto atual', 'desconto liberado', 'desconto'] },
+  { key: 'descontoAtual', label: '% Desconto atual (opcional — se não mapear, busco no catálogo)', required: false, patterns: ['desconto total', 'desconto atual', 'desconto liberado', 'desconto'] },
   { key: 'precoComDesc', label: 'Preço com desconto (opcional)', required: false, patterns: ['cdesc', 'com desconto'] },
 ];
 
@@ -556,6 +573,7 @@ function negGuessMapping(headers) {
 }
 
 function negBuildProducts(headers, rows, mapping) {
+  const temColunaDesconto = mapping.descontoAtual != null && mapping.descontoAtual >= 0;
   return rows.map(row => {
     const get = key => { const idx = mapping[key]; return idx >= 0 && idx < row.length ? row[idx] : ''; };
     const preco = negParseNumberBR(get('preco'));
@@ -581,6 +599,10 @@ function negBuildProducts(headers, rows, mapping) {
       cod: String(get('cod') || '').trim(), ean: String(get('ean') || '').trim(),
       preco: negFormatInputNumber(precoOk), qtd: negFormatInputNumber(isNaN(qtd) ? 0 : qtd),
       descontoAtual: negFormatInputNumber(Math.round(descontoAtual * 100) / 100),
+      // Se a coluna de desconto foi mapeada, esse valor é "do usuário" e nunca
+      // será sobrescrito pela busca automática no catálogo (negResolverPrecosPendentes).
+      // Se não foi mapeada, fica false e o sistema busca o desconto certo sozinho.
+      descontoManual: temColunaDesconto,
       targetType: 'pct', targetValue, precoFinalDesejado,
       selected: true
     };
@@ -681,7 +703,7 @@ async function negConfirmImport() {
     if (NEG_ST_ATIVO) await negReaplicarST();
     negSaveState();
     negRenderAll();
-    alert(`Preços buscados no catálogo (UF ${UF_USUARIO}): ${resolvidos} encontrados${naoEncontrados > 0 ? `, ${naoEncontrados} não localizados (preencha o preço manualmente nesses)` : ''}.`);
+    alert(`Preços/descontos buscados no catálogo (UF ${UF_USUARIO}): ${resolvidos} encontrados${naoEncontrados > 0 ? `, ${naoEncontrados} não localizados (preencha manualmente nesses)` : ''}.`);
   }
 }
 
@@ -706,6 +728,9 @@ function negCheckHandoff() {
   // "cod" que chega do catálogo é o ID interno do produto — o mesmo usado na
   // tabela de ST (chamarApi('st', ...)). Guardando aqui, o botão de ST
   // (negReaplicarST) passa a funcionar também para esses itens.
+  // descontoManual: true porque esse desconto já veio calculado pelo perfil
+  // completo do cliente no catálogo (com OL Danone/Omron etc.) — não deve ser
+  // recalculado por uma versão simplificada aqui na Central de Investimento.
   const built = itensBrutos.map(it => ({
     id: negUid(),
     produto: it.produto || 'Produto sem nome',
@@ -713,6 +738,7 @@ function negCheckHandoff() {
     preco: negFormatInputNumber(it.preco || 0),
     qtd: negFormatInputNumber(it.qtd || 0),
     descontoAtual: negFormatInputNumber(Math.round((it.descontoAtual || 0) * 100) / 100),
+    descontoManual: true,
     targetType: 'pct', targetValue: '0', precoFinalDesejado: '',
     catalogoId: it.cod || null,
     catalogoPrecoBase: Number(it.preco) || 0,
@@ -807,6 +833,9 @@ function negUpdateProduct(id, key, value) {
   const p = NEG_PRODUCTS.find(x => x.id === id);
   if (!p) return;
   p[key] = value;
+  // Se o usuário editou o desconto atual na mão, isso vira "manual": passa a
+  // ser preservado e nunca mais sobrescrito por buscas automáticas no catálogo.
+  if (key === 'descontoAtual') p.descontoManual = true;
   negSaveState();
   negRenderAll();
 }
@@ -835,7 +864,7 @@ function negRemoveProduct(id) {
 }
 
 function negAddManualRow() {
-  NEG_PRODUCTS.push({ id: negUid(), produto: '', cod: '', ean: '', preco: '', qtd: '1', descontoAtual: '0', targetType: 'pct', targetValue: '0', precoFinalDesejado: '', selected: true });
+  NEG_PRODUCTS.push({ id: negUid(), produto: '', cod: '', ean: '', preco: '', qtd: '1', descontoAtual: '0', descontoManual: false, targetType: 'pct', targetValue: '0', precoFinalDesejado: '', selected: true });
   negSaveState();
   negRenderAll();
 }
