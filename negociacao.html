@@ -492,55 +492,67 @@ document.addEventListener('click', function(e) {
 // igual ao comportamento do catálogo principal.
 function negCalcularDescontoCatalogo(p, cliente, olDanone, olOmron) {
   const forn = String(p.fornecedor || '').toUpperCase().trim();
+  let percentual = 0;
 
   if (forn.includes('DANONE')) {
-    if (!cliente || !olDanone) return 0;
-    const perfil = String(cliente.perfilDanone || '').toUpperCase().trim();
-    if (perfil === 'ASSOCIATIVISMO') {
-      if (olDanone === 250) return negConverterPercentual(p.olAssoc250);
-      if (olDanone === 500) return negConverterPercentual(p.olAssoc500);
-      if (olDanone === 1000) return negConverterPercentual(p.olAssoc1000);
-    } else if (perfil === 'PNV') {
-      if (olDanone === 250) return negConverterPercentual(p.olPnv250);
-      if (olDanone === 500) return negConverterPercentual(p.olPnv500);
-      if (olDanone === 1000) return negConverterPercentual(p.olPnv1000);
+    if (cliente && olDanone) {
+      const perfil = String(cliente.perfilDanone || '').toUpperCase().trim();
+      if (perfil === 'ASSOCIATIVISMO') {
+        if (olDanone === 250) percentual = negConverterPercentual(p.olAssoc250);
+        else if (olDanone === 500) percentual = negConverterPercentual(p.olAssoc500);
+        else if (olDanone === 1000) percentual = negConverterPercentual(p.olAssoc1000);
+      } else if (perfil === 'PNV') {
+        if (olDanone === 250) percentual = negConverterPercentual(p.olPnv250);
+        else if (olDanone === 500) percentual = negConverterPercentual(p.olPnv500);
+        else if (olDanone === 1000) percentual = negConverterPercentual(p.olPnv1000);
+      }
     }
-    return 0;
+  } else if (forn.includes('OMRON')) {
+    if (cliente) {
+      if (olOmron === 500 && p.omronOL500) percentual = negConverterPercentual(p.omronOL500);
+      else if (olOmron === 1000 && p.omronOL1000) percentual = negConverterPercentual(p.omronOL1000);
+      else {
+        const equipe = String(cliente.equipe || '').toUpperCase().trim();
+        if (equipe === 'DEDICADO' && p.omronDedicado) percentual = negConverterPercentual(p.omronDedicado);
+        else if (equipe === 'FARMA' && p.omronFarma) percentual = negConverterPercentual(p.omronFarma);
+      }
+    }
+  } else if (forn.includes('UNILEVER')) {
+    if (cliente) {
+      const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
+      if (grupo === 'GRUPO1' || grupo === '1') percentual = negConverterPercentual(p.descUniG1);
+      else if (grupo === 'GRUPO2' || grupo === '2') percentual = negConverterPercentual(p.descUniG2);
+      else if (grupo === 'GRUPO3' || grupo === '3') percentual = negConverterPercentual(p.descUniG3);
+    }
+  } else if (forn.includes('KENVUE')) {
+    if (cliente) {
+      if (String(cliente.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE') {
+        percentual = negConverterPercentual(p.descTransfer);
+      } else {
+        const equipe = String(cliente.equipe || '').toUpperCase().trim();
+        if (equipe === 'DEDICADO' && p.kenuveDedicado) percentual = negConverterPercentual(p.kenuveDedicado);
+        else if (equipe === 'FARMA' && p.kenuveFarma) percentual = negConverterPercentual(p.kenuveFarma);
+      }
+    }
+  } else if (forn.includes('KIMBERLY')) {
+    if (cliente) {
+      const equipe = String(cliente.equipe || '').toUpperCase().trim();
+      if (equipe === 'DEDICADO' && p.kimberlyDedicado) percentual = negConverterPercentual(p.kimberlyDedicado);
+      else if (equipe === 'FARMA' && p.kimberlyFarma) percentual = negConverterPercentual(p.kimberlyFarma);
+    }
+  } else if (cliente) {
+    percentual = negConverterPercentual(p.descontoPadrao);
   }
 
-  if (forn.includes('OMRON')) {
-    if (!cliente) return 0;
-    if (olOmron === 500 && p.omronOL500) return negConverterPercentual(p.omronOL500);
-    if (olOmron === 1000 && p.omronOL1000) return negConverterPercentual(p.omronOL1000);
-    const equipe = String(cliente.equipe || '').toUpperCase().trim();
-    if (equipe === 'DEDICADO' && p.omronDedicado) return negConverterPercentual(p.omronDedicado);
-    if (equipe === 'FARMA' && p.omronFarma) return negConverterPercentual(p.omronFarma);
-    return 0;
+  // Fallback: se a regra específica do fornecedor não gerou desconto
+  // (coluna vazia ou cliente não bate com nenhum critério), tenta o
+  // Desconto Padrão antes de retornar 0.
+  if (percentual === 0 && cliente) {
+    const padrao = negConverterPercentual(p.descontoPadrao);
+    if (padrao > 0) percentual = padrao;
   }
 
-  if (!cliente) return negConverterPercentual(p.descontoPadrao);
-
-  if (forn.includes('UNILEVER')) {
-    const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
-    if (grupo === 'GRUPO1' || grupo === '1') return negConverterPercentual(p.descUniG1);
-    if (grupo === 'GRUPO2' || grupo === '2') return negConverterPercentual(p.descUniG2);
-    if (grupo === 'GRUPO3' || grupo === '3') return negConverterPercentual(p.descUniG3);
-    return 0;
-  }
-  if (forn.includes('KENVUE')) {
-    if (String(cliente.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE') return negConverterPercentual(p.descTransfer);
-    const equipe = String(cliente.equipe || '').toUpperCase().trim();
-    if (equipe === 'DEDICADO' && p.kenuveDedicado) return negConverterPercentual(p.kenuveDedicado);
-    if (equipe === 'FARMA' && p.kenuveFarma) return negConverterPercentual(p.kenuveFarma);
-    return 0;
-  }
-  if (forn.includes('KIMBERLY')) {
-    const equipe = String(cliente.equipe || '').toUpperCase().trim();
-    if (equipe === 'DEDICADO' && p.kimberlyDedicado) return negConverterPercentual(p.kimberlyDedicado);
-    if (equipe === 'FARMA' && p.kimberlyFarma) return negConverterPercentual(p.kimberlyFarma);
-    return 0;
-  }
-  return negConverterPercentual(p.descontoPadrao);
+  return percentual;
 }
 
 // Recalcula o % desconto atual de todo item cujo desconto NÃO foi definido manualmente
