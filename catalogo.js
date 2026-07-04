@@ -2920,27 +2920,36 @@ function confirmarAlertaMinimos() {
     }
 
     async function _gerarExcelDePedidoSalvo(pedido) {
-      try {
-        const itensPorFornecedor = {};
-        let acBruto = 0, acLiquido = 0, acUnidades = 0;
+  try {
+    const itensPorFornecedor = {};
+    let acBruto = 0, acLiquido = 0, acUnidades = 0;
 
-        pedido.itens.forEach(item => {
-          acBruto    += item.precoOriginal * item.qtd;
-          acLiquido  += item.precoFinal    * item.qtd;
-          acUnidades += item.qtd;
-          // Reconstruímos o objeto "p" mínimo que construirWorkbookPedido espera
-          const pFake = {
-  id: item.id, ean: item.ean, descricao: item.descricao, marca: item.marca,
-  fornecedor: item.fornecedor, embalagem: item.embalagem
-};
-          const forn = (item.fornecedor || 'GERAL').trim().toUpperCase();
-          if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
-          itensPorFornecedor[forn].push({
-            p: pFake, qtd: item.qtd,
-            precoFinal: item.precoFinal, precoOriginal: item.precoOriginal,
-            percentual: item.percentual
-          });
-        });
+    pedido.itens.forEach(item => {
+      acBruto    += item.precoOriginal * item.qtd;
+      acLiquido  += item.precoFinal    * item.qtd;
+      acUnidades += item.qtd;
+
+      // Busca o estoque ATUAL do produto no catálogo — o pedido salvo não guarda
+      // isso, então sem essa busca a coluna Status sempre saía "Sem estoque".
+      const produtoAtual = BD_PRODUTOS.find(x => x.id === item.id);
+      const pFake = {
+        id: item.id, ean: item.ean, descricao: item.descricao, marca: item.marca,
+        fornecedor: item.fornecedor, embalagem: item.embalagem,
+        // Se o produto não existir mais no catálogo (removido/renomeado), não dá
+        // pra confirmar falta de estoque — assume disponível em vez de acusar errado.
+        estoque: produtoAtual ? produtoAtual.estoque : 999999
+      };
+
+      const forn = (item.fornecedor || 'GERAL').trim().toUpperCase();
+      if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+      itensPorFornecedor[forn].push({
+        p: pFake, qtd: item.qtd,
+        precoFinal: item.precoFinal, precoOriginal: item.precoOriginal,
+        percentual: item.percentual
+      });
+    });
+
+    // ... resto da função continua igual (workbook, nome do arquivo, download)
 
         const workbook = await construirWorkbookPedido({
           itensPorFornecedor,
