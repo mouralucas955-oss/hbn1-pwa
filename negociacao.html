@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Central de Investimento — HBN1</title>
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com"> 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -1085,11 +1085,22 @@ function negComputeGroup(selectedProducts, groupTargetType, groupTargetValue) {
     return s + preco * qtd * (1 - desc / 100);
   }, 0);
   const targetRaw = negParseNumberBR(groupTargetValue);
-  let valorAlvo;
-  if (groupTargetType === 'valor') valorAlvo = isNaN(targetRaw) ? valorAtual : targetRaw;
-  else valorAlvo = somaPrecoCheio * (1 - (isNaN(targetRaw) ? 0 : targetRaw) / 100);
-  const investimentoTotal = valorAtual - valorAlvo;
-  const xAdicionalPct = somaPrecoCheio > 0 ? (investimentoTotal / somaPrecoCheio) * 100 : 0;
+
+  let investimentoTotal, valorAlvo, xAdicionalPct;
+
+  if (groupTargetType === 'valor') {
+    // Meta em R$: continua igual — você diz o valor final desejado do grupo
+    valorAlvo = isNaN(targetRaw) ? valorAtual : targetRaw;
+    investimentoTotal = valorAtual - valorAlvo;
+    xAdicionalPct = somaPrecoCheio > 0 ? (investimentoTotal / somaPrecoCheio) * 100 : 0;
+  } else {
+    // Meta em %: agora é o ADICIONAL direto (somado ao desconto atual de cada item),
+    // igual ao modo "Por item" — não mais um % final sobre o preço cheio.
+    xAdicionalPct = isNaN(targetRaw) ? 0 : targetRaw;
+    investimentoTotal = Math.max(0, xAdicionalPct / 100) * somaPrecoCheio;
+    valorAlvo = valorAtual - investimentoTotal;
+  }
+
   const perItem = selectedProducts.map(p => {
     const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, descontoAtual = negParseNumberBR(p.descontoAtual) || 0;
     const pctFinal = descontoAtual + xAdicionalPct;
@@ -1201,8 +1212,8 @@ function negSetGroupTargetType(type) {
   NEG_GROUP_TARGET_TYPE = type;
   document.getElementById('negSegValor').classList.toggle('neg-seg-btn-active', type === 'valor');
   document.getElementById('negSegPct').classList.toggle('neg-seg-btn-active', type === 'pct');
-  document.getElementById('negGroupInputLabel').innerText = type === 'valor' ? 'Valor total desejado do grupo' : '% de desconto desejado (sobre o preço cheio)';
-  document.getElementById('negGroupTargetValue').placeholder = type === 'valor' ? 'Ex.: 21500,00' : 'Ex.: 22,5';
+  document.getElementById('negGroupInputLabel').innerText = type === 'valor' ? 'Valor total desejado do grupo' : '% de desconto adicional (somado ao desconto atual de cada item)';
+  document.getElementById('negGroupTargetValue').placeholder = type === 'valor' ? 'Ex.: 21500,00' : 'Ex.: 10';
   negSaveState();
   negRenderAll();
 }
