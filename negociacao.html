@@ -136,11 +136,11 @@
     <div class="neg-ticker-value" id="tkPedidoCheio">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
-    <div class="neg-ticker-label">Valor Liquido</div>
+    <div class="neg-ticker-label">Valor Liquido c/ desconto ativo</div>
     <div class="neg-ticker-value" id="tkComDesconto">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
-    <div class="neg-ticker-label">Valor Alvo</div>
+    <div class="neg-ticker-label">Valor Liquido c/ adicional</div>
     <div class="neg-ticker-value" id="tkValorAlvo" style="color: var(--green);">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
@@ -1494,7 +1494,7 @@ function negRenderGroupPanel() {
       <span style="color:var(--text-secondary);">Valor com desconto atual</span><span class="mono">${negFormatBRL(gr.valorAtual)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
-      <span style="color:var(--text-secondary);">Valor alvo</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
+      <span style="color:var(--text-secondary);">Valor liquido c/ adicional</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
       <span style="color:var(--text-secondary);">% adicional uniforme</span>
