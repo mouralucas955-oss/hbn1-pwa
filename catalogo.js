@@ -755,7 +755,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       executarFiltrosGerais();
     }
 
-    function executarFiltrosGerais() {
+    function executarFiltrosGerais(comAnimacao = true) {
       const busca = document.getElementById('barraPesquisa').value.toLowerCase().trim();
       PRODUTOS_FILTRADOS = BD_PRODUTOS.filter(p => {
         // Ignora linhas sem ID válido (linhas de controle/cabeçalho na planilha)
@@ -772,10 +772,10 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
           (p.tag       && String(p.tag).toLowerCase().includes(busca));
         return condForn && condBusca;
       });
-      renderizarInterfaceGrafica(PRODUTOS_FILTRADOS);
+     renderizarInterfaceGrafica(PRODUTOS_FILTRADOS, comAnimacao);
     }
 
-    function renderizarInterfaceGrafica(lista) {
+    function renderizarInterfaceGrafica(lista, comAnimacao = true) {
       const grid     = document.getElementById('gridProdutos');
       const contador = document.getElementById('contadorProdutos');
       grid.innerHTML = '';
@@ -784,7 +784,14 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
         grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400 font-medium bg-white rounded-2xl border border-dashed p-8">Nenhum produto localizado para os filtros informados.</div>`;
         return;
       }
-      lista.forEach(p => { grid.appendChild(criarCardProduto(p)); });
+      lista.forEach((p, i) => {
+        const card = criarCardProduto(p);
+        if (comAnimacao) {
+          card.classList.add('card-anim-entrada');
+          card.style.animationDelay = `${Math.min(i * 20, 400)}ms`;
+        }
+        grid.appendChild(card);
+      });
     }
 
     // =========================================================================
@@ -804,7 +811,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
           ? "border-slate-100 opacity-70"
           : noCarrinho
             ? "border-orange-300 shadow-md shadow-orange-100"
-            : "border-slate-100 hover:border-slate-200 hover:shadow-lg hover:-translate-y-0.5");
+            : "border-slate-100 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-100/60 hover:-translate-y-1");
 
       const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
       const temDesconto = percentual > 0;
@@ -883,7 +890,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
           <div class="mt-auto pt-2 border-t border-slate-100">
             <div class="flex items-end justify-between mb-2">
               ${blocoPrecoHtml}
-              ${temDesconto ? `<span class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">−${percentual}%</span>` : ''}
+             ${temDesconto ? `<span class="badge-desconto-forte text-white text-[10px] font-black px-2 py-0.5 rounded-lg">−${percentual}%</span>` : ''}
             </div>
             <div id="card-btn-${p.id}">
               ${obterHtmlBotaoAcao(p.id, qtdNoCarrinho, estoque, isEsgotado)}
@@ -965,7 +972,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       card.className = "bg-white border rounded-2xl flex flex-col overflow-hidden relative group text-[11px] transition-all duration-200 " +
         (noCarrinho
           ? "border-orange-300 shadow-md shadow-orange-100"
-          : "border-slate-100 hover:border-slate-200 hover:shadow-lg hover:-translate-y-0.5");
+          : "border-slate-100 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-100/60 hover:-translate-y-1");
 
       // Recalcula o ícone de carrinho / bolinha de ST no canto, já que o card
       // não é recriado do zero ao só mudar a quantidade.
@@ -3108,9 +3115,9 @@ if (pedido.cliente && pedido.cliente.razao) {
             if (isPrimeiraCarga) {
               // Primeira carga: abre tela de portais
               mostrarTelaPortais();
-            } else {
+           } else {
               if (qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
-              executarFiltrosGerais();
+              executarFiltrosGerais(false);
             }
             recalcularTotaisGerais();
             atualizarTextoUltimaSincronizacao();
