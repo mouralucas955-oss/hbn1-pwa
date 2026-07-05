@@ -340,7 +340,7 @@ let BD_CHAVES_VENCIDAS = new Set(); // chaves de desconto cuja validade (coluna 
     // Aceita cliente e OL explícitos — usada tanto pelo catálogo (globais)
     // quanto pela importação de pedidos (cliente identificado pelo CNPJ)
     // Retorna { precoFinal, precoOriginal, percentualDesconto }
-   function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
+function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
   const precoBruto = converterPrecoValido(p.preco);
   if (precoBruto === 0) return { precoFinal: 0, precoOriginal: 0, percentual: 0, colunaAtiva: null };
 
@@ -355,23 +355,79 @@ let BD_CHAVES_VENCIDAS = new Set(); // chaves de desconto cuja validade (coluna 
   let colunaAtiva = null;
 
   if (isDanone) {
-    // ... mantém igual
+    if (cliente && olAtivo > 0) {
+      const perfil = String(cliente.perfilDanone || '').toUpperCase().trim();
+      if (perfil === 'ASSOCIATIVISMO') {
+        if      (olAtivo === 250)  { percentual = converterPercentual(p.olAssoc250);  colunaAtiva = 'olAssoc250'; }
+        else if (olAtivo === 500)  { percentual = converterPercentual(p.olAssoc500);  colunaAtiva = 'olAssoc500'; }
+        else if (olAtivo === 1000) { percentual = converterPercentual(p.olAssoc1000); colunaAtiva = 'olAssoc1000'; }
+      } else if (perfil === 'PNV') {
+        if      (olAtivo === 250)  { percentual = converterPercentual(p.olPnv250);  colunaAtiva = 'olPnv250'; }
+        else if (olAtivo === 500)  { percentual = converterPercentual(p.olPnv500);  colunaAtiva = 'olPnv500'; }
+        else if (olAtivo === 1000) { percentual = converterPercentual(p.olPnv1000); colunaAtiva = 'olPnv1000'; }
+      }
+    }
   } else if (isUnilever) {
-    // ... mantém igual
+    if (cliente) {
+      const grupo = String(cliente.grupoUnilever || '').toUpperCase().trim();
+      if      (grupo === 'GRUPO1' || grupo === '1') { percentual = converterPercentual(p.descUniG1); colunaAtiva = 'descUniG1'; }
+      else if (grupo === 'GRUPO2' || grupo === '2') { percentual = converterPercentual(p.descUniG2); colunaAtiva = 'descUniG2'; }
+      else if (grupo === 'GRUPO3' || grupo === '3') { percentual = converterPercentual(p.descUniG3); colunaAtiva = 'descUniG3'; }
+    }
   } else if (isKenvue) {
-    // ... mantém igual
+    if (cliente && String(cliente.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE') {
+      percentual = converterPercentual(p.descTransfer);
+      colunaAtiva = 'descTransfer';
+    } else if (cliente) {
+      const equipe = String(cliente.equipe || '').toUpperCase().trim();
+      if (equipe === 'DEDICADO' && p.kenuveDedicado) {
+        percentual = converterPercentual(p.kenuveDedicado);
+        colunaAtiva = 'kenuveDedicado';
+      } else if (equipe === 'FARMA' && p.kenuveFarma) {
+        percentual = converterPercentual(p.kenuveFarma);
+        colunaAtiva = 'kenuveFarma';
+      }
+    }
   } else if (isOmron) {
-    // ... mantém igual
+    if (cliente) {
+      // OL OMRON tem prioridade sobre desconto de equipe
+      if (omronOlAtivo === 500 && p.omronOL500) {
+        percentual = converterPercentual(p.omronOL500);
+        colunaAtiva = 'omronOL500';
+      } else if (omronOlAtivo === 1000 && p.omronOL1000) {
+        percentual = converterPercentual(p.omronOL1000);
+        colunaAtiva = 'omronOL1000';
+      } else {
+        const equipe = String(cliente.equipe || '').toUpperCase().trim();
+        if (equipe === 'DEDICADO' && p.omronDedicado) {
+          percentual = converterPercentual(p.omronDedicado);
+          colunaAtiva = 'omronDedicado';
+        } else if (equipe === 'FARMA' && p.omronFarma) {
+          percentual = converterPercentual(p.omronFarma);
+          colunaAtiva = 'omronFarma';
+        }
+      }
+    }
   } else if (isKimberly) {
-    // ... mantém igual
+    if (cliente) {
+      const equipe = String(cliente.equipe || '').toUpperCase().trim();
+      if (equipe === 'DEDICADO' && p.kimberlyDedicado) {
+        percentual = converterPercentual(p.kimberlyDedicado);
+        colunaAtiva = 'kimberlyDedicado';
+      } else if (equipe === 'FARMA' && p.kimberlyFarma) {
+        percentual = converterPercentual(p.kimberlyFarma);
+        colunaAtiva = 'kimberlyFarma';
+      }
+    }
   } else if (cliente) {
     percentual = converterPercentual(p.descontoPadrao);
     if (percentual > 0) colunaAtiva = 'descontoPadrao';
   }
 
   // NOVO — fallback: se a regra específica do fornecedor não gerou desconto
-  // (coluna vazia ou perfil/equipe do cliente não bate com nada), tenta o
-  // Desconto Padrão antes de zerar de vez.
+  // (coluna vazia ou perfil/equipe do cliente não bate com nenhum critério),
+  // tenta o Desconto Padrão antes de zerar de vez. Só entra aqui se a coluna
+  // específica ficou em 0 — nunca sobrescreve um desconto específico já achado.
   if (percentual === 0 && cliente) {
     const padrao = converterPercentual(p.descontoPadrao);
     if (padrao > 0) {
