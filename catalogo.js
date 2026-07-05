@@ -826,9 +826,21 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
         : '';
 
       // Ponto no canto: prioriza indicar "no carrinho"; se não estiver no carrinho mas tiver ST ativo, indica ST
-      const badgeCantoHtml = noCarrinho
-        ? `<span class="absolute top-2 right-2 z-10 w-2 h-2 rounded-full bg-orange-400 shadow shadow-orange-300"></span>`
-        : (temST ? `<span class="absolute top-2 right-2 z-10 w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/50" title="ST ativo"></span>` : '');
+      // Indicadores no canto: ícone de carrinho se o item estiver no carrinho,
+      // bolinha de ST se o ST estiver ativo para este item — os dois podem aparecer juntos.
+      const iconeCarrinhoHtml = noCarrinho
+        ? `<span class="absolute top-2 right-2 z-10 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow shadow-orange-300" title="No carrinho">
+             <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
+             </svg>
+           </span>`
+        : '';
+
+      const bolinhaSTHtml = temST
+        ? `<span class="absolute top-2 ${noCarrinho ? 'right-8' : 'right-2'} z-10 w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/50" title="ST ativo"></span>`
+        : '';
+
+      const badgeCantoHtml = iconeCarrinhoHtml + bolinhaSTHtml;
 
       const corPillEstoque = isEsgotado ? 'bg-red-100 text-red-600'
         : estoque <= 5  ? 'bg-amber-100 text-amber-700'
