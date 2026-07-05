@@ -825,22 +825,9 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
         ? `<span class="absolute top-2 left-2 z-10 bg-[#FF6B00] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider">${p.tag}</span>`
         : '';
 
-      // Ponto no canto: prioriza indicar "no carrinho"; se não estiver no carrinho mas tiver ST ativo, indica ST
-      // Indicadores no canto: ícone de carrinho se o item estiver no carrinho,
-      // bolinha de ST se o ST estiver ativo para este item — os dois podem aparecer juntos.
-      const iconeCarrinhoHtml = noCarrinho
-        ? `<span class="absolute top-2 right-2 z-10 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow shadow-orange-300" title="No carrinho">
-             <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
-             </svg>
-           </span>`
-        : '';
-
-      const bolinhaSTHtml = temST
-        ? `<span class="absolute top-2 ${noCarrinho ? 'right-8' : 'right-2'} z-10 w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/50" title="ST ativo"></span>`
-        : '';
-
-      const badgeCantoHtml = iconeCarrinhoHtml + bolinhaSTHtml;
+      // Indicadores no canto (carrinho + ST) — ficam num container com id próprio,
+      // para poder ser atualizado depois sem precisar recriar o card inteiro.
+      const badgeCantoHtml = `<div id="card-badges-${p.id}">${obterHtmlBadgesCanto(noCarrinho, temST)}</div>`;
 
       const corPillEstoque = isEsgotado ? 'bg-red-100 text-red-600'
         : estoque <= 5  ? 'bg-amber-100 text-amber-700'
@@ -918,6 +905,24 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-1.5 bg-[#FF6B00] hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold rounded-xl transition-all tracking-wide flex items-center justify-center gap-1 shadow-sm shadow-orange-200">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>Adicionar</button>`;
     }
+// Monta o HTML dos indicadores no canto do card (ícone de carrinho + bolinha de ST).
+    // Isolado numa função para poder ser chamado tanto na criação do card quanto
+    // na atualização de quantidade (sem precisar recriar o card inteiro).
+    function obterHtmlBadgesCanto(noCarrinho, temST) {
+      const iconeCarrinhoHtml = noCarrinho
+        ? `<span class="absolute top-2 right-2 z-10 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow shadow-orange-300" title="No carrinho">
+             <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
+             </svg>
+           </span>`
+        : '';
+
+      const bolinhaSTHtml = temST
+        ? `<span class="absolute top-2 ${noCarrinho ? 'right-8' : 'right-2'} z-10 w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-900/50" title="ST ativo"></span>`
+        : '';
+
+      return iconeCarrinhoHtml + bolinhaSTHtml;
+    }
 
     function atualizarQtdDigitada(idProd, valor, estoqueMax) {
       let novaQtd = parseInt(valor);
@@ -961,6 +966,16 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
         (noCarrinho
           ? "border-orange-300 shadow-md shadow-orange-100"
           : "border-slate-100 hover:border-slate-200 hover:shadow-lg hover:-translate-y-0.5");
+
+      // Recalcula o ícone de carrinho / bolinha de ST no canto, já que o card
+      // não é recriado do zero ao só mudar a quantidade.
+      const badgesEl = document.getElementById(`card-badges-${idProd}`);
+      if (badgesEl) {
+        const p = BD_PRODUTOS.find(item => item.id === idProd);
+        const valorST = (ST_ATIVO && p && BD_ST[idProd]) ? Number(BD_ST[idProd]) : 0;
+        const temST   = ST_ATIVO && valorST > 0;
+        badgesEl.innerHTML = obterHtmlBadgesCanto(noCarrinho, temST);
+      }
     }
     // TOTALIZADORES
     function recalcularTotaisGerais() { atualizarIndicadoresFinanceirosGlobais(); }
