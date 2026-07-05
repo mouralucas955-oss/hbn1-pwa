@@ -97,21 +97,21 @@
 
 /* ── Dark Mode ─────────────────────────────────────────────── */
 [data-theme="dark"] {
-  --surface-page:       #0D1B2A;
-  --surface-card:       #142232;
-  --surface-secondary:  #1A2D40;
-  --surface-tertiary:   #213347;
-  --surface-header:     #070F1A;
-  --surface-overlay:    rgba(4, 10, 18, 0.80);
+  --surface-page:       #1A1D23;
+  --surface-card:       #22262E;
+  --surface-secondary:  #2A2F38;
+  --surface-tertiary:   #333944;
+  --surface-header:     #14161A;
+  --surface-overlay:    rgba(10, 11, 13, 0.80);
 
-  --border-subtle:      #1C3048;
-  --border-default:     #274460;
-  --border-strong:      #3A5A78;
+  --border-subtle:      #2E333B;
+  --border-default:     #3A4048;
+  --border-strong:      #4A515C;
 
-  --text-primary:       #E4EDF6;
-  --text-secondary:     #7EA8CC;
-  --text-muted:         #3E5C78;
-  --text-inverse:       #E4EDF6;
+  --text-primary:       #E8EAED;
+  --text-secondary:     #9BA3AE;
+  --text-muted:         #5F6672;
+  --text-inverse:       #E8EAED;
 
   --accent-soft:        #1C1000;
   --accent-border:      #7C3300;
