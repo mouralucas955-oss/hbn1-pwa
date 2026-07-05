@@ -1011,7 +1011,7 @@ function negCheckHandoff() {
     preco: negFormatInputNumber(it.preco || 0),
     qtd: negFormatInputNumber(it.qtd || 0),
     descontoAtual: negFormatInputNumber(Math.round((it.descontoAtual || 0) * 100) / 100),
-    descontoManual: true,
+    descontoManual: false,
     targetType: 'pct', targetValue: '0', precoFinalDesejado: '',
     catalogoId: it.cod || null,
     catalogoPrecoBase: Number(it.preco) || 0,
