@@ -425,9 +425,9 @@ header .bg-white {
     transform var(--transition-fast);
 }
 [id^="card-item-"]:hover {
-  border-color: var(--border-default);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(255, 107, 0, 0.18), var(--shadow-md);
+  transform: translateY(-4px);
 }
 
 /* Área da imagem do produto */
@@ -1063,4 +1063,61 @@ img[alt="HBN1"] {
   #faixaClienteSelecionado .text-slate-500.shrink-0 {
     display: none !important;
   }
+ }
+   /* ============================================================
+   RIBBON DE DESCONTO — fita diagonal no canto do card
+   ============================================================ */
+[id^="card-item-"] {
+  position: relative;
+  overflow: hidden; /* corta a fita nas bordas arredondadas */
 }
+
+.card-ribbon-desconto {
+  position: absolute;
+  top: 14px;
+  right: -34px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 38px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  z-index: 5;
+  pointer-events: none;
+}
+   /* ============================================================
+   SKELETON LOADING — cards fantasmas durante o carregamento
+   ============================================================ */
+.skeleton-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-secondary) 25%,
+    var(--surface-tertiary) 50%,
+    var(--surface-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-img    { height: 108px; width: 100%; }
+.skeleton-line   { height: 10px; margin: 10px 12px; border-radius: var(--radius-sm); }
+.skeleton-line.short  { width: 55%; }
+.skeleton-line.medium { width: 80%; }
+.skeleton-btn    { height: 32px; margin: 12px; border-radius: var(--radius-lg); }
+
