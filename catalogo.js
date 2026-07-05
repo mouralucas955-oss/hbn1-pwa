@@ -3146,11 +3146,12 @@ if (pedido.cliente && pedido.cliente.razao) {
       carregarST();
       carregarValoresMinimos();
       atualizarBadgesPedidosSalvos();
-      // Mostra portais imediatamente (grid atualiza quando produtos chegarem)
-      document.getElementById('telaPortais').classList.remove('hidden');
-      document.getElementById('portaisNomeUsuario').innerText =
-        localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
-
+      // Mostra portais imediatamente e já desenha o skeleton (grid atualiza quando produtos chegarem)
+document.getElementById('telaPortais').classList.remove('hidden');
+document.getElementById('portaisNomeUsuario').innerText =
+  localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
+renderizarGridPortais();
+        
       setInterval(atualizarMuralInvisivel,     60000);   // 1 min
       setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
       setInterval(atualizarClientesInvisivel, 300000);  // 5 min
