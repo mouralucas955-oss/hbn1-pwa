@@ -1521,8 +1521,7 @@ function negRenderTable() {
 
   const headCols = NEG_MODE === 'individual'
     ? `<th></th><th>Produto</th><th>Cód.</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">Preço final desejado</th><th class="neg-num">Progresso</th><th class="neg-num">% Desc. final</th><th class="neg-num">Investimento</th><th class="neg-num">Preço final</th><th></th>`
-    : `<th></th><th>Produto</th><th>Cód.Interno</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">Investimento no item</th><th class="neg-num">Preço final</th><th></th>`;
-
+    : `<th></th><th>Produto</th><th>Cód.Interno</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">% Desc. final</th><th class="neg-num">Investimento no item</th><th class="neg-num">Preço final</th><th></th>`;
   const rows = list.map(p => {
     const c = negComputeIndividual(p);
     const selCell = NEG_MODE === 'grupo'
@@ -1553,15 +1552,17 @@ function negRenderTable() {
         <td class="neg-num mono" style="font-weight:700; color:${c.investimento > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatBRL(c.investimento)}</td>
         <td class="neg-num mono">${negFormatBRL(c.precoFinal)}</td>`;
     } else {
-      const gc = grupoMap[p.id];
-      modeCols = gc ? `
-        <td class="neg-num mono">${negFormatPct(gc.pctFinal)}</td>
-        <td class="neg-num mono" style="font-weight:700; color:${gc.investimentoItem > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatBRL(gc.investimentoItem)}</td>
-        <td class="neg-num mono">${negFormatBRL(gc.precoFinal)}</td>` : `
-        <td class="neg-num" style="color:var(--text-secondary)">—</td>
-        <td class="neg-num" style="color:var(--text-secondary)">—</td>
-        <td class="neg-num" style="color:var(--text-secondary)">—</td>`;
-    }
+  const gc = grupoMap[p.id];
+  modeCols = gc ? `
+    <td class="neg-num mono">${negFormatPct(grupoResult.xAdicionalPct)}</td>
+    <td class="neg-num mono">${negFormatPct(gc.pctFinal)}</td>
+    <td class="neg-num mono" style="font-weight:700; color:${gc.investimentoItem > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatBRL(gc.investimentoItem)}</td>
+    <td class="neg-num mono">${negFormatBRL(gc.precoFinal)}</td>` : `
+    <td class="neg-num" style="color:var(--text-secondary)">—</td>
+    <td class="neg-num" style="color:var(--text-secondary)">—</td>
+    <td class="neg-num" style="color:var(--text-secondary)">—</td>
+    <td class="neg-num" style="color:var(--text-secondary)">—</td>`;
+}
 
     return `<tr>${selCell}${commonCols}${modeCols}<td><button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negRemoveProduct('${p.id}')">✕</button></td></tr>`;
   }).join('');
