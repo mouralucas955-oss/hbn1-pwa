@@ -49,6 +49,38 @@
     .logo-parceiro:hover {
       filter: grayscale(0%);
       opacity: 1;
+      }
+      .carrossel-parceiros-wrap {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+.carrossel-parceiros-trilho {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  gap: 1.5rem;
+  animation: carrosselParceiros 24s linear infinite;
+}
+.carrossel-parceiros-wrap:hover .carrossel-parceiros-trilho {
+  animation-play-state: paused;
+}
+.carrossel-parceiro-card {
+  flex: 0 0 auto;
+  width: 200px;
+  height: 110px;
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+@keyframes carrosselParceiros {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
     }
   </style>
 </head>
@@ -111,31 +143,49 @@
     </div>
 
     <!-- PAINEL DIREITO: PARCEIROS -->
-    <div class="hidden lg:flex flex-col flex-grow bg-slate-50 items-center justify-center p-12 gap-10">
-      <div class="text-center">
-        <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Nossos Parceiros</p>
-        <h2 class="text-2xl font-black text-slate-800">Marcas que trabalhamos</h2>
+<div class="hidden lg:flex flex-col flex-grow bg-slate-50 items-center justify-center p-12 gap-10 overflow-hidden">
+  <div class="text-center">
+    <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Nossos Parceiros</p>
+    <h2 class="text-2xl font-black text-slate-800">Marcas que trabalhamos</h2>
+  </div>
+
+  <div class="carrossel-parceiros-wrap w-full max-w-3xl">
+    <div class="carrossel-parceiros-trilho">
+      <!-- Conjunto 1 -->
+      <div class="carrossel-parceiro-card">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png" alt="Danone" class="h-10 w-auto object-contain">
       </div>
-      <div class="grid grid-cols-2 gap-8 w-full max-w-md">
-        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png" alt="Danone" class="h-10 w-auto object-contain">
-        </div>
-        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
-          <img src="https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp" alt="Kenvue" class="h-9 w-auto object-contain">
-        </div>
-        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
-          <img src="https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg" alt="Kimberly" class="h-9 w-auto object-contain">
-        </div>
-        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png" alt="Omron" class="h-8 w-auto object-contain">
-        </div>
-        <div class="bg-white rounded-2xl p-8 flex items-center justify-center shadow-sm border border-slate-100 aspect-video col-span-2">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png" alt="Unilever" class="h-10 w-auto object-contain">
-        </div>
+      <div class="carrossel-parceiro-card">
+        <img src="https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp" alt="Kenvue" class="h-9 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card">
+        <img src="https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg" alt="Kimberly" class="h-9 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png" alt="Omron" class="h-8 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png" alt="Unilever" class="h-10 w-auto object-contain">
+      </div>
+      <!-- Conjunto 2 (idêntico, invisível para leitor de tela) — garante o loop contínuo -->
+      <div class="carrossel-parceiro-card" aria-hidden="true">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png" alt="" class="h-10 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card" aria-hidden="true">
+        <img src="https://www.celegence.com/wp-content/uploads/2025/06/Kenvue.webp" alt="" class="h-9 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card" aria-hidden="true">
+        <img src="https://embalagemmarca.com.br/wp-content/uploads/2025/11/Kimberly-Logo.jpg" alt="" class="h-9 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card" aria-hidden="true">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/OMRON_Logo.svg/1280px-OMRON_Logo.svg.png" alt="" class="h-8 w-auto object-contain">
+      </div>
+      <div class="carrossel-parceiro-card" aria-hidden="true">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Unilever_logo.png" alt="" class="h-10 w-auto object-contain">
       </div>
     </div>
-
   </div>
+</div>
 
   <script src="api.js"></script>
 <script>
