@@ -211,7 +211,7 @@
           </div>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
-          Preço e desconto são opcionais: se não vierem no arquivo, eu busco no catálogo pela sua UF (e pelo cliente/oferta, se identificados). Só preciso do <strong>EAN ou Código</strong> + Qtd.
+          Preço e desconto são opcionais: se não vierem no arquivo, a buscar é feita no catálogo de acordo com o login. No arqquivo só precisa do <strong>EAN ou Código</strong> + Qtd.
         </p>
       </div>
 
@@ -233,17 +233,17 @@
           <button type="button" id="negSegSTSim" class="neg-seg-btn" onclick="negSetSTAtivo(true)">Com ST</button>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:8px; line-height:1.5;">
-          Quando ligado, o ST é somado ao preço cheio antes do desconto — igual ao catálogo. Só afeta itens buscados no catálogo (com EAN/Código reconhecidos).
+          Quando ligado, o ST é adicionado. Só afeta itens (com EAN/Código reconhecidos).
         </p>
       </div>
 
       <div class="neg-panel" id="negGroupPanel" style="display:none;">
-        <div class="neg-panel-title" id="negGroupTitle">Meta do grupo</div>
+        <div class="neg-panel-title" id="negGroupTitle">Meta do pedido</div>
         <div class="neg-seg" style="margin-bottom:10px;">
           <button type="button" id="negSegValor" class="neg-seg-btn neg-seg-btn-active" onclick="negSetGroupTargetType('valor')">Valor total (R$)</button>
           <button type="button" id="negSegPct" class="neg-seg-btn" onclick="negSetGroupTargetType('pct')">% Desconto médio</button>
         </div>
-        <span class="neg-label" id="negGroupInputLabel">Valor total desejado do grupo</span>
+        <span class="neg-label" id="negGroupInputLabel">Valor total desejado do pedido</span>
         <input id="negGroupTargetValue" class="neg-input mono" placeholder="Ex.: 21500,00" oninput="negOnGroupTargetInput(this.value)">
         <div id="negGroupSummary" style="margin-top:14px; display:flex; flex-direction:column; gap:8px;"></div>
       </div>
@@ -1212,7 +1212,7 @@ function negSetGroupTargetType(type) {
   NEG_GROUP_TARGET_TYPE = type;
   document.getElementById('negSegValor').classList.toggle('neg-seg-btn-active', type === 'valor');
   document.getElementById('negSegPct').classList.toggle('neg-seg-btn-active', type === 'pct');
-  document.getElementById('negGroupInputLabel').innerText = type === 'valor' ? 'Valor total desejado do grupo' : '% de desconto adicional (somado ao desconto atual de cada item)';
+  document.getElementById('negGroupInputLabel').innerText = type === 'valor' ? 'Valor total desejado do pedido' : '% de desconto adicional (somado ao desconto atual de cada item)';
   document.getElementById('negGroupTargetValue').placeholder = type === 'valor' ? 'Ex.: 21500,00' : 'Ex.: 10';
   negSaveState();
   negRenderAll();
@@ -1469,7 +1469,7 @@ function negRenderTicker() {
   // no modo grupo, o valor atual só do grupo selecionado (é sobre isso que o investimento pesa)
   const baseComparacao = NEG_MODE === 'individual' ? somaAtual : groupResult.valorAtual;
   const pctRepresentatividade = baseComparacao > 0 ? (investTotal / baseComparacao) * 100 : 0;
-  const rotuloBase = NEG_MODE === 'individual' ? 'do pedido' : 'do grupo';
+  const rotuloBase = NEG_MODE === 'individual' ? 'do pedido' : 'do pedido';
 
   document.getElementById('tkInvest').innerText = negFormatBRL(investTotal);
   document.getElementById('tkInvestPct').innerText = investTotal > 0 ? `(${negFormatPct(pctRepresentatividade)} ${rotuloBase})` : '';
@@ -1478,12 +1478,12 @@ function negRenderTicker() {
 function negRenderGroupPanel() {
   if (NEG_MODE !== 'grupo') return;
   const selected = NEG_PRODUCTS.filter(p => p.selected);
-  document.getElementById('negGroupTitle').innerText = `Meta do grupo (${selected.length} selecionado${selected.length === 1 ? '' : 's'})`;
+  document.getElementById('negGroupTitle').innerText = `Meta do pedido (${selected.length} selecionado${selected.length === 1 ? '' : 's'})`;
   const gr = negComputeGroup(selected, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
   const el = document.getElementById('negGroupSummary');
   el.innerHTML = `
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
-      <span style="color:var(--text-secondary);">Valor cheio do grupo</span><span class="mono">${negFormatBRL(gr.somaPrecoCheio)}</span>
+      <span style="color:var(--text-secondary);">Valor cheio do pedido</span><span class="mono">${negFormatBRL(gr.somaPrecoCheio)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
       <span style="color:var(--text-secondary);">Valor com desconto atual</span><span class="mono">${negFormatBRL(gr.valorAtual)}</span>
