@@ -138,9 +138,9 @@
 
   <div class="cart-topbar">
     <div style="display:flex; align-items:center; gap:12px;">
-      <a href="catalogo.html" class="cart-back">
+      <a href="catalogo.html" id="cartBotaoVoltar" class="cart-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-        Voltar ao Catálogo
+        <span id="cartBotaoVoltarTexto">Voltar ao Catálogo</span>
       </a>
       <div>
         <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Carteira de Clientes</div>
@@ -183,6 +183,18 @@
   (function() {
     const tema = localStorage.getItem('hbn1_tema') || 'light';
     document.documentElement.setAttribute('data-theme', tema);
+  })();
+  // Ajusta o botão "Voltar" conforme a origem da navegação (?origem=negociacao)
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('origem') === 'negociacao') {
+      const btn = document.getElementById('cartBotaoVoltar');
+      const txt = document.getElementById('cartBotaoVoltarTexto');
+      if (btn && txt) {
+        btn.setAttribute('href', 'negociacao.html');
+        txt.innerText = 'Voltar à Central de Investimento';
+      }
+    }
   })();
 
   const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
