@@ -156,6 +156,10 @@
                     <p id="popCliCNPJ"  class="text-slate-400 text-[10px] font-mono mt-0.5">—</p>
                     <p id="popCliID"    class="text-slate-500 text-[10px] font-mono">ID: —</p>
                   </div>
+                  <button onclick="abrirModalResumoCliente()"
+                    class="shrink-0 px-2 py-1 bg-blue-950 hover:bg-blue-900 text-blue-300 hover:text-blue-200 rounded-lg text-[10px] font-bold transition-all">
+                    ℹ️ Info
+                  </button>
                   <button onclick="limparClienteSelecionado()"
                     class="shrink-0 px-2 py-1 bg-red-950 hover:bg-red-900 text-red-400 hover:text-red-300 rounded-lg text-[10px] font-bold transition-all">
                     ✖
@@ -429,6 +433,16 @@
   <div class="flex-grow">
     <p class="font-black text-sm">Central de Investimento</p>
     <p class="text-[11px] text-slate-400">Calcular desconto adicional na negociação</p>
+   <a href="carteira.html"
+  class="w-full p-4 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl flex items-center gap-3 transition-all text-left border border-slate-200">
+  <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4"/>
+    </svg>
+  </div>
+  <div class="flex-grow">
+    <p class="font-black text-sm">Carteira de Clientes</p>
+    <p class="text-[11px] text-slate-400">Desempenho de vendas por vendedor</p>
   </div>
 </a>
 
@@ -527,6 +541,25 @@
             <span id="modalBadgeDesconto" class="bg-red-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm">0% OFF</span>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+  <!-- =====================================================================
+       MODAL — RESUMO DE VENDAS DO CLIENTE
+       ===================================================================== -->
+  <div id="modalResumoCliente" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="fecharModalResumoClienteNoBackdrop(event)">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+      <header class="p-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="min-w-0">
+          <h3 class="font-black text-sm truncate">Resumo de Vendas</h3>
+          <p id="resumoClienteNome" class="text-[11px] text-slate-300 truncate"></p>
+        </div>
+        <button onclick="fecharModalResumoCliente()" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full flex items-center justify-center transition-colors shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </header>
+      <div id="corpoResumoCliente" class="p-4 flex-grow overflow-y-auto space-y-2 no-scrollbar bg-slate-50/50">
+        <div class="text-center py-10 text-slate-400 text-sm font-medium">Carregando...</div>
       </div>
     </div>
   </div>
