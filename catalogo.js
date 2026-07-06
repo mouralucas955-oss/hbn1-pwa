@@ -691,6 +691,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
     }
 
     function limparClienteSelecionado() {
+      fecharModalResumoCliente();
       CLIENTE_SELECIONADO = null;
       OL_ATIVO = 0;
       OMRON_OL_ATIVO = 0;
@@ -1282,6 +1283,43 @@ document.addEventListener('keydown', function(e) {
     if (zoom && !zoom.classList.contains('hidden')) fecharZoomImagem();
   }
 });
+function abrirModalResumoCliente() {
+  if (!CLIENTE_SELECIONADO) return;
+  document.getElementById('resumoClienteNome').innerText = (CLIENTE_SELECIONADO.razao || '').toUpperCase();
+  document.getElementById('corpoResumoCliente').innerHTML = '<div class="text-center py-10 text-slate-400 text-sm font-medium">Carregando...</div>';
+  document.getElementById('modalResumoCliente').classList.remove('hidden');
+
+  chamarApi('resumoCliente', { uf: UF_USUARIO, codCliente: CLIENTE_SELECIONADO.id })
+    .then(resp => renderizarResumoCliente(resp))
+    .catch(() => {
+      document.getElementById('corpoResumoCliente').innerHTML = '<div class="text-center py-10 text-red-400 text-sm font-medium">Erro ao carregar o resumo.</div>';
+    });
+}
+
+function renderizarResumoCliente(resp) {
+  const corpo = document.getElementById('corpoResumoCliente');
+  if (!resp || resp.erro || !resp.fornecedores || resp.fornecedores.length === 0) {
+    corpo.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm font-medium">Nenhum histórico de faturamento encontrado para este cliente.</div>';
+    return;
+  }
+  corpo.innerHTML = resp.fornecedores.map(f => `
+    <div class="bg-white border border-slate-200 rounded-xl p-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-black text-slate-700">${f.fornecedor}</span>
+        ${f.positivado
+          ? '<span class="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Positivado</span>'
+          : '<span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">— Sem compra no mês</span>'}
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-[11px]">
+        <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Ano Anterior</span><span class="font-bold text-slate-700">${formatarParaReal(f.faturadoAnoAnterior)}</span></div>
+        <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Trimestre</span><span class="font-bold text-slate-700">${formatarParaReal(f.faturadoTri)}</span></div>
+        <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Mês Atual</span><span class="font-bold text-orange-600">${formatarParaReal(f.faturadoMesAtual)}</span></div>
+      </div>
+    </div>`).join('');
+}
+
+function fecharModalResumoCliente() { document.getElementById('modalResumoCliente').classList.add('hidden'); }
+function fecharModalResumoClienteNoBackdrop(event) { if (event.target.id === 'modalResumoCliente') fecharModalResumoCliente(); }
     // DOWNLOAD CSV
 
     // CONSTRÓI O WORKBOOK FORMATADO (compartilhado pelo carrinho normal
