@@ -116,6 +116,10 @@
 
   <div class="neg-topbar">
     <div style="display:flex; align-items:center; gap:12px;">
+      <button type="button" class="neg-back" onclick="negAbrirMenuLateral()" style="cursor:pointer;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        Menu
+      </button>
       <a href="catalogo.html" class="neg-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
         Voltar ao Catálogo
@@ -170,6 +174,7 @@
               <div id="negClienteChipNome" style="font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
               <div id="negClienteChipCnpj" style="font-size:10.5px; color:var(--text-secondary);"></div>
             </div>
+            <button type="button" class="neg-btn neg-btn-sm" onclick="negAbrirResumoCliente()" title="Mais informações">ℹ️</button>
             <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negLimparClienteNeg()">✕</button>
           </div>
           <div id="negClienteBadges" style="display:none; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
@@ -312,6 +317,33 @@
         <button type="button" class="neg-btn" onclick="negConfirmHandoff('add')">Adicionar aos existentes</button>
         <button type="button" class="neg-btn neg-btn-gold" onclick="negConfirmHandoff('replace')">Substituir lista atual</button>
       </div>
+    </div>
+  </div>
+  <!-- MENU LATERAL -->
+  <div id="negOverlayMenu" onclick="negFecharMenuLateral()" style="display:none; position:fixed; inset:0; background:rgba(8,9,13,0.6); z-index:90;"></div>
+  <div id="negPainelMenu" style="position:fixed; top:0; right:0; height:100%; width:300px; max-width:88vw; background:var(--surface-card); box-shadow:-8px 0 24px rgba(0,0,0,0.2); z-index:91; transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column;">
+    <div style="padding:16px; background:var(--surface-header); color:#fff; display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-weight:800; font-size:13px;">Menu</span>
+      <button onclick="negFecharMenuLateral()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:28px; height:28px; border-radius:999px; cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
+      <a href="carteira.html" class="neg-btn" style="text-decoration:none; justify-content:flex-start;">
+        📊 Informação de Vendas
+      </a>
+    </div>
+  </div>
+
+  <!-- MODAL — RESUMO DE VENDAS DO CLIENTE -->
+  <div id="negModalResumoCliente" class="neg-modal-overlay" style="display:none;" onclick="if(event.target===this) negFecharResumoCliente()">
+    <div class="neg-modal" style="max-width:480px;" onclick="event.stopPropagation()">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <div style="min-width:0;">
+          <div class="disp" style="font-size:15px; font-weight:700;">Resumo de Vendas</div>
+          <div id="negResumoClienteNome" style="font-size:11.5px; color:var(--text-secondary);"></div>
+        </div>
+        <button onclick="negFecharResumoCliente()" class="neg-btn neg-btn-sm">✕</button>
+      </div>
+      <div id="negCorpoResumoCliente"></div>
     </div>
   </div>
 
@@ -495,6 +527,51 @@ function negRenderBadgesCliente() {
   ).join('');
   el.style.display = 'flex';
 }
+  function negAbrirMenuLateral() {
+  document.getElementById('negOverlayMenu').style.display = 'block';
+  document.getElementById('negPainelMenu').style.transform = 'translateX(0)';
+}
+function negFecharMenuLateral() {
+  document.getElementById('negOverlayMenu').style.display = 'none';
+  document.getElementById('negPainelMenu').style.transform = 'translateX(100%)';
+}
+
+function negAbrirResumoCliente() {
+  if (!NEG_CLIENTE) return;
+  document.getElementById('negResumoClienteNome').innerText = (NEG_CLIENTE.razao || '').toUpperCase();
+  document.getElementById('negCorpoResumoCliente').innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--text-secondary); font-size:13px;">Carregando...</div>';
+  document.getElementById('negModalResumoCliente').style.display = 'flex';
+
+  chamarApi('resumoCliente', { uf: UF_USUARIO, codCliente: NEG_CLIENTE.id })
+    .then(resp => negRenderResumoCliente(resp))
+    .catch(() => {
+      document.getElementById('negCorpoResumoCliente').innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--red); font-size:13px;">Erro ao carregar o resumo.</div>';
+    });
+}
+
+function negRenderResumoCliente(resp) {
+  const corpo = document.getElementById('negCorpoResumoCliente');
+  if (!resp || resp.erro || !resp.fornecedores || resp.fornecedores.length === 0) {
+    corpo.innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--text-secondary); font-size:13px;">Nenhum histórico de faturamento encontrado para este cliente.</div>';
+    return;
+  }
+  corpo.innerHTML = resp.fornecedores.map(f => `
+    <div style="background:var(--surface-secondary); border:1px solid var(--border-subtle); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <span style="font-size:12px; font-weight:800;">${f.fornecedor}</span>
+        ${f.positivado
+          ? '<span style="font-size:9px; font-weight:800; color:var(--green); background:rgba(34,197,94,0.12); padding:2px 8px; border-radius:999px;">✓ Positivado</span>'
+          : '<span style="font-size:9px; font-weight:800; color:var(--text-secondary); background:var(--surface-tertiary); padding:2px 8px; border-radius:999px;">— Sem compra no mês</span>'}
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:11px;">
+        <div><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Ano Anterior</span><span class="mono" style="font-weight:700;">${negFormatBRL(f.faturadoAnoAnterior)}</span></div>
+        <div><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Trimestre</span><span class="mono" style="font-weight:700;">${negFormatBRL(f.faturadoTri)}</span></div>
+        <div><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Mês Atual</span><span class="mono" style="font-weight:700; color:var(--gold);">${negFormatBRL(f.faturadoMesAtual)}</span></div>
+      </div>
+    </div>`).join('');
+}
+
+function negFecharResumoCliente() { document.getElementById('negModalResumoCliente').style.display = 'none'; }
 
 async function negSetOLDanone(valor) {
   NEG_OL_DANONE = valor;
