@@ -162,18 +162,20 @@
         <div id="cartDropdownClientesTopo" class="cart-dropdown-cliente" style="display:none;"></div>
       </div>
 
-     <div class="cart-panel">
+      <div class="cart-panel" style="position:relative;">
         <div class="cart-panel-title">Ver por vendedor</div>
-        <select id="cartSelectVendedor" class="cart-select" onchange="cartOnSelecionarVendedor(this.value)">
-          <option value="">Carregando vendedores...</option>
-        </select>
+        <input id="cartBuscaVendedor" class="cart-select" style="max-width:100%;"
+               placeholder="🔍 Digite o nome do vendedor..." oninput="cartFiltrarVendedores()"
+               onfocus="cartFiltrarVendedores()" autocomplete="off">
+        <div id="cartDropdownVendedores" class="cart-dropdown-cliente" style="display:none;"></div>
       </div>
 
-      <div class="cart-panel">
+      <div class="cart-panel" style="position:relative;">
         <div class="cart-panel-title">Ver por rede</div>
-        <select id="cartSelectRede" class="cart-select" onchange="cartOnSelecionarRede(this.value)">
-          <option value="">Carregando redes...</option>
-        </select>
+        <input id="cartBuscaRede" class="cart-select" style="max-width:100%;"
+               placeholder="🔍 Digite o nome da rede..." oninput="cartFiltrarRedes()"
+               onfocus="cartFiltrarRedes()" autocomplete="off">
+        <div id="cartDropdownRedes" class="cart-dropdown-cliente" style="display:none;"></div>
       </div>
     </div>
 
@@ -270,6 +272,9 @@
   let CART_CLIENTE_ATUAL   = null; // cliente escolhido na busca direta (independe de vendedor)
   let CART_CLIENTE_RESUMO  = null; // resposta de resumoCliente para CART_CLIENTE_ATUAL
 
+  let CART_LISTA_VENDEDORES = []; // lista completa p/ a busca digitável de vendedor
+  let CART_LISTA_REDES      = []; // lista completa p/ a busca digitável de rede
+
   function cartCarregarClientesBusca() {
     chamarApi('clientes', { uf: UF_USUARIO })
       .then(lista => { CART_CLIENTES = lista || []; })
@@ -305,14 +310,14 @@
     const cliente = CART_CLIENTES.find(c => String(c.id) === String(id));
     if (!cliente) return;
 
-    // Modo "cliente direto" é independente do modo "por vendedor" — zera o outro
-    // pra não misturar as duas visões na tela.
+    // Modo "cliente direto" é independente do modo "por vendedor"/"por rede" — zera os outros
+    // pra não misturar as visões na tela.
     CART_VENDEDOR_ATUAL = null;
     CART_REDE_ATUAL = null;
     CART_DADOS = null;
     CART_FORNECEDOR_ATUAL = null;
-    document.getElementById('cartSelectVendedor').value = '';
-    document.getElementById('cartSelectRede').value = '';
+    document.getElementById('cartBuscaVendedor').value = '';
+    document.getElementById('cartBuscaRede').value = '';
 
     CART_CLIENTE_ATUAL = cliente;
     CART_CLIENTE_RESUMO = null;
@@ -345,44 +350,132 @@
     cartRenderConteudo();
   }
 
-  // Fecha o dropdown de busca de cliente ao clicar fora
+  // Fecha os dropdowns de busca ao clicar fora
   document.addEventListener('click', function(e) {
     const dropdown = document.getElementById('cartDropdownClientesTopo');
     const input = document.getElementById('cartBuscaClienteTopo');
     if (dropdown && input && !dropdown.contains(e.target) && e.target !== input) {
       dropdown.style.display = 'none';
     }
+
+    const dropdownV = document.getElementById('cartDropdownVendedores');
+    const inputV = document.getElementById('cartBuscaVendedor');
+    if (dropdownV && inputV && !dropdownV.contains(e.target) && e.target !== inputV) {
+      dropdownV.style.display = 'none';
+    }
+
+    const dropdownR = document.getElementById('cartDropdownRedes');
+    const inputR = document.getElementById('cartBuscaRede');
+    if (dropdownR && inputR && !dropdownR.contains(e.target) && e.target !== inputR) {
+      dropdownR.style.display = 'none';
+    }
   });
 
+  // ── CARREGAMENTO DAS LISTAS (vendedores e redes) ─────────────────────
   function cartCarregarVendedores() {
-    const select = document.getElementById('cartSelectVendedor');
     chamarApi('vendedores', { uf: UF_USUARIO })
-      .then(lista => {
-        if (!lista || lista.length === 0) {
-          select.innerHTML = '<option value="">Nenhum vendedor cadastrado</option>';
+      .then(lista => { CART_LISTA_VENDEDORES = lista || []; })
+      .catch(() => { CART_LISTA_VENDEDORES = []; });
+  }
+
+  function cartCarregarRedes() {
+    chamarApi('redes', { uf: UF_USUARIO })
+      .then(lista => { CART_LISTA_REDES = lista || []; })
+      .catch(() => { CART_LISTA_REDES = []; });
+  }
+
+  // ── BUSCA DIGITÁVEL — VENDEDOR ────────────────────────────────────────
+  function cartFiltrarVendedores() {
+    const termo = document.getElementById('cartBuscaVendedor').value.trim().toLowerCase();
+    const dropdown = document.getElementById('cartDropdownVendedores');
+    const filtrados = termo
+      ? CART_LISTA_VENDEDORES.filter(v => v.toLowerCase().includes(termo))
+      : CART_LISTA_VENDEDORES;
+
+    if (filtrados.length === 0) {
+      dropdown.innerHTML = '<div class="cart-dropdown-cliente-item" style="cursor:default; color:var(--text-secondary);">Nenhum vendedor encontrado</div>';
+    } else {
+      dropdown.innerHTML = filtrados.slice(0, 20).map(v => `
+        <div class="cart-dropdown-cliente-item" onclick="cartSelecionarVendedorDropdown('${v.replace(/'/g, "\\'")}')">
+          <div class="nome">${v}</div>
+        </div>`).join('');
+    }
+    dropdown.style.display = 'block';
+  }
+
+  function cartSelecionarVendedorDropdown(nome) {
+    document.getElementById('cartBuscaVendedor').value = nome;
+    document.getElementById('cartDropdownVendedores').style.display = 'none';
+    cartOnSelecionarVendedor(nome);
+  }
+
+  function cartOnSelecionarVendedor(nome) {
+    CART_FORNECEDOR_ATUAL = null;
+    CART_CLIENTE_ATUAL = null;
+    CART_CLIENTE_RESUMO = null;
+    document.getElementById('cartBuscaClienteTopo').value = '';
+    document.getElementById('cartDropdownClientesTopo').style.display = 'none';
+
+    // Zera o filtro de rede pra não misturar as duas visões
+    CART_REDE_ATUAL = null;
+    document.getElementById('cartBuscaRede').value = '';
+
+    if (!nome) {
+      CART_VENDEDOR_ATUAL = null;
+      CART_DADOS = null;
+      document.getElementById('cartResumoTopo').style.display = 'none';
+      cartRenderConteudo();
+      return;
+    }
+
+    CART_VENDEDOR_ATUAL = nome;
+    document.getElementById('cartConteudo').innerHTML =
+      '<div class="cart-panel"><div class="cart-loading">Calculando carteira de ' + nome + '...</div></div>';
+
+    chamarApi('carteiraVendedor', { uf: UF_USUARIO, vendedor: nome })
+      .then(resp => {
+        if (!resp || resp.erro) {
+          document.getElementById('cartConteudo').innerHTML =
+            '<div class="cart-panel"><div class="cart-empty"><div class="disp">Não foi possível carregar</div><div>' +
+            (resp && resp.mensagem ? resp.mensagem : 'Tente novamente em instantes.') + '</div></div></div>';
           return;
         }
-        select.innerHTML = '<option value="">Selecione um vendedor...</option>' +
-          lista.map(v => `<option value="${v.replace(/"/g, '&quot;')}">${v}</option>`).join('');
+        CART_DADOS = resp;
+        document.getElementById('cartResumoTopo').style.display = 'block';
+        document.getElementById('cartTopoVendedor').innerText = resp.vendedor;
+        document.getElementById('cartTopoTotalClientes').innerText =
+          resp.totalClientesCarteira + ' cliente' + (resp.totalClientesCarteira !== 1 ? 's' : '') + ' na carteira';
+        cartRenderConteudo();
       })
       .catch(() => {
-        select.innerHTML = '<option value="">Erro ao carregar vendedores</option>';
+        document.getElementById('cartConteudo').innerHTML =
+          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexão</div><div>Não foi possível buscar os dados. Tente novamente.</div></div></div>';
       });
   }
-  function cartCarregarRedes() {
-    const select = document.getElementById('cartSelectRede');
-    chamarApi('redes', { uf: UF_USUARIO })
-      .then(lista => {
-        if (!lista || lista.length === 0) {
-          select.innerHTML = '<option value="">Nenhuma rede encontrada</option>';
-          return;
-        }
-        select.innerHTML = '<option value="">Selecione uma rede...</option>' +
-          lista.map(r => `<option value="${r.replace(/"/g, '&quot;')}">${r}</option>`).join('');
-      })
-      .catch(() => {
-        select.innerHTML = '<option value="">Erro ao carregar redes</option>';
-      });
+
+  // ── BUSCA DIGITÁVEL — REDE ────────────────────────────────────────────
+  function cartFiltrarRedes() {
+    const termo = document.getElementById('cartBuscaRede').value.trim().toLowerCase();
+    const dropdown = document.getElementById('cartDropdownRedes');
+    const filtrados = termo
+      ? CART_LISTA_REDES.filter(r => r.toLowerCase().includes(termo))
+      : CART_LISTA_REDES;
+
+    if (filtrados.length === 0) {
+      dropdown.innerHTML = '<div class="cart-dropdown-cliente-item" style="cursor:default; color:var(--text-secondary);">Nenhuma rede encontrada</div>';
+    } else {
+      dropdown.innerHTML = filtrados.slice(0, 20).map(r => `
+        <div class="cart-dropdown-cliente-item" onclick="cartSelecionarRedeDropdown('${r.replace(/'/g, "\\'")}')">
+          <div class="nome">${r}</div>
+        </div>`).join('');
+    }
+    dropdown.style.display = 'block';
+  }
+
+  function cartSelecionarRedeDropdown(nome) {
+    document.getElementById('cartBuscaRede').value = nome;
+    document.getElementById('cartDropdownRedes').style.display = 'none';
+    cartOnSelecionarRede(nome);
   }
 
   function cartOnSelecionarRede(nome) {
@@ -394,7 +487,7 @@
 
     // Zera o filtro de vendedor pra não misturar as duas visões
     CART_VENDEDOR_ATUAL = null;
-    document.getElementById('cartSelectVendedor').value = '';
+    document.getElementById('cartBuscaVendedor').value = '';
 
     if (!nome) {
       CART_REDE_ATUAL = null;
