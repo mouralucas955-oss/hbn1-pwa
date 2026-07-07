@@ -249,9 +249,10 @@
   // dos 3 meses ANTERIORES ao mês atual (ou seja, NÃO inclui o mês corrente).
   // Se a API ainda estiver somando o mês atual dentro desse total, o ajuste
   // precisa ser feito na origem (api.js / backend), não aqui no front.
-  function cartMediaMensal(faturadoTri) {
-    return (Number(faturadoTri) || 0) / 3;
-  }
+ function cartMediaMensal(faturadoTri, meses) {
+  const divisor = (Number(meses) > 0) ? Number(meses) : 3;
+  return (Number(faturadoTri) || 0) / divisor;
+}
 
   // ── Variação YoY: Fat. Mês Atual vs Fat. Ano Anterior ────────────────
   function cartCalcVariacaoYoY(anoAnterior, mesAtual) {
