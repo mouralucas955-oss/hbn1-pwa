@@ -332,6 +332,19 @@
       </a>
     </div>
   </div>
+  <div id="negModalPedidosSalvosOverlay" class="neg-modal-overlay" style="display:none;" onclick="if(event.target===this) negFecharModalPedidosSalvos()">
+  <div class="neg-modal" style="max-width:680px;" onclick="event.stopPropagation()">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <div class="disp" style="font-size:16px;">Pedidos Salvos</div>
+      <span id="negLabelQtdPedidosSalvos" style="font-size:10.5px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; background:var(--surface-secondary); padding:3px 9px; border-radius:999px;">0 pedidos</span>
+    </div>
+    <div class="neg-row" style="justify-content:flex-end; margin-bottom:10px;">
+      <button type="button" id="negBtnLimparTodosSalvos" class="neg-btn neg-btn-sm neg-btn-danger" style="display:none;" onclick="negLimparTodosPedidosSalvos()">Limpar Tudo</button>
+      <button type="button" class="neg-btn neg-btn-sm" onclick="negFecharModalPedidosSalvos()">Fechar</button>
+    </div>
+    <div id="negListaPedidosSalvos" style="display:flex; flex-direction:column; gap:10px; max-height:60vh; overflow-y:auto;"></div>
+  </div>
+</div>
 
   <!-- PAINEL LATERAL — RESUMO DE VENDAS DO CLIENTE -->
 <div id="negResumoOverlay" onclick="negFecharResumoCliente()" style="display:none; position:fixed; inset:0; background:rgba(8,9,13,0.35); z-index:95;"></div>
@@ -1710,7 +1723,242 @@ function negRenderTable() {
       </table>
     </div>`;
 }
+/* =========================================================================
+   PEDIDOS SALVOS — mesmo padrão do catálogo (CHAVE_PEDIDOS_SALVOS),
+   mas guardando o estado completo da negociação (cliente, modo, ST, OL).
+   ========================================================================= */
+const NEG_CHAVE_PEDIDOS_SALVOS = 'hbn1_negociacao_pedidos_salvos';
 
+function negCarregarPedidosSalvos() {
+  try { return JSON.parse(localStorage.getItem(NEG_CHAVE_PEDIDOS_SALVOS) || '[]'); }
+  catch (e) { return []; }
+}
+
+function negPersistirPedidosSalvos(lista) {
+  try { localStorage.setItem(NEG_CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista)); } catch (e) {}
+  negAtualizarBadgePedidosSalvos();
+}
+
+function negAtualizarBadgePedidosSalvos() {
+  const n = negCarregarPedidosSalvos().length;
+  const badge = document.getElementById('negBadgePedidosSalvos');
+  if (badge) { badge.innerText = n; badge.style.display = n > 0 ? 'flex' : 'none'; }
+}
+
+// Igual ao catálogo: salva o pedido atual e já inicia um novo (limpa a lista em edição).
+function negSalvarPedidoAtual() {
+  if (NEG_PRODUCTS.length === 0) { alert('Não há produtos na lista para salvar.'); return; }
+
+  const nomeSugerido = NEG_CLIENTE && NEG_CLIENTE.razao
+    ? NEG_CLIENTE.razao.toUpperCase()
+    : ('Pedido ' + new Date().toLocaleDateString('pt-BR'));
+  const nome = prompt('Nome para identificar este pedido:', nomeSugerido);
+  if (nome === null) return; // cancelou
+  const nomeFinal = nome.trim() || nomeSugerido;
+
+  let somaPrecoCheio = 0, somaAtual = 0, somaInvest = 0;
+  NEG_PRODUCTS.forEach(p => {
+    const c = negComputeIndividual(p);
+    somaPrecoCheio += c.preco * c.qtd;
+    somaAtual += c.preco * c.qtd * (1 - c.descontoAtual / 100);
+    somaInvest += c.investimento;
+  });
+  const selected = NEG_PRODUCTS.filter(p => p.selected);
+  const gr = negComputeGroup(selected, NEG_GROUP_TARGET_TYPE, NEG_GROUP_TARGET_VALUE);
+  const investTotal = NEG_MODE === 'individual' ? somaInvest : Math.max(0, gr.investimentoTotal);
+
+  const agora = new Date();
+  const pedido = {
+    id: 'NEG_' + agora.getTime(),
+    timestamp: agora.getTime(),
+    data: agora.toLocaleString('pt-BR'),
+    nome: nomeFinal,
+    clienteNome: NEG_CLIENTE ? (NEG_CLIENTE.razao || '') : '',
+    clienteCnpj: NEG_CLIENTE ? (NEG_CLIENTE.cnpj || '') : '',
+    modo: NEG_MODE,
+    totalProdutos: NEG_PRODUCTS.length,
+    valorCheio: somaPrecoCheio,
+    valorComDescontoAtual: somaAtual,
+    investimentoTotal: investTotal,
+    // Snapshot completo — permite carregar de volta ou reexportar o Excel depois
+    estado: {
+      products: NEG_PRODUCTS, mode: NEG_MODE,
+      groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
+      cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO,
+      olDanone: NEG_OL_DANONE, olOmron: NEG_OL_OMRON
+    }
+  };
+
+  const lista = negCarregarPedidosSalvos();
+  lista.unshift(pedido); // mais recente primeiro, igual ao catálogo
+  negPersistirPedidosSalvos(lista);
+
+  // Igual ao catálogo: salva e já inicia um pedido novo em branco
+  NEG_PRODUCTS = [];
+  NEG_CLIENTE = null;
+  NEG_OL_DANONE = 0;
+  NEG_OL_OMRON = 0;
+  negAtualizarPainelOfertas();
+  negSaveState();
+  negRenderAll();
+
+  alert('Pedido "' + nomeFinal + '" salvo. Uma nova lista em branco foi iniciada.');
+}
+
+function negAbrirModalPedidosSalvos() {
+  negRenderizarListaPedidosSalvos();
+  document.getElementById('negModalPedidosSalvosOverlay').style.display = 'flex';
+}
+
+function negFecharModalPedidosSalvos() {
+  document.getElementById('negModalPedidosSalvosOverlay').style.display = 'none';
+}
+
+function negRenderizarListaPedidosSalvos() {
+  const lista = negCarregarPedidosSalvos();
+  const corpo = document.getElementById('negListaPedidosSalvos');
+  const label = document.getElementById('negLabelQtdPedidosSalvos');
+  const btnLimpar = document.getElementById('negBtnLimparTodosSalvos');
+
+  label.innerText = lista.length + (lista.length === 1 ? ' pedido' : ' pedidos');
+  btnLimpar.style.display = lista.length > 0 ? 'inline-flex' : 'none';
+
+  if (lista.length === 0) {
+    corpo.innerHTML = `<div class="neg-empty" style="padding:30px 10px;">
+      <div class="disp" style="font-size:14px;">Nenhum pedido salvo ainda</div>
+      <div style="font-size:12px;">Monte a negociação e clique em "Salvar Pedido e Iniciar Novo" no menu.</div>
+    </div>`;
+    return;
+  }
+
+  corpo.innerHTML = lista.map(p => {
+    const liquido = negFormatBRL(p.valorComDescontoAtual - p.investimentoTotal);
+    return `
+    <div style="border:1px solid var(--border-subtle); border-radius:10px; overflow:hidden;">
+      <div style="padding:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div style="min-width:0;">
+          <div style="font-weight:700; font-size:13px;">${(p.nome || 'Pedido').replace(/</g,'&lt;')}</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
+            ${p.clienteNome ? p.clienteNome.toUpperCase() + (p.clienteCnpj ? ' • ' + p.clienteCnpj : '') : 'Sem cliente vinculado'}
+          </div>
+          <div style="font-size:10.5px; color:var(--text-secondary); margin-top:2px;">
+            ${p.data} • ${p.totalProdutos} produto(s) • Modo: ${p.modo === 'individual' ? 'Por item' : 'Por grupo'}
+          </div>
+        </div>
+        <div style="text-align:right; flex-shrink:0;">
+          <div class="mono" style="font-size:12.5px; font-weight:800; color:var(--gold);">${negFormatBRL(p.investimentoTotal)}</div>
+          <div style="font-size:9.5px; color:var(--text-secondary); text-transform:uppercase;">Investimento</div>
+          <div class="mono" style="font-size:11px; font-weight:700; color:var(--green); margin-top:2px;">${liquido}</div>
+          <div style="font-size:9.5px; color:var(--text-secondary); text-transform:uppercase;">Valor líquido final</div>
+        </div>
+      </div>
+      <div style="padding:0 12px 12px;" class="neg-row">
+        <button type="button" class="neg-btn neg-btn-sm" onclick="negTogglePreviewPedidoSalvo('${p.id}')">Ver Itens</button>
+        <button type="button" class="neg-btn neg-btn-sm neg-btn-gold" onclick="negCarregarPedidoSalvo('${p.id}')">Carregar na Tela</button>
+        <button type="button" class="neg-btn neg-btn-sm" onclick="negBaixarPedidoSalvo('${p.id}')">Baixar Excel</button>
+        <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negExcluirPedidoSalvo('${p.id}')">Excluir</button>
+      </div>
+      <div id="negPreview_${p.id}" style="display:none; border-top:1px solid var(--border-subtle); background:var(--surface-secondary); padding:10px 12px; max-height:220px; overflow-y:auto;"></div>
+    </div>`;
+  }).join('');
+}
+
+function negTogglePreviewPedidoSalvo(id) {
+  const el = document.getElementById('negPreview_' + id);
+  if (!el) return;
+  const abrir = el.style.display === 'none';
+  el.style.display = abrir ? 'block' : 'none';
+  if (!abrir) return;
+
+  const pedido = negCarregarPedidosSalvos().find(p => p.id === id);
+  if (!pedido) return;
+  const itens = (pedido.estado.products || []).slice(0, 200); // trava de segurança visual
+  el.innerHTML = itens.map(item => {
+    const preco = negParseNumberBR(item.preco) || 0;
+    const qtd = negParseNumberBR(item.qtd) || 0;
+    return `<div style="display:flex; justify-content:space-between; gap:8px; padding:4px 0; border-bottom:1px solid var(--border-subtle); font-size:11.5px;">
+      <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${(item.produto || '').replace(/</g,'&lt;')}</span>
+      <span class="mono" style="flex-shrink:0; color:var(--text-secondary);">${qtd} un × ${negFormatBRL(preco)}</span>
+    </div>`;
+  }).join('') || '<div style="font-size:11.5px; color:var(--text-secondary);">Sem itens.</div>';
+}
+
+function negCarregarPedidoSalvo(id) {
+  const pedido = negCarregarPedidosSalvos().find(p => p.id === id);
+  if (!pedido) return;
+  if (NEG_PRODUCTS.length > 0 && !confirm('Isso vai substituir a lista atual pelo pedido "' + pedido.nome + '". Continuar?')) return;
+
+  const d = pedido.estado;
+  NEG_PRODUCTS = Array.isArray(d.products) ? d.products : [];
+  NEG_MODE = d.mode || 'individual';
+  NEG_GROUP_TARGET_TYPE = d.groupTargetType || 'valor';
+  NEG_GROUP_TARGET_VALUE = d.groupTargetValue || '';
+  NEG_CLIENTE = d.cliente || null;
+  NEG_ST_ATIVO = !!d.stAtivo;
+  NEG_OL_DANONE = d.olDanone || 0;
+  NEG_OL_OMRON = d.olOmron || 0;
+
+  document.getElementById('negGroupTargetValue').value = NEG_GROUP_TARGET_VALUE || '';
+  negSetMode(NEG_MODE);
+  negSetGroupTargetType(NEG_GROUP_TARGET_TYPE);
+  negSetSTAtivo(NEG_ST_ATIVO);
+  negAtualizarPainelOfertas();
+  if (NEG_CLIENTE && NEG_CLIENTE.id) negPrefetchResumoCliente(NEG_CLIENTE.id);
+
+  negSaveState();
+  negRenderAll();
+  negFecharModalPedidosSalvos();
+}
+
+function negExcluirPedidoSalvo(id) {
+  if (!confirm('Excluir este pedido salvo? Essa ação não pode ser desfeita.')) return;
+  negPersistirPedidosSalvos(negCarregarPedidosSalvos().filter(p => p.id !== id));
+  negRenderizarListaPedidosSalvos();
+}
+
+function negLimparTodosPedidosSalvos() {
+  if (!confirm('Remover TODOS os pedidos salvos? Essa ação não pode ser desfeita.')) return;
+  negPersistirPedidosSalvos([]);
+  negRenderizarListaPedidosSalvos();
+}
+
+// Reexporta o Excel de um pedido salvo, reaproveitando negExportExcel():
+// troca os globais temporariamente pelo snapshot salvo, gera o arquivo,
+// e restaura o estado em edição em seguida (sem afetar a tela atual).
+async function negBaixarPedidoSalvo(id) {
+  const pedido = negCarregarPedidosSalvos().find(p => p.id === id);
+  if (!pedido) return;
+
+  const backup = {
+    products: NEG_PRODUCTS, mode: NEG_MODE,
+    groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
+    cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO,
+    olDanone: NEG_OL_DANONE, olOmron: NEG_OL_OMRON
+  };
+
+  const d = pedido.estado;
+  NEG_PRODUCTS = d.products || [];
+  NEG_MODE = d.mode || 'individual';
+  NEG_GROUP_TARGET_TYPE = d.groupTargetType || 'valor';
+  NEG_GROUP_TARGET_VALUE = d.groupTargetValue || '';
+  NEG_CLIENTE = d.cliente || null;
+  NEG_ST_ATIVO = !!d.stAtivo;
+  NEG_OL_DANONE = d.olDanone || 0;
+  NEG_OL_OMRON = d.olOmron || 0;
+
+  try {
+    await negExportExcel();
+  } finally {
+    NEG_PRODUCTS = backup.products;
+    NEG_MODE = backup.mode;
+    NEG_GROUP_TARGET_TYPE = backup.groupTargetType;
+    NEG_GROUP_TARGET_VALUE = backup.groupTargetValue;
+    NEG_CLIENTE = backup.cliente;
+    NEG_ST_ATIVO = backup.stAtivo;
+    NEG_OL_DANONE = backup.olDanone;
+    NEG_OL_OMRON = backup.olOmron;
+  }
+}
 /* =========================================================================
    INIT
    ========================================================================= */
@@ -1729,6 +1977,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (NEG_CLIENTE && NEG_CLIENTE.id) negPrefetchResumoCliente(NEG_CLIENTE.id);
   negRenderAll();
   negCheckHandoff();
+  negAtualizarBadgePedidosSalvos();
 });
 </script>
 </body>
