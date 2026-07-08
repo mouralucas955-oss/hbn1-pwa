@@ -221,31 +221,9 @@
   }
 
   function hitCarregarRedes() {
-  return chamarApi('redesHit', { uf: UF_USUARIO }).then(lista => { HIT_LISTA_REDES = lista || []; })
-    .catch(() => { HIT_LISTA_REDES = []; });
-}
-  function buscarRedesHit(uf) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var redesSet = {};
-    ['CLIENTES', 'CLIENTES NORDESTE'].forEach(function(nomeAba) {
-      var plan = ss.getSheetByName(nomeAba);
-      if (!plan) return;
-      var ultimaLinha = plan.getLastRow();
-      if (ultimaLinha <= 1) return;
-      var dados = plan.getRange(2, 1, ultimaLinha - 1, 10).getValues();
-      for (var i = 0; i < dados.length; i++) {
-        var rede   = String(dados[i][3] || '').trim();
-        var equipe = String(dados[i][8] || '').trim().toUpperCase();
-        if (rede !== '' && equipe === 'DEDICADO') redesSet[rede] = true;
-      }
-    });
-    return JSON.stringify(Object.keys(redesSet).sort());
-  } catch (erro) {
-    Logger.log('Erro ao buscar redes HIT: ' + erro.toString());
-    return '[]';
+    return chamarApi('redes', { uf: UF_USUARIO }).then(lista => { HIT_LISTA_REDES = lista || []; })
+      .catch(() => { HIT_LISTA_REDES = []; });
   }
-}
 
   function hitRenderPeriodo() {
     const wrap = document.getElementById('hitPeriodoWrap');
