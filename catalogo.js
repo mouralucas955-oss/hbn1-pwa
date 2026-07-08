@@ -3455,7 +3455,8 @@ const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v3_';
 const PDF_IMG_LARGURA_PROXY = 480;
 const PDF_CARDS_POR_PAGINA = 12;
 let _PDF_GERANDO = false;
-const PDF_IMG_PROXY_PROPRIO = 'https://dry-hall-0bba.mouralucas955.workers.dev/?url='; // Ex.: 'https://SEU-DOMINIO.com/img-proxy?url='
+
+const PDF_IMG_PROXY_PROPRIO = 'https://dry-hall-0bba.mouralucas955.workers.dev/?url=';
 
 function _normalizarUrlImagem(urlOriginal) {
   let url = String(urlOriginal || '').trim();
@@ -3614,20 +3615,6 @@ function _gerarHtmlCardPdf(p, imgBase64) {
             <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
           </div>
         </div>
-  ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
-
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-    <div style="font-size:15px;font-weight:800;color:#e8620a;line-height:1.2;white-space:nowrap;">
-      ${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}
-    </div>
-
-    ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7px;font-weight:700;padding:2px 5px;border-radius:5px;white-space:nowrap;">ECON. ${formatarParaReal(economia)}</span>` : ''}
-  </div>
-
-  <div style="text-align:right;margin-top:3px;">
-    <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
-  </div>
-</div>
       </div>
     </div>`;
 }
@@ -3644,8 +3631,6 @@ function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
   const clienteTxt  = info.cliente ? `Cliente: ${(info.cliente.razao || '').toUpperCase()}` : '';
   const vendedorTxt = info.vendedor ? `Vendedor: ${info.vendedor}` : '';
   const subLinha = [clienteTxt, vendedorTxt, info.data].filter(Boolean).join(' | ');
-  const clienteTxt = info.cliente ? `Cliente: ${(info.cliente.razao || '').toUpperCase()}` : '';
-const subLinha = [clienteTxt, info.data].filter(Boolean).join(' | ');
 
   const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id])).join('');
 
