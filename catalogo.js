@@ -3576,9 +3576,9 @@ function _gerarHtmlCardPdf(p, imgBase64) {
       <div style="flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;">
         <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
 
-        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.25;margin:2px 0 5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;flex-shrink:0;">
-          ${p.descricao || ''}
-        </p>
+        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.25;margin:2px 0 5px;max-height:37.5px;overflow:hidden;flex-shrink:0;">
+  ${p.descricao || ''}
+</p>
 
         <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
           <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
