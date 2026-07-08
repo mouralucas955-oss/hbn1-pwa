@@ -39,33 +39,51 @@ function montarItensPendentesHit() {
     (al.grupos || []).forEach(g => {
       if (g.positivado) return;
 
-      // Entre as alternativas do grupo (itens "OU"), sugere a de maior estoque
+      // Resolve TODOS os produtos das alternativas do grupo (não só o de maior estoque)
+      // — precisamos disso para detectar se o usuário já adicionou QUALQUER uma delas
+      // manualmente no catálogo, mesmo que não seja a que o sistema sugeriu.
       let melhor = null;
+      const produtosDoGrupo = [];
       (g.itens || []).forEach(item => {
         const eanAlvo = normalizarSoDigitos(item.ean);
         let p = BD_PRODUTOS.find(prod => normalizarSoDigitos(prod.ean) === eanAlvo && eanAlvo !== '');
         if (!p && item.cod) p = BD_PRODUTOS.find(prod => String(prod.id).trim() === String(item.cod).trim());
+        if (p) produtosDoGrupo.push(p);
         const estoque = p ? Number(p.estoque || 0) : 0;
         if (!melhor || estoque > melhor.estoque) melhor = { item, produto: p, estoque };
       });
 
-      // Só sugere se o produto existir no catálogo atual
       if (melhor && melhor.produto) {
-        HIT_ITENS_PENDENTES.push({ alavanca: al.alavanca, grupo: g.grupo, item: melhor.item, produto: melhor.produto });
+        HIT_ITENS_PENDENTES.push({
+          alavanca: al.alavanca,
+          grupo: g.grupo,
+          item: melhor.item,
+          produto: melhor.produto,
+          produtosDoGrupo // todas as alternativas "OU" já resolvidas no catálogo atual
+        });
       }
     });
   });
+}
+// Verifica se QUALQUER alternativa ("OU") do grupo já está no carrinho.
+// Retorna o produto encontrado, ou null se nenhuma alternativa foi adicionada.
+function _produtoDoGrupoNoCarrinho(itemHit) {
+  const lista = (itemHit.produtosDoGrupo && itemHit.produtosDoGrupo.length)
+    ? itemHit.produtosDoGrupo
+    : [itemHit.produto];
+  return lista.find(p => p && (CARRINHO[p.id] || 0) > 0) || null;
 }
 
 function atualizarBotaoSugestaoHit() {
   const btn   = document.getElementById('btnSugestaoHit');
   const badge = document.getElementById('badgeSugestaoHit');
   if (!btn) return;
-  // Os itens do HIT são todos Unilever — só mostra o botão navegando nesse portal
   const estaNaUnilever = filtroFornecedorAtual === 'UNILEVER';
-  const qtd = HIT_ITENS_PENDENTES.length;
-  btn.classList.toggle('hidden', !estaNaUnilever || qtd === 0);
-  if (badge) badge.innerText = qtd;
+  // Conta só o que REALMENTE ainda falta — itens já satisfeitos por alguma
+  // alternativa do OU não entram no contador.
+  const qtdPendenteReal = HIT_ITENS_PENDENTES.filter(i => !_produtoDoGrupoNoCarrinho(i)).length;
+  btn.classList.toggle('hidden', !estaNaUnilever || HIT_ITENS_PENDENTES.length === 0);
+  if (badge) badge.innerText = qtdPendenteReal;
 }
 
 function abrirPainelSugestaoHit() {
@@ -77,7 +95,24 @@ function abrirPainelSugestaoHit() {
   const corpo = document.getElementById('corpoSugestaoHit');
   let acBruto = 0, acLiquido = 0;
 
-  corpo.innerHTML = HIT_ITENS_PENDENTES.map(({ alavanca, item, produto }) => {
+  corpo.innerHTML = HIT_ITENS_PENDENTES.map((itemHit) => {
+    const { alavanca, item, produto } = itemHit;
+    const produtoNoCarrinho = _produtoDoGrupoNoCarrinho(itemHit);
+
+    // Alguma alternativa do OU já está no carrinho — mostra como concluído,
+    // usando o produto REALMENTE adicionado (pode não ser o "melhor" sugerido)
+    if (produtoNoCarrinho) {
+      return `
+        <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+          <img src="${produtoNoCarrinho.imagens}" class="w-12 h-12 object-contain bg-white rounded-lg p-1 border border-emerald-100 shrink-0 mix-blend-multiply">
+          <div class="min-w-0 flex-grow">
+            <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider">${alavanca}</span>
+            <p class="text-xs font-bold text-slate-800 truncate">${produtoNoCarrinho.descricao || produtoNoCarrinho.id}</p>
+            <p class="text-[10px] text-emerald-600 font-bold">✅ Já no pedido (${CARRINHO[produtoNoCarrinho.id]} un)</p>
+          </div>
+        </div>`;
+    }
+
     const { precoFinal, precoOriginal } = calcularPrecos(produto);
     acBruto   += precoOriginal;
     acLiquido += precoFinal;
@@ -111,11 +146,14 @@ function adicionarItensSugestaoHit() {
   if (HIT_ITENS_PENDENTES.length === 0) return;
 
   let adicionados = 0;
-  HIT_ITENS_PENDENTES.forEach(({ produto }) => {
+  HIT_ITENS_PENDENTES.forEach((itemHit) => {
+    if (_produtoDoGrupoNoCarrinho(itemHit)) return; // já satisfeito por alguma alternativa do OU
+
+    const { produto } = itemHit;
     const estoqueMax = Number(produto.estoque || 0);
-    if (estoqueMax <= 0) return; // não adiciona item sem estoque
+    if (estoqueMax <= 0) return;
     const qtdAtual = CARRINHO[produto.id] || 0;
-    if (qtdAtual >= estoqueMax) return; // já está no limite do estoque
+    if (qtdAtual >= estoqueMax) return;
 
     CARRINHO[produto.id] = qtdAtual + 1;
     adicionados++;
@@ -131,7 +169,7 @@ function adicionarItensSugestaoHit() {
   if (adicionados > 0) {
     mostrarToast('success', `${adicionados} item(ns) da sugestão HIT adicionados ao pedido.`);
   } else {
-    mostrarToast('warning', 'Nenhum item pôde ser adicionado (sem estoque disponível).');
+    mostrarToast('warning', 'Nenhum item pôde ser adicionado (sem estoque disponível ou já no pedido).');
   }
 }
 
@@ -1080,6 +1118,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       _atualizarEstadoVisualCard(idProd);
       atualizarIndicadoresFinanceirosGlobais();
       atualizarIndicadorMinimosBarra();
+      atualizarBotaoSugestaoHit();  
     }
 
     function alterarQtd(idProd, mudanca) {
@@ -1096,6 +1135,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       _atualizarEstadoVisualCard(idProd);
       atualizarIndicadoresFinanceirosGlobais();
     atualizarIndicadorMinimosBarra();
+    atualizarBotaoSugestaoHit();
     }
 
     // Atualiza borda/badge do card (estado "no carrinho") sem precisar re-renderizar o grid inteiro
@@ -1175,6 +1215,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       });
       atualizarIndicadoresFinanceirosGlobais();
       atualizarIndicadorMinimosBarra();
+      atualizarBotaoSugestaoHit();  
     }
 
     function limparPedidoCompleto() {
