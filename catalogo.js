@@ -3481,7 +3481,11 @@ async function _fetchComTimeout(url, ms = 12000) {
 
 async function _baixarImagemComoBase64(url, timeoutMs) {
   const resp = await _fetchComTimeout(url, timeoutMs);
-  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  if (!resp.ok) {
+    const erro = new Error('HTTP ' + resp.status);
+    erro.status = resp.status;
+    throw erro;
+  }
   const blob = await resp.blob();
   if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
   return await new Promise((resolve, reject) => {
@@ -3492,40 +3496,46 @@ async function _baixarImagemComoBase64(url, timeoutMs) {
   });
 }
 
-
-async function _obterImagemBase64ComCache(urlOriginal, tentativas = 3) {
+async function _obterImagemBase64ComCache(urlOriginal, tentativas = 4) {
   if (!urlOriginal) return null;
   const chave = PDF_IMG_CACHE_PREFIX + urlOriginal;
   const cache = localStorage.getItem(chave);
   if (cache) return cache;
 
-  // 1) Proxy principal (weserv), com resolução maior e mais tentativas
+  // Proxy principal — agora com mais tentativas e espera maior se for rate limit (429)
   for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
     try {
-      const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxy(urlOriginal), 10000);
+      const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxy(urlOriginal), 15000);
       try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
       return base64;
     } catch (e) {
       console.warn(`Imagem (proxy principal) falhou (tentativa ${tentativa}/${tentativas}):`, urlOriginal, e.message);
-      if (tentativa < tentativas) await new Promise(r => setTimeout(r, 300 * tentativa));
+      if (tentativa < tentativas) {
+        const espera = e.status === 429 ? 1500 * tentativa : 400 * tentativa;
+        await new Promise(r => setTimeout(r, espera));
+      }
     }
   }
 
-  // 2) Proxy principal esgotou as tentativas — tenta o alternativo antes de desistir
-  try {
-    const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxyFallback(urlOriginal), 12000);
-    try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
-    return base64;
-  } catch (e) {
-    console.warn('Imagem (proxy alternativo) também falhou:', urlOriginal, e.message);
-    return null;
+  // Proxy alternativo — antes só tentava 1x, agora 2x
+  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+    try {
+      const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxyFallback(urlOriginal), 15000);
+      try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
+      return base64;
+    } catch (e) {
+      console.warn(`Imagem (proxy alternativo) falhou (tentativa ${tentativa}/2):`, urlOriginal, e.message);
+      if (tentativa < 2) await new Promise(r => setTimeout(r, 600 * tentativa));
+    }
   }
+
+  return null;
 }
 
-// Busca imagens em paralelo (com limite de concorrência) em vez de uma por vez
-async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia = 6, onProgresso) {
+async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia = 3, onProgresso) {
   let indice = 0, concluidas = 0;
-  async function worker() {
+  async function worker(numeroWorker) {
+    await new Promise(r => setTimeout(r, numeroWorker * 150)); // escalona o início
     while (indice < lista.length) {
       const i = indice++;
       const p = lista[i];
@@ -3534,7 +3544,7 @@ async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia 
       if (onProgresso) onProgresso(concluidas, lista.length);
     }
   }
-  await Promise.all(Array.from({ length: concorrencia }, worker));
+  await Promise.all(Array.from({ length: concorrencia }, (_, idx) => worker(idx)));
 }
 
 function _formatarPercentualBadge(percentual) {
@@ -3632,7 +3642,7 @@ async function baixarCatalogoPdf() {
 
     // DEPOIS:
 const mapaImagens = {};
-await _prefetchImagensComConcorrencia(lista, mapaImagens, 6, (feitas, total) => {
+await _prefetchImagensComConcorrencia(lista, mapaImagens, 3, (feitas, total) => {
   if (feitas % 15 === 0 || feitas === total) {
     mostrarToast('info', `Carregando imagens... ${feitas}/${total}`, 1500);
   }
