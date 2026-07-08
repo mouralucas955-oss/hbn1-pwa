@@ -3450,55 +3450,66 @@ window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'))
 // =========================================================================
 // EXPORTAÇÃO DO CATÁLOGO EM PDF (imagens via proxy + cache local)
 // =========================================================================
-const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_';
-const PDF_CARDS_POR_PAGINA = 15; // 3 colunas x 6 linhas, igual ao exemplo Kenvue/Omron
+cconst PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v2_'; // v2: resolução maior — invalida cache antigo em baixa qualidade
+const PDF_IMG_LARGURA_PROXY = 480; // era 240 — imagem chega bem mais nítida no PDF
+const PDF_CARDS_POR_PAGINA = 12; // 2 colunas x 6 linhas — card horizontal (imagem + info lado a lado)
 let _PDF_GERANDO = false;
 
-// Usa images.weserv.nl como proxy: resolve CORS pro html2canvas e já redimensiona
-// a imagem (menos peso no PDF final). Precisa da URL SEM o "https://".
+// Proxy principal — redimensiona a imagem pra resolução configurada em PDF_IMG_LARGURA_PROXY
 function _obterUrlImagemProxy(urlOriginal) {
   if (!urlOriginal) return '';
   const semProtocolo = urlOriginal.replace(/^https?:\/\//, '');
-  return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=240&fit=contain`;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=${PDF_IMG_LARGURA_PROXY}&fit=contain`;
 }
 
-async function _fetchComTimeout(url, ms = 12000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  try {
-    return await fetch(url, { signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
+// Proxy alternativo (fallback) — não redimensiona, mas resolve o caso do weserv
+// estar fora do ar ou recusando aquela URL específica. Só é usado se o principal
+// falhar em todas as tentativas, então não pesa no caso normal (imagem já cacheada
+// ou baixada de primeira).
+function _obterUrlImagemProxyFallback(urlOriginal) {
+  return `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlOriginal)}`;
 }
 
-async function _obterImagemBase64ComCache(urlOriginal, tentativas = 2) {
+async function _baixarImagemComoBase64(url, timeoutMs) {
+  const resp = await _fetchComTimeout(url, timeoutMs);
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const blob = await resp.blob();
+  if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function _obterImagemBase64ComCache(urlOriginal, tentativas = 3) {
   if (!urlOriginal) return null;
   const chave = PDF_IMG_CACHE_PREFIX + urlOriginal;
   const cache = localStorage.getItem(chave);
   if (cache) return cache;
 
+  // 1) Proxy principal (weserv), com resolução maior e mais tentativas
   for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
     try {
-      const resp = await _fetchComTimeout(_obterUrlImagemProxy(urlOriginal), 12000);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const blob = await resp.blob();
-      if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload  = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxy(urlOriginal), 10000);
       try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
       return base64;
     } catch (e) {
-      console.warn(`Imagem falhou (tentativa ${tentativa}/${tentativas}):`, urlOriginal, e.message);
-      if (tentativa === tentativas) return null;
-      await new Promise(r => setTimeout(r, 400 * tentativa));
+      console.warn(`Imagem (proxy principal) falhou (tentativa ${tentativa}/${tentativas}):`, urlOriginal, e.message);
+      if (tentativa < tentativas) await new Promise(r => setTimeout(r, 300 * tentativa));
     }
   }
-  return null;
+
+  // 2) Proxy principal esgotou as tentativas — tenta o alternativo antes de desistir
+  try {
+    const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxyFallback(urlOriginal), 12000);
+    try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
+    return base64;
+  } catch (e) {
+    console.warn('Imagem (proxy alternativo) também falhou:', urlOriginal, e.message);
+    return null;
+  }
 }
 
 // Busca imagens em paralelo (com limite de concorrência) em vez de uma por vez
@@ -3531,32 +3542,36 @@ function _gerarHtmlCardPdf(p, imgBase64) {
   const badgePct = _formatarPercentualBadge(percentual);
 
   return `
-    <div style="border:1px solid #e2e2e2;border-radius:10px;padding:10px;position:relative;background:#fff;display:flex;flex-direction:column;height:195px;box-sizing:border-box;overflow:hidden;">
-      ${badgePct ? `<span style="position:absolute;top:8px;left:8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;z-index:2;">${badgePct}</span>` : ''}
+    <div style="display:flex;border:1px solid #e2e2e2;border-radius:10px;overflow:hidden;background:#fff;height:160px;box-sizing:border-box;">
 
-      <div style="height:64px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fafafa;border-radius:6px;margin-bottom:6px;">
+      <!-- LATERAL ESQUERDA: imagem -->
+      <div style="width:130px;flex-shrink:0;position:relative;background:#fafafa;display:flex;align-items:center;justify-content:center;">
+        ${badgePct ? `<span style="position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;z-index:2;">${badgePct}</span>` : ''}
         ${imgBase64
-          ? `<img src="${imgBase64}" style="max-height:60px;max-width:90%;object-fit:contain;">`
+          ? `<img src="${imgBase64}" style="max-height:120px;max-width:118px;object-fit:contain;">`
           : `<span style="font-size:8px;color:#c2c2c2;">sem imagem</span>`}
       </div>
 
-      <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
+      <!-- LATERAL DIREITA: informações -->
+      <div style="flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;">
+        <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
 
-      <p style="font-size:9.5px;font-weight:700;color:#1e293b;line-height:1.25;margin:2px 0 4px;height:24px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex-shrink:0;">
-        ${p.descricao || ''}
-      </p>
+        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.25;margin:2px 0 5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;flex-shrink:0;">
+          ${p.descricao || ''}
+        </p>
 
-      <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:4px;">
-        <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
-        <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
-      </div>
+        <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
+          <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
+        </div>
 
-      <div style="margin-top:auto;flex-shrink:0;">
-        ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
-        <div style="font-size:14px;font-weight:800;color:#e8620a;line-height:1.2;">${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">
-          ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:5px;">ECON. ${formatarParaReal(economia)}</span>` : '<span></span>'}
-          <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
+        <div style="margin-top:auto;flex-shrink:0;">
+          ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
+          <div style="font-size:15px;font-weight:800;color:#e8620a;line-height:1.2;">${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">
+            ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:5px;">ECON. ${formatarParaReal(economia)}</span>` : '<span></span>'}
+            <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
+          </div>
         </div>
       </div>
     </div>`;
@@ -3583,7 +3598,7 @@ function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
       <p style="color:#ffe8d6;font-size:11px;margin:6px 0 0;">${subLinha}</p>
       <span style="position:absolute;top:26px;right:34px;color:#ffe8d6;font-size:10px;">Página ${info.numPagina}/${info.totalPaginas}</span>
     </div>
-    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;">
+    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(2, 1fr);gap:14px;">
       ${cardsHtml}
     </div>`;
   return div;
