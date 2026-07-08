@@ -3447,85 +3447,98 @@ enviarParaCentralInvestimento(itens);
 if ('serviceWorker' in navigator) {
 window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
 }
-// =========================================================================
-// EXPORTAÇÃO DO CATÁLOGO EM PDF (imagens via proxy + cache local)
-// =========================================================================
-const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v2_'; // v2: resolução maior — invalida cache antigo em baixa qualidade
-const PDF_IMG_LARGURA_PROXY = 480; // era 240 — imagem chega bem mais nítida no PDF
-const PDF_CARDS_POR_PAGINA = 12; // 2 colunas x 6 linhas — card horizontal (imagem + info lado a lado)
-let _PDF_GERANDO = false;
+// Substitua o bloco de funções de imagem do PDF por este.
+// Resolve Amazon/Google Drive tentando direto, mantém weserv para CDNs compatíveis
+// e deixa um ponto claro para proxy próprio nos domínios sem CORS, como RaiaDrogasil.
 
-// Proxy principal — redimensiona a imagem pra resolução configurada em PDF_IMG_LARGURA_PROXY
+const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v3_';
+const PDF_IMG_LARGURA_PROXY = 480;
+const PDF_IMG_PROXY_PROPRIO = ''; // Ex.: 'https://SEU-DOMINIO.com/img-proxy?url='
+
+function _normalizarUrlImagem(urlOriginal) {
+  let url = String(urlOriginal || '').trim();
+  if (!url) return '';
+  url = url.replace(/\s+/g, '');
+  url = url.replace(/(v=\d+)h=/, '$1&h=');
+  return url;
+}
+
 function _obterUrlImagemProxy(urlOriginal) {
-  if (!urlOriginal) return '';
-  const semProtocolo = urlOriginal.replace(/^https?:\/\//, '');
+  const url = _normalizarUrlImagem(urlOriginal);
+  if (!url) return '';
+  const semProtocolo = url.replace(/^https?:\/\//, '');
   return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=${PDF_IMG_LARGURA_PROXY}&fit=contain`;
 }
 
-// Proxy alternativo (fallback) — não redimensiona, mas resolve o caso do weserv
-// estar fora do ar ou recusando aquela URL específica. Só é usado se o principal
-// falhar em todas as tentativas, então não pesa no caso normal (imagem já cacheada
-// ou baixada de primeira).
-function _obterUrlImagemProxyFallback(urlOriginal) {
-  return `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlOriginal)}`;
+function _obterUrlImagemProxyProprio(urlOriginal) {
+  if (!PDF_IMG_PROXY_PROPRIO) return '';
+  return PDF_IMG_PROXY_PROPRIO + encodeURIComponent(_normalizarUrlImagem(urlOriginal));
 }
+
 async function _fetchComTimeout(url, ms = 12000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try {
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, {
+      signal: controller.signal,
+      cache: 'force-cache',
+      headers: { Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8' }
+    });
   } finally {
     clearTimeout(timer);
   }
 }
 
 async function _baixarImagemComoBase64(url, timeoutMs) {
+  if (!url) throw new Error('URL vazia');
   const resp = await _fetchComTimeout(url, timeoutMs);
   if (!resp.ok) {
     const erro = new Error('HTTP ' + resp.status);
     erro.status = resp.status;
     throw erro;
   }
+
+  const tipo = (resp.headers.get('content-type') || '').toLowerCase();
   const blob = await resp.blob();
   if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
+  if (tipo && !tipo.startsWith('image/')) throw new Error('Resposta nao e imagem: ' + tipo);
+
   return await new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result);
+    reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
 }
 
-async function _obterImagemBase64ComCache(urlOriginal, tentativas = 4) {
-  if (!urlOriginal) return null;
-  const chave = PDF_IMG_CACHE_PREFIX + urlOriginal;
+async function _tentarBaixarImagem(rotulo, url, timeoutMs) {
+  try {
+    return await _baixarImagemComoBase64(url, timeoutMs);
+  } catch (e) {
+    console.warn(`Imagem (${rotulo}) falhou:`, url, e.message);
+    return null;
+  }
+}
+
+async function _obterImagemBase64ComCache(urlOriginal) {
+  const url = _normalizarUrlImagem(urlOriginal);
+  if (!url) return null;
+
+  const chave = PDF_IMG_CACHE_PREFIX + url;
   const cache = localStorage.getItem(chave);
   if (cache) return cache;
 
-  // Proxy principal — agora com mais tentativas e espera maior se for rate limit (429)
-  for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
-    try {
-      const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxy(urlOriginal), 15000);
-      try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
-      return base64;
-    } catch (e) {
-      console.warn(`Imagem (proxy principal) falhou (tentativa ${tentativa}/${tentativas}):`, urlOriginal, e.message);
-      if (tentativa < tentativas) {
-        const espera = e.status === 429 ? 1500 * tentativa : 400 * tentativa;
-        await new Promise(r => setTimeout(r, espera));
-      }
-    }
-  }
+  const tentativas = [
+    ['direto', url, 9000],
+    ['weserv', _obterUrlImagemProxy(url), 12000],
+    ['proxy proprio', _obterUrlImagemProxyProprio(url), 15000],
+  ].filter(([, u]) => !!u);
 
-  // Proxy alternativo — antes só tentava 1x, agora 2x
-  for (let tentativa = 1; tentativa <= 2; tentativa++) {
-    try {
-      const base64 = await _baixarImagemComoBase64(_obterUrlImagemProxyFallback(urlOriginal), 15000);
+  for (const [rotulo, tentativaUrl, timeout] of tentativas) {
+    const base64 = await _tentarBaixarImagem(rotulo, tentativaUrl, timeout);
+    if (base64) {
       try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
       return base64;
-    } catch (e) {
-      console.warn(`Imagem (proxy alternativo) falhou (tentativa ${tentativa}/2):`, urlOriginal, e.message);
-      if (tentativa < 2) await new Promise(r => setTimeout(r, 600 * tentativa));
     }
   }
 
