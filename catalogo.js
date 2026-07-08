@@ -3456,31 +3456,58 @@ let _PDF_GERANDO = false;
 
 // Usa images.weserv.nl como proxy: resolve CORS pro html2canvas e já redimensiona
 // a imagem (menos peso no PDF final). Precisa da URL SEM o "https://".
-function _obterUrlImagemProxy(urlOriginal) {
-  if (!urlOriginal) return '';
-  const semProtocolo = urlOriginal.replace(/^https?:\/\//, '');
-  return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=240&fit=contain`;
-}
-
-async function _fetchComTimeout(url, ms = 12000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
+function _extrairUrlImagemReal(urlOriginal) {
+  if (!urlOriginal) return urlOriginal;
   try {
-    return await fetch(url, { signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
+    const temMarcadorNextImage = urlOriginal.includes('/_next/image') && urlOriginal.includes('url=');
+    if (!temMarcadorNextImage) return urlOriginal;
+
+    const partes = urlOriginal.split('url=');
+    if (partes.length < 2) return urlOriginal;
+
+    // Pega só o valor do parâmetro url= (até o próximo & se houver)
+    let valorCodificado = partes[1].split('&')[0];
+    const urlReal = decodeURIComponent(valorCodificado);
+
+    // Só usa se realmente decodificou para uma URL http válida
+    return /^https?:\/\//.test(urlReal) ? urlReal : urlOriginal;
+  } catch (e) {
+    return urlOriginal;
   }
 }
 
+function _obterUrlImagemProxy(urlOriginal) {
+  if (!urlOriginal) return '';
+  const urlReal = _extrairUrlImagemReal(urlOriginal);
+  const semProtocolo = urlReal.replace(/^https?:\/\//, '');
+  return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=240&fit=contain`;
+}
+```
+
+## Reforço: tentar a URL real também sem proxy, como segunda camada de fallback
+
+Como algumas origens podem bloquear até o weserv, vale tentar buscar a URL real diretamente também, caso o proxy falhe:
+
+```js
 async function _obterImagemBase64ComCache(urlOriginal, tentativas = 2) {
   if (!urlOriginal) return null;
   const chave = PDF_IMG_CACHE_PREFIX + urlOriginal;
   const cache = localStorage.getItem(chave);
   if (cache) return cache;
 
-  for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
+  const urlReal = _extrairUrlImagemReal(urlOriginal);
+
+  // Lista de estratégias, na ordem que serão tentadas
+  const estrategias = [
+    () => _obterUrlImagemProxy(urlOriginal),                                   // proxy com URL real extraída
+    () => `https://images.weserv.nl/?url=${encodeURIComponent(urlOriginal.replace(/^https?:\/\//, ''))}&w=240&fit=contain`, // proxy com URL original (fallback)
+    () => urlReal,                                                             // busca direta sem proxy (funciona se CORS permitir)
+  ];
+
+  for (let i = 0; i < estrategias.length; i++) {
+    const urlTentativa = estrategias[i]();
     try {
-      const resp = await _fetchComTimeout(_obterUrlImagemProxy(urlOriginal), 12000);
+      const resp = await _fetchComTimeout(urlTentativa, 12000);
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const blob = await resp.blob();
       if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
@@ -3493,9 +3520,7 @@ async function _obterImagemBase64ComCache(urlOriginal, tentativas = 2) {
       try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
       return base64;
     } catch (e) {
-      console.warn(`Imagem falhou (tentativa ${tentativa}/${tentativas}):`, urlOriginal, e.message);
-      if (tentativa === tentativas) return null;
-      await new Promise(r => setTimeout(r, 400 * tentativa));
+      console.warn(`Imagem falhou (estratégia ${i + 1}/${estrategias.length}):`, urlTentativa, e.message);
     }
   }
   return null;
