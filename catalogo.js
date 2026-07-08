@@ -3450,7 +3450,7 @@ window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'))
 // =========================================================================
 // EXPORTAÇÃO DO CATÁLOGO EM PDF (imagens via proxy + cache local)
 // =========================================================================
-cconst PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v2_'; // v2: resolução maior — invalida cache antigo em baixa qualidade
+const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v2_'; // v2: resolução maior — invalida cache antigo em baixa qualidade
 const PDF_IMG_LARGURA_PROXY = 480; // era 240 — imagem chega bem mais nítida no PDF
 const PDF_CARDS_POR_PAGINA = 12; // 2 colunas x 6 linhas — card horizontal (imagem + info lado a lado)
 let _PDF_GERANDO = false;
