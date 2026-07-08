@@ -103,31 +103,31 @@ const produtoNoCarrinho = _produtoDoGrupoNoCarrinho(itemHit);
 // usando o produto REALMENTE adicionado (pode não ser o "melhor" sugerido)
 if (produtoNoCarrinho) {
 return `
-      <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
-        <img src="${produtoNoCarrinho.imagens}" class="w-12 h-12 object-contain bg-white rounded-lg p-1 border border-emerald-100 shrink-0 mix-blend-multiply">
-        <div class="min-w-0 flex-grow">
-          <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider">${alavanca}</span>
-          <p class="text-xs font-bold text-slate-800 truncate">${produtoNoCarrinho.descricao || produtoNoCarrinho.id}</p>
-          <p class="text-[10px] text-emerald-600 font-bold">✅ Já no pedido (${CARRINHO[produtoNoCarrinho.id]} un)</p>
-        </div>
-      </div>`;
+       <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+         <img src="${produtoNoCarrinho.imagens}" class="w-12 h-12 object-contain bg-white rounded-lg p-1 border border-emerald-100 shrink-0 mix-blend-multiply">
+         <div class="min-w-0 flex-grow">
+           <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider">${alavanca}</span>
+           <p class="text-xs font-bold text-slate-800 truncate">${produtoNoCarrinho.descricao || produtoNoCarrinho.id}</p>
+           <p class="text-[10px] text-emerald-600 font-bold">✅ Já no pedido (${CARRINHO[produtoNoCarrinho.id]} un)</p>
+         </div>
+       </div>`;
 }
 
 const { precoFinal, precoOriginal } = calcularPrecos(produto);
 acBruto   += precoOriginal;
 acLiquido += precoFinal;
 return `
-    <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl p-2.5">
-      <img src="${produto.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0 mix-blend-multiply">
-      <div class="min-w-0 flex-grow">
-        <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider">${alavanca}</span>
-        <p class="text-xs font-bold text-slate-800 truncate">${produto.descricao || item.descricao || item.cod}</p>
-        <p class="text-[10px] text-slate-400 font-mono">Cód ${item.cod} • EAN ${item.ean}</p>
-      </div>
-      <div class="text-right shrink-0">
-        <p class="text-[11px] font-black text-slate-800">${formatarParaReal(precoFinal)}</p>
-      </div>
-    </div>`;
+     <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl p-2.5">
+       <img src="${produto.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0 mix-blend-multiply">
+       <div class="min-w-0 flex-grow">
+         <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider">${alavanca}</span>
+         <p class="text-xs font-bold text-slate-800 truncate">${produto.descricao || item.descricao || item.cod}</p>
+         <p class="text-[10px] text-slate-400 font-mono">Cód ${item.cod} • EAN ${item.ean}</p>
+       </div>
+       <div class="text-right shrink-0">
+         <p class="text-[11px] font-black text-slate-800">${formatarParaReal(precoFinal)}</p>
+       </div>
+     </div>`;
 }).join('');
 
 document.getElementById('sugestaoHitTotalBruto').innerText   = formatarParaReal(acBruto);
@@ -258,9 +258,9 @@ const nomesFornecedores = Object.keys(CONFIG_FORNECEDORES).filter(n => n !== 'NA
 container.innerHTML = nomesFornecedores.map(nome => {
 const cfg = CONFIG_FORNECEDORES[nome];
 return `
-        <div class="splash-logo-item opacity-0 bg-white/95 rounded-xl px-3 py-2 flex items-center justify-center h-10 min-w-[70px]">
-          <img src="${cfg.logo}" alt="${nome}" class="h-5 max-w-[90px] object-contain" onerror="this.style.display='none'">
-        </div>`;
+         <div class="splash-logo-item opacity-0 bg-white/95 rounded-xl px-3 py-2 flex items-center justify-center h-10 min-w-[70px]">
+           <img src="${cfg.logo}" alt="${nome}" class="h-5 max-w-[90px] object-contain" onerror="this.style.display='none'">
+         </div>`;
 }).join('');
 
 // Entrada escalonada dos logos — começa logo após o nome aparecer
@@ -309,15 +309,15 @@ el.id = id;
 el.className = `${cfg.bg} ${cfg.border} border rounded-2xl shadow-lg overflow-hidden flex items-start gap-3 p-3 pr-2 w-80 max-w-[90vw] pointer-events-auto`;
 el.style.animation = 'toastIn 0.35s cubic-bezier(0.16,1,0.3,1) forwards';
 el.innerHTML = `
-      <div class="${cfg.iconBg} w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">${cfg.icon}</svg>
-      </div>
-      <p class="${cfg.text} text-xs font-semibold leading-snug flex-grow pt-1">${mensagem}</p>
-      <button onclick="fecharToast('${id}')" class="shrink-0 w-6 h-6 rounded-full hover:bg-black/5 flex items-center justify-center transition-colors">
-        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>`;
+       <div class="${cfg.iconBg} w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">${cfg.icon}</svg>
+       </div>
+       <p class="${cfg.text} text-xs font-semibold leading-snug flex-grow pt-1">${mensagem}</p>
+       <button onclick="fecharToast('${id}')" class="shrink-0 w-6 h-6 rounded-full hover:bg-black/5 flex items-center justify-center transition-colors">
+         <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+         </svg>
+       </button>`;
 container.appendChild(el);
 
 if (duracaoMs > 0) setTimeout(() => fecharToast(id), duracaoMs);
@@ -386,12 +386,12 @@ BD_PRODUTOS
 if (fornecedoresValidos.length === 0) {
 // Skeleton shimmer no formato exato dos cards finais — evita texto solto e layout shift
 grid.innerHTML = Array.from({ length: 6 }).map((_, i) => `
-        <div class="rounded-3xl bg-slate-100 overflow-hidden relative animate-pulse" style="min-height:188px; animation-delay:${i * 80}ms">
-          <div class="h-full flex flex-col items-center justify-center gap-3 p-6">
-            <div class="bg-white/60 rounded-2xl w-full max-w-[160px] h-14"></div>
-            <div class="bg-white/50 rounded-full w-20 h-3"></div>
-          </div>
-        </div>`).join('');
+         <div class="rounded-3xl bg-slate-100 overflow-hidden relative animate-pulse" style="min-height:188px; animation-delay:${i * 80}ms">
+           <div class="h-full flex flex-col items-center justify-center gap-3 p-6">
+             <div class="bg-white/60 rounded-2xl w-full max-w-[160px] h-14"></div>
+             <div class="bg-white/50 rounded-full w-20 h-3"></div>
+           </div>
+         </div>`).join('');
 return;
 }
 
@@ -405,19 +405,19 @@ const logoHtml = cfg.logo
 ? `<img src="${cfg.logo}" alt="${forn}" class="h-12 max-w-[150px] object-contain" onerror="this.style.display='none'">`
 : `<span class="text-slate-800 font-black text-lg">${forn}</span>`;
 return `
-        <button onclick="entrarFornecedor('${forn}')" data-portal-card
-          class="opacity-0 translate-y-3 scale-95 transition-all duration-500 ease-out group relative overflow-hidden rounded-3xl p-6 flex flex-col items-center justify-center gap-3 shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.03] cursor-pointer border border-white/10"
-          style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%); min-height: 188px;">
-          <div class="relative bg-white/95 rounded-2xl px-5 py-3.5 flex items-center justify-center w-full max-w-[180px] min-h-[64px]">
-            ${logoHtml}
-            <span class="absolute -top-2.5 -right-2.5 bg-white text-[10px] font-black px-2 py-1 rounded-full shadow-md border-2 border-white" style="color:${cfg.cor2}">${qtd}</span>
-          </div>
-          <span class="text-white/85 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''} disponíve${qtd !== 1 ? 'is' : 'l'}</span>
-          <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-3xl pointer-events-none"></div>
-          <div class="absolute bottom-3 right-3 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-white/20 translate-x-1 group-hover:translate-x-0 transition-all duration-200">
-            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-          </div>
-        </button>`;
+         <button onclick="entrarFornecedor('${forn}')" data-portal-card
+           class="opacity-0 translate-y-3 scale-95 transition-all duration-500 ease-out group relative overflow-hidden rounded-3xl p-6 flex flex-col items-center justify-center gap-3 shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.03] cursor-pointer border border-white/10"
+           style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%); min-height: 188px;">
+           <div class="relative bg-white/95 rounded-2xl px-5 py-3.5 flex items-center justify-center w-full max-w-[180px] min-h-[64px]">
+             ${logoHtml}
+             <span class="absolute -top-2.5 -right-2.5 bg-white text-[10px] font-black px-2 py-1 rounded-full shadow-md border-2 border-white" style="color:${cfg.cor2}">${qtd}</span>
+           </div>
+           <span class="text-white/85 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''} disponíve${qtd !== 1 ? 'is' : 'l'}</span>
+           <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-3xl pointer-events-none"></div>
+           <div class="absolute bottom-3 right-3 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-white/20 translate-x-1 group-hover:translate-x-0 transition-all duration-200">
+             <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+           </div>
+         </button>`;
 }).join('');
 
 // Entrada escalonada (stagger) — cada card surge ~60ms depois do anterior
@@ -479,11 +479,11 @@ const logoHtml = cfg.logo
 ? `<img src="${cfg.logo}" alt="${forn}" class="h-5 max-w-[60px] object-contain" onerror="this.parentElement.innerText='${forn}'">`
 : forn;
 return `
-        <button onclick="entrarFornecedor('${forn}')"
-          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/40 transition-all border border-white/20"
-          title="${forn}">
-          <div class="bg-white rounded-md px-1.5 py-0.5 flex items-center">${logoHtml}</div>
-        </button>`;
+         <button onclick="entrarFornecedor('${forn}')"
+           class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/40 transition-all border border-white/20"
+           title="${forn}">
+           <div class="bg-white rounded-md px-1.5 py-0.5 flex items-center">${logoHtml}</div>
+         </button>`;
 }).join('');
 }
 
@@ -783,13 +783,13 @@ return;
 let html = '';
 filtrados.slice(0, 10).forEach(c => {
 html += `
-        <div onclick="selecionarCliente('${c.id}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b border-slate-100 last:border-none transition-colors">
-          <div class="font-bold text-xs text-slate-900">${c.razao.toUpperCase()}</div>
-          <div class="text-[10px] text-slate-500 flex justify-between mt-1 font-mono">
-            <span>ID: ${c.id}</span>
-            <span>CNPJ: ${c.cnpj}</span>
-          </div>
-        </div>`;
+         <div onclick="selecionarCliente('${c.id}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b border-slate-100 last:border-none transition-colors">
+           <div class="font-bold text-xs text-slate-900">${c.razao.toUpperCase()}</div>
+           <div class="text-[10px] text-slate-500 flex justify-between mt-1 font-mono">
+             <span>ID: ${c.id}</span>
+             <span>CNPJ: ${c.cnpj}</span>
+           </div>
+         </div>`;
 });
 dropdown.innerHTML = html;
 dropdown.classList.remove('hidden');
@@ -1022,69 +1022,69 @@ const corBarraEstoque = isEsgotado ? 'bg-red-500'
 
 const blocoPrecoHtml = temDesconto
 ? `<div>
-           <p class="text-base font-black text-slate-900 leading-none">${formatarParaReal(precoExibidoFinal)}</p>
-           <p class="text-[10px] text-slate-400 line-through leading-tight mt-0.5">${formatarParaReal(precoExibidoOriginal)}</p>
-         </div>`
+            <p class="text-base font-black text-slate-900 leading-none">${formatarParaReal(precoExibidoFinal)}</p>
+            <p class="text-[10px] text-slate-400 line-through leading-tight mt-0.5">${formatarParaReal(precoExibidoOriginal)}</p>
+          </div>`
 : `<div>
-           <p class="text-base font-black text-slate-900 leading-none">${precoExibidoOriginal > 0 ? formatarParaReal(precoExibidoOriginal) : '—'}</p>
-         </div>`;
+            <p class="text-base font-black text-slate-900 leading-none">${precoExibidoOriginal > 0 ? formatarParaReal(precoExibidoOriginal) : '—'}</p>
+          </div>`;
 
 card.innerHTML = `
-      ${badgeTagHtml}
-      ${badgeCantoHtml}
+       ${badgeTagHtml}
+       ${badgeCantoHtml}
 
-      <!-- Imagem -->
-      <div class="relative bg-slate-50 flex items-center justify-center cursor-pointer overflow-hidden" style="height:140px" onclick="abrirModalDetalhes('${p.id}')">
-        <img src="${p.imagens}" class="h-28 w-28 object-contain transition-transform duration-200 group-hover:scale-105 ${isEsgotado ? 'grayscale opacity-50' : 'mix-blend-multiply'}" loading="lazy">
-        <span class="absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${corPillEstoque}">
-          ${isEsgotado ? 'Esgotado' : (p.estoque || 0) + ' un'}
-        </span>
-      </div>
-      <div class="h-[3px] w-full ${corBarraEstoque}"></div>
+       <!-- Imagem -->
+       <div class="relative bg-slate-50 flex items-center justify-center cursor-pointer overflow-hidden" style="height:140px" onclick="abrirModalDetalhes('${p.id}')">
+         <img src="${p.imagens}" class="h-28 w-28 object-contain transition-transform duration-200 group-hover:scale-105 ${isEsgotado ? 'grayscale opacity-50' : 'mix-blend-multiply'}" loading="lazy">
+         <span class="absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${corPillEstoque}">
+           ${isEsgotado ? 'Esgotado' : (p.estoque || 0) + ' un'}
+         </span>
+       </div>
+       <div class="h-[3px] w-full ${corBarraEstoque}"></div>
 
-      <!-- Informações -->
-      <div class="p-2.5 flex flex-col flex-grow gap-1.5">
+       <!-- Informações -->
+       <div class="p-2.5 flex flex-col flex-grow gap-1.5">
 
-        <!-- Nome e marca -->
-        <div>
-          <span class="text-[9px] font-black text-[#FF6B00] uppercase tracking-widest">${p.marca || ''}</span>
-          <h2 class="text-[11px] font-semibold text-slate-800 line-clamp-2 leading-snug mt-0.5 min-h-[28px] cursor-pointer hover:text-orange-500 transition-colors" onclick="abrirModalDetalhes('${p.id}')">
-            ${p.descricao || ''}
-          </h2>
-        </div>
+         <!-- Nome e marca -->
+         <div>
+           <span class="text-[9px] font-black text-[#FF6B00] uppercase tracking-widest">${p.marca || ''}</span>
+           <h2 class="text-[11px] font-semibold text-slate-800 line-clamp-2 leading-snug mt-0.5 min-h-[28px] cursor-pointer hover:text-orange-500 transition-colors" onclick="abrirModalDetalhes('${p.id}')">
+             ${p.descricao || ''}
+           </h2>
+         </div>
 
-        <!-- Embalagem + ID, em uma linha compacta -->
-        <p class="text-[9px] text-slate-400 font-mono">
-          Emb. <span class="text-slate-500 font-semibold">${p.embalagem ? p.embalagem + ' un' : '—'}</span>
-          <span class="mx-1">·</span>
-          ID <span class="text-slate-500 font-semibold">${p.id}</span>
-        </p>
+         <!-- Embalagem + ID, em uma linha compacta -->
+         <p class="text-[9px] text-slate-400 font-mono">
+           Emb. <span class="text-slate-500 font-semibold">${p.embalagem ? p.embalagem + ' un' : '—'}</span>
+           <span class="mx-1">·</span>
+           ID <span class="text-slate-500 font-semibold">${p.id}</span>
+         </p>
 
-        <!-- Preço — hero do card -->
-        <div class="mt-auto pt-2 border-t border-slate-100">
-          <div class="flex items-end justify-between mb-2">
-            ${blocoPrecoHtml}
-           ${temDesconto ? `<span class="badge-desconto-forte text-white text-[10px] font-black px-2 py-0.5 rounded-lg">−${percentual}%</span>` : ''}
-          </div>
-          <div id="card-btn-${p.id}">
-            ${obterHtmlBotaoAcao(p.id, qtdNoCarrinho, estoque, isEsgotado)}
-          </div>
-        </div>
-      </div>`;
+         <!-- Preço — hero do card -->
+         <div class="mt-auto pt-2 border-t border-slate-100">
+           <div class="flex items-end justify-between mb-2">
+             ${blocoPrecoHtml}
+            ${temDesconto ? `<span class="badge-desconto-forte text-white text-[10px] font-black px-2 py-0.5 rounded-lg">−${percentual}%</span>` : ''}
+           </div>
+           <div id="card-btn-${p.id}">
+             ${obterHtmlBotaoAcao(p.id, qtdNoCarrinho, estoque, isEsgotado)}
+           </div>
+         </div>
+       </div>`;
 return card;
 }
 
 function obterHtmlBotaoAcao(idProd, qtd, estoque, isEsgotado) {
 if (isEsgotado) return `<button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-[10px] font-semibold rounded-xl cursor-not-allowed tracking-wide">Sem estoque</button>`;
 if (qtd > 0) return `
-      <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl p-0.5 w-full">
-        <button onclick="alterarQtd('${idProd}', -1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">−</button>
-        <input type="number" value="${qtd}" min="1" max="${estoque}" onchange="atualizarQtdDigitada('${idProd}', this.value, ${estoque})" onkeydown="if(event.key==='Enter') this.blur();"
-          class="w-full text-center font-black text-sm text-orange-600 bg-transparent focus:outline-none min-w-0 p-0 border-0">
-        <button onclick="alterarQtd('${idProd}', 1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">+</button>
-      </div>`;
+       <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl p-0.5 w-full">
+         <button onclick="alterarQtd('${idProd}', -1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">−</button>
+         <input type="number" value="${qtd}" min="1" max="${estoque}" onchange="atualizarQtdDigitada('${idProd}', this.value, ${estoque})" onkeydown="if(event.key==='Enter') this.blur();"
+           class="w-full text-center font-black text-sm text-orange-600 bg-transparent focus:outline-none min-w-0 p-0 border-0">
+         <button onclick="alterarQtd('${idProd}', 1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">+</button>
+       </div>`;
 return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-1.5 bg-[#FF6B00] hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold rounded-xl transition-all tracking-wide flex items-center justify-center gap-1 shadow-sm shadow-orange-200">
-      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>Adicionar</button>`;
+       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>Adicionar</button>`;
 }
 // Monta o HTML dos indicadores no canto do card (ícone de carrinho + bolinha de ST).
 // Isolado numa função para poder ser chamado tanto na criação do card quanto
@@ -1092,10 +1092,10 @@ return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-1.5 bg-[#F
 function obterHtmlBadgesCanto(noCarrinho, temST) {
 const iconeCarrinhoHtml = noCarrinho
 ? `<span class="absolute top-2 right-2 z-10 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center shadow shadow-orange-300" title="No carrinho">
-           <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
-           </svg>
-         </span>`
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z"/>
+            </svg>
+          </span>`
 : '';
 
 const bolinhaSTHtml = temST
@@ -1308,25 +1308,25 @@ if (b.includes('UNILEVER')) return 1;
 return a.localeCompare(b);
 });
 let htmlForn = `
-      <div class="flex justify-between items-center mb-2 border-b border-blue-200 pb-1">
-        <h3 class="text-xs font-black text-blue-700 uppercase tracking-wider">Resumo por Fornecedor</h3>
-        <div class="flex gap-4 text-[10px] font-bold text-blue-400 uppercase tracking-wider text-right pr-1">
-          <span class="w-16">Qtd</span><span class="w-20">Bruto</span><span class="w-20">Líquido</span>
-        </div>
-      </div>`;
+       <div class="flex justify-between items-center mb-2 border-b border-blue-200 pb-1">
+         <h3 class="text-xs font-black text-blue-700 uppercase tracking-wider">Resumo por Fornecedor</h3>
+         <div class="flex gap-4 text-[10px] font-bold text-blue-400 uppercase tracking-wider text-right pr-1">
+           <span class="w-16">Qtd</span><span class="w-20">Bruto</span><span class="w-20">Líquido</span>
+         </div>
+       </div>`;
 chavesOrdenadas.forEach(forn => {
 const d = totaisPorFornecedor[forn];
 const estiloLinha = "flex justify-between items-center text-xs border-b border-blue-100/50 pb-1.5 last:border-0 last:pb-0" + (d.subItem ? " pl-4 bg-slate-50/40" : "");
 const estiloNome  = d.subItem ? "font-medium text-slate-500 italic text-[11px]" : d.destaque ? "font-black text-blue-900 tracking-tight" : "font-bold text-slate-700 truncate max-w-[180px] sm:max-w-[280px]";
 htmlForn += `
-        <div class="${estiloLinha}">
-          <span class="${estiloNome}">${forn}</span>
-          <div class="flex gap-4 text-right shrink-0 font-mono">
-            <span class="text-slate-400 font-medium w-16">${d.unidades} un</span>
-            <span class="text-slate-500 text-[11px] w-20">${formatarParaReal(d.bruto)}</span>
-            <span class="${d.destaque ? 'font-black text-blue-600' : 'font-black text-slate-950'} w-20">${formatarParaReal(d.liquido)}</span>
-          </div>
-        </div>`;
+         <div class="${estiloLinha}">
+           <span class="${estiloNome}">${forn}</span>
+           <div class="flex gap-4 text-right shrink-0 font-mono">
+             <span class="text-slate-400 font-medium w-16">${d.unidades} un</span>
+             <span class="text-slate-500 text-[11px] w-20">${formatarParaReal(d.bruto)}</span>
+             <span class="${d.destaque ? 'font-black text-blue-600' : 'font-black text-slate-950'} w-20">${formatarParaReal(d.liquido)}</span>
+           </div>
+         </div>`;
 });
 divFornecedores.innerHTML = htmlForn;
 boxCorpo.appendChild(divFornecedores);
@@ -1347,25 +1347,25 @@ const { precoFinal } = calcularPrecos(p);
 const itemLinha = document.createElement('div');
 itemLinha.className = "flex items-center justify-between border-b border-slate-100 pb-3 gap-4 last:border-0";
 itemLinha.innerHTML = `
-        <div class="flex items-center gap-3 min-w-0">
-          <img src="${p.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0">
-          <div class="min-w-0">
-            <h4 class="text-sm font-bold text-slate-900 truncate">${p.id}</h4>
-            <p class="text-xs text-slate-500 truncate">${p.descricao || 'Sem descrição'}</p>
-            <div class="flex flex-wrap gap-2 text-[10px] text-slate-400 font-medium">
-              <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold text-[8px] uppercase">${p.fornecedor}</span>
-              ${p.divisao ? `<span class="bg-blue-50 text-blue-600 px-1 rounded font-bold text-[8px] uppercase">${p.divisao}</span>` : ''}
-              <span>${p.embalagem ? 'Emb: ' + p.embalagem + ' un' : ''}</span>
-              <span>EAN: ${p.ean}</span>
-              <span class="text-[9px] text-slate-400 font-bold">(${formatarParaReal(precoFinal)} und)</span>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center bg-slate-100 p-1 rounded-lg shrink-0">
-          <button onclick="alterarQtdNoModal('${p.id}', -1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">-</button>
-          <input type="number" value="${qtd}" min="1" max="${estoqueMax}" onchange="atualizarQtdNoModalDigitada('${p.id}', this.value, ${estoqueMax})" onkeydown="if(event.key==='Enter') this.blur();" class="w-10 text-center font-black text-xs text-slate-800 bg-transparent focus:outline-none p-0 border-0 focus:ring-0">
-          <button onclick="alterarQtdNoModal('${p.id}', 1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">+</button>
-        </div>`;
+         <div class="flex items-center gap-3 min-w-0">
+           <img src="${p.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0">
+           <div class="min-w-0">
+             <h4 class="text-sm font-bold text-slate-900 truncate">${p.id}</h4>
+             <p class="text-xs text-slate-500 truncate">${p.descricao || 'Sem descrição'}</p>
+             <div class="flex flex-wrap gap-2 text-[10px] text-slate-400 font-medium">
+               <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold text-[8px] uppercase">${p.fornecedor}</span>
+               ${p.divisao ? `<span class="bg-blue-50 text-blue-600 px-1 rounded font-bold text-[8px] uppercase">${p.divisao}</span>` : ''}
+               <span>${p.embalagem ? 'Emb: ' + p.embalagem + ' un' : ''}</span>
+               <span>EAN: ${p.ean}</span>
+               <span class="text-[9px] text-slate-400 font-bold">(${formatarParaReal(precoFinal)} und)</span>
+             </div>
+           </div>
+         </div>
+         <div class="flex items-center bg-slate-100 p-1 rounded-lg shrink-0">
+           <button onclick="alterarQtdNoModal('${p.id}', -1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">-</button>
+           <input type="number" value="${qtd}" min="1" max="${estoqueMax}" onchange="atualizarQtdNoModalDigitada('${p.id}', this.value, ${estoqueMax})" onkeydown="if(event.key==='Enter') this.blur();" class="w-10 text-center font-black text-xs text-slate-800 bg-transparent focus:outline-none p-0 border-0 focus:ring-0">
+           <button onclick="alterarQtdNoModal('${p.id}', 1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">+</button>
+         </div>`;
 boxCorpo.appendChild(itemLinha);
 });
 
@@ -1479,19 +1479,19 @@ corpo.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm font-med
 return;
 }
 corpo.innerHTML = resp.fornecedores.map(f => `
-  <div class="bg-white border border-slate-200 rounded-xl p-3">
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-xs font-black text-slate-700">${f.fornecedor}</span>
-      ${f.positivado
-        ? '<span class="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Positivado</span>'
-        : '<span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">— Sem compra no mês</span>'}
-    </div>
-    <div class="grid grid-cols-3 gap-2 text-[11px]">
-      <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Ano Anterior</span><span class="font-bold text-slate-700">${formatarParaReal(f.faturadoAnoAnterior)}</span></div>
-      <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Trimestre</span><span class="font-bold text-slate-700">${formatarParaReal(f.faturadoTri)}</span></div>
-      <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Mês Atual</span><span class="font-bold text-orange-600">${formatarParaReal(f.faturadoMesAtual)}</span></div>
-    </div>
-  </div>`).join('');
+   <div class="bg-white border border-slate-200 rounded-xl p-3">
+     <div class="flex items-center justify-between mb-2">
+       <span class="text-xs font-black text-slate-700">${f.fornecedor}</span>
+       ${f.positivado
+         ? '<span class="text-[9px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">✓ Positivado</span>'
+         : '<span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">— Sem compra no mês</span>'}
+     </div>
+     <div class="grid grid-cols-3 gap-2 text-[11px]">
+       <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Ano Anterior</span><span class="font-bold text-slate-700">${formatarParaReal(f.faturadoAnoAnterior)}</span></div>
+       <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Trimestre</span><span class="font-bold text-slate-700">${formatarParaReal(f.faturadoTri)}</span></div>
+       <div><span class="block text-slate-400 text-[9px] uppercase font-bold">Mês Atual</span><span class="font-bold text-orange-600">${formatarParaReal(f.faturadoMesAtual)}</span></div>
+     </div>
+   </div>`).join('');
 }
 
 function fecharModalResumoCliente() { document.getElementById('modalResumoCliente').classList.add('hidden'); }
@@ -2364,41 +2364,41 @@ acQtdNaoAtendidaGeral += acQtdNaoAtendida; acValorNaoAtendidoGeral += acValorNao
 
 const linhasItens = Object.keys(itensPorFornecedor).sort().map(forn =>
 itensPorFornecedor[forn].map(({ p, qtd, precoFinal, qtdAtendida, qtdNaoAtendida }) => `
-          <tr class="border-t border-slate-100">
-            <td class="p-1.5 text-slate-500 font-mono text-[10px]">${p.ean || 'N/A'}</td>
-            <td class="p-1.5 text-slate-700">${p.descricao || ''}</td>
-            <td class="p-1.5 text-center font-bold ${qtdNaoAtendida > 0 ? 'text-red-600' : ''}">
-              ${qtd}
-              ${qtdNaoAtendida > 0 ? `<div class="text-[9px] font-normal text-red-500 leading-tight">(${qtdAtendida} disp.)</div>` : ''}
-            </td>
-            <td class="p-1.5 text-right font-bold text-emerald-700">${formatarParaReal(precoFinal * qtd)}</td>
-          </tr>`).join('')
+           <tr class="border-t border-slate-100">
+             <td class="p-1.5 text-slate-500 font-mono text-[10px]">${p.ean || 'N/A'}</td>
+             <td class="p-1.5 text-slate-700">${p.descricao || ''}</td>
+             <td class="p-1.5 text-center font-bold ${qtdNaoAtendida > 0 ? 'text-red-600' : ''}">
+               ${qtd}
+               ${qtdNaoAtendida > 0 ? `<div class="text-[9px] font-normal text-red-500 leading-tight">(${qtdAtendida} disp.)</div>` : ''}
+             </td>
+             <td class="p-1.5 text-right font-bold text-emerald-700">${formatarParaReal(precoFinal * qtd)}</td>
+           </tr>`).join('')
 ).join('');
 
 const blocoEstoqueClienteHtml = acQtdNaoAtendida > 0 ? `
-          <div class="bg-white px-3 py-2 border-t border-emerald-100 flex flex-wrap gap-x-5 gap-y-1 text-[11px]">
-            <span class="font-bold text-emerald-700">✅ Atendido: ${acQtdAtendida} un • ${formatarParaReal(acValorAtendido)}</span>
-            <span class="font-bold text-red-600">⚠️ Não atendido: ${acQtdNaoAtendida} un • ${formatarParaReal(acValorNaoAtendido)}</span>
-          </div>` : '';
+           <div class="bg-white px-3 py-2 border-t border-emerald-100 flex flex-wrap gap-x-5 gap-y-1 text-[11px]">
+             <span class="font-bold text-emerald-700">✅ Atendido: ${acQtdAtendida} un • ${formatarParaReal(acValorAtendido)}</span>
+             <span class="font-bold text-red-600">⚠️ Não atendido: ${acQtdNaoAtendida} un • ${formatarParaReal(acValorNaoAtendido)}</span>
+           </div>` : '';
 
 return `
-        <div class="border border-emerald-200 rounded-2xl overflow-hidden">
-          <div class="bg-emerald-50 p-3 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p class="text-sm font-black text-emerald-900">${(cliente.razao || 'CLIENTE').toUpperCase()}</p>
-              <p class="text-[11px] text-emerald-700 font-mono">${formatarCNPJ(cliente.cnpj ? normalizarSoDigitos(cliente.cnpj) : '')} • UF: ${cliente.uf || '-'}${olDetectado > 0 ? ' • OL Danone: ' + olDetectado : ''}</p>
-            </div>
-            <div class="text-right">
-              <p class="text-[9px] font-black text-emerald-600 uppercase tracking-wider">Total Líquido</p>
-              <p class="text-sm font-black text-emerald-800">${formatarParaReal(acLiquido)}</p>
-              <p class="text-[10px] text-emerald-600">${totalVariedades} itens • ${acUnidades} un</p>
-            </div>
-          </div>
-          ${blocoEstoqueClienteHtml}
-          <table class="w-full text-xs">
-            <tbody>${linhasItens}</tbody>
-          </table>
-        </div>`;
+         <div class="border border-emerald-200 rounded-2xl overflow-hidden">
+           <div class="bg-emerald-50 p-3 flex flex-wrap items-center justify-between gap-2">
+             <div>
+               <p class="text-sm font-black text-emerald-900">${(cliente.razao || 'CLIENTE').toUpperCase()}</p>
+               <p class="text-[11px] text-emerald-700 font-mono">${formatarCNPJ(cliente.cnpj ? normalizarSoDigitos(cliente.cnpj) : '')} • UF: ${cliente.uf || '-'}${olDetectado > 0 ? ' • OL Danone: ' + olDetectado : ''}</p>
+             </div>
+             <div class="text-right">
+               <p class="text-[9px] font-black text-emerald-600 uppercase tracking-wider">Total Líquido</p>
+               <p class="text-sm font-black text-emerald-800">${formatarParaReal(acLiquido)}</p>
+               <p class="text-[10px] text-emerald-600">${totalVariedades} itens • ${acUnidades} un</p>
+             </div>
+           </div>
+           ${blocoEstoqueClienteHtml}
+           <table class="w-full text-xs">
+             <tbody>${linhasItens}</tbody>
+           </table>
+         </div>`;
 }).join('');
 
 document.getElementById('importBlocosClientes').innerHTML = blocosHtml || '<p class="text-xs text-slate-400 text-center py-4">Nenhum cliente identificado.</p>';
@@ -2410,46 +2410,46 @@ document.getElementById('importTotalLiquido').innerText = formatarParaReal(acLiq
 const blocoResumoEstoque = document.getElementById('importBlocoResumoEstoque');
 if (acQtdNaoAtendidaGeral > 0) {
 blocoResumoEstoque.innerHTML = `
-        <div class="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
-          <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block">✅ Valor Atendido</span>
-          <span class="text-sm font-black text-emerald-800 block">${formatarParaReal(acValorAtendidoGeral)}</span>
-          <span class="text-[10px] text-emerald-600">${acQtdAtendidaGeral} un</span>
-        </div>
-        <div class="bg-red-50 rounded-xl p-3 border-2 border-red-200 text-center">
-          <span class="text-[9px] font-black text-red-600 uppercase tracking-wider block">⚠️ Valor Não Atendido</span>
-          <span class="text-sm font-black text-red-700 block">${formatarParaReal(acValorNaoAtendidoGeral)}</span>
-          <span class="text-[10px] text-red-600">${acQtdNaoAtendidaGeral} un</span>
-        </div>`;
+         <div class="bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
+           <span class="text-[9px] font-black text-emerald-600 uppercase tracking-wider block">✅ Valor Atendido</span>
+           <span class="text-sm font-black text-emerald-800 block">${formatarParaReal(acValorAtendidoGeral)}</span>
+           <span class="text-[10px] text-emerald-600">${acQtdAtendidaGeral} un</span>
+         </div>
+         <div class="bg-red-50 rounded-xl p-3 border-2 border-red-200 text-center">
+           <span class="text-[9px] font-black text-red-600 uppercase tracking-wider block">⚠️ Valor Não Atendido</span>
+           <span class="text-sm font-black text-red-700 block">${formatarParaReal(acValorNaoAtendidoGeral)}</span>
+           <span class="text-[10px] text-red-600">${acQtdNaoAtendidaGeral} un</span>
+         </div>`;
 } else {
 blocoResumoEstoque.innerHTML = `
-        <div class="col-span-2 bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
-          <span class="text-xs font-black text-emerald-700">✅ Estoque suficiente para atender 100% do pedido (${acQtdAtendidaGeral} un)</span>
-        </div>`;
+         <div class="col-span-2 bg-emerald-50 rounded-xl p-3 border-2 border-emerald-200 text-center">
+           <span class="text-xs font-black text-emerald-700">✅ Estoque suficiente para atender 100% do pedido (${acQtdAtendidaGeral} un)</span>
+         </div>`;
 }
 
 const blocoCnpjNaoEnc = document.getElementById('importBlocoCnpjNaoEncontrados');
 if (naoEncontrados.length > 0) {
 const ufsDisponiveis = Object.keys(MAPA_UFS_DISPONIVEIS).sort();
 document.getElementById('importTabelaCnpjNaoEncontrados').innerHTML = naoEncontrados.map(n => `
-        <div class="bg-white rounded-xl border border-amber-200 p-3 flex flex-col gap-2">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <span class="font-mono font-bold text-amber-700 text-xs">${n.cnpjFormatado}</span>
-              <span class="text-amber-500 text-[10px] ml-2">${n.linhas} linha(s) • ${n.unidades} un</span>
-            </div>
-            <span class="text-[9px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">CNPJ não cadastrado</span>
-          </div>
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-[10px] text-slate-500 font-medium shrink-0">Calcular pela UF:</span>
-            <div class="flex flex-wrap gap-1.5">
-              ${ufsDisponiveis.map(uf => `
-                <button onclick="processarCnpjSemCadastro('${n.cnpjDigits}', '${uf}')"
-                  class="px-2.5 py-1 text-[9px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all">
-                  ${uf}
-                </button>`).join('')}
-            </div>
-          </div>
-        </div>`).join('');
+         <div class="bg-white rounded-xl border border-amber-200 p-3 flex flex-col gap-2">
+           <div class="flex items-center justify-between flex-wrap gap-2">
+             <div>
+               <span class="font-mono font-bold text-amber-700 text-xs">${n.cnpjFormatado}</span>
+               <span class="text-amber-500 text-[10px] ml-2">${n.linhas} linha(s) • ${n.unidades} un</span>
+             </div>
+             <span class="text-[9px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">CNPJ não cadastrado</span>
+           </div>
+           <div class="flex items-center gap-2 flex-wrap">
+             <span class="text-[10px] text-slate-500 font-medium shrink-0">Calcular pela UF:</span>
+             <div class="flex flex-wrap gap-1.5">
+               ${ufsDisponiveis.map(uf => `
+                 <button onclick="processarCnpjSemCadastro('${n.cnpjDigits}', '${uf}')"
+                   class="px-2.5 py-1 text-[9px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all">
+                   ${uf}
+                 </button>`).join('')}
+             </div>
+           </div>
+         </div>`).join('');
 blocoCnpjNaoEnc.classList.remove('hidden');
 } else {
 blocoCnpjNaoEnc.classList.add('hidden');
@@ -2779,31 +2779,31 @@ return;
 }
 
 pop.innerHTML = `
-  <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-    <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Faturamentos Mínimos</p>
-    <button onclick="document.getElementById('popoverMinimos').classList.add('hidden')"
-      class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 transition-colors">
-      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-    </button>
-  </div>
-  <div class="p-3 space-y-2">
-    ${todos.map(item => {
-      const ok = item.faltam === 0;
-      return `
-        <div class="rounded-xl p-3 border ${ok ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}">
-          <div class="flex items-center justify-between gap-2 mb-1.5">
-            <span class="text-xs font-black ${ok ? 'text-emerald-700' : 'text-amber-700'}">${ok ? '🟢' : '🟠'} ${item.label}</span>
-            ${ok
-              ? `<span class="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">✓ Atingido</span>`
-              : `<span class="text-[10px] font-black text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">Faltam ${formatarParaReal(item.faltam)}</span>`}
-          </div>
-          <div class="flex gap-4 text-[10px] font-mono">
-            <span class="${ok ? 'text-emerald-600' : 'text-amber-600'}">Atual: <strong>${formatarParaReal(item.atual)}</strong></span>
-            <span class="text-slate-400">Mínimo: <strong>${formatarParaReal(item.minimo)}</strong></span>
-          </div>
-        </div>`;
-    }).join('')}
-  </div>`;
+   <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+     <p class="text-xs font-black text-slate-700 uppercase tracking-wider">Faturamentos Mínimos</p>
+     <button onclick="document.getElementById('popoverMinimos').classList.add('hidden')"
+       class="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 transition-colors">
+       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+     </button>
+   </div>
+   <div class="p-3 space-y-2">
+     ${todos.map(item => {
+       const ok = item.faltam === 0;
+       return `
+         <div class="rounded-xl p-3 border ${ok ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}">
+           <div class="flex items-center justify-between gap-2 mb-1.5">
+             <span class="text-xs font-black ${ok ? 'text-emerald-700' : 'text-amber-700'}">${ok ? '🟢' : '🟠'} ${item.label}</span>
+             ${ok
+               ? `<span class="text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">✓ Atingido</span>`
+               : `<span class="text-[10px] font-black text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">Faltam ${formatarParaReal(item.faltam)}</span>`}
+           </div>
+           <div class="flex gap-4 text-[10px] font-mono">
+             <span class="${ok ? 'text-emerald-600' : 'text-amber-600'}">Atual: <strong>${formatarParaReal(item.atual)}</strong></span>
+             <span class="text-slate-400">Mínimo: <strong>${formatarParaReal(item.minimo)}</strong></span>
+           </div>
+         </div>`;
+     }).join('')}
+   </div>`;
 
 pop.classList.remove('hidden');
 }
@@ -2828,19 +2828,19 @@ const titulo = pendentes.length === 1
 
 const conteudo = pendentes.length === 1
 ? `<p class="text-slate-600 text-xs mb-3 font-semibold">${pendentes[0].label}</p>
-     <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 space-y-1.5 text-xs">
-       <div class="flex justify-between"><span class="text-slate-500">Atual</span><span class="font-bold text-slate-700">${formatarParaReal(pendentes[0].atual)}</span></div>
-       <div class="flex justify-between"><span class="text-slate-500">Mínimo</span><span class="font-bold text-slate-700">${formatarParaReal(pendentes[0].minimo)}</span></div>
-       <div class="flex justify-between border-t border-amber-200 pt-1.5"><span class="text-red-600 font-bold">Faltam</span><span class="font-black text-red-600">${formatarParaReal(pendentes[0].faltam)}</span></div>
-     </div>`
+      <div class="bg-amber-50 rounded-xl p-3 border border-amber-200 space-y-1.5 text-xs">
+        <div class="flex justify-between"><span class="text-slate-500">Atual</span><span class="font-bold text-slate-700">${formatarParaReal(pendentes[0].atual)}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Mínimo</span><span class="font-bold text-slate-700">${formatarParaReal(pendentes[0].minimo)}</span></div>
+        <div class="flex justify-between border-t border-amber-200 pt-1.5"><span class="text-red-600 font-bold">Faltam</span><span class="font-black text-red-600">${formatarParaReal(pendentes[0].faltam)}</span></div>
+      </div>`
 : `<p class="text-slate-400 text-xs mb-2">Os seguintes mínimos ainda não foram atingidos:</p>
-     <div class="space-y-1.5">
-       ${pendentes.map(p => `
-         <div class="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2 border border-amber-100">
-           <span class="text-xs font-bold text-amber-700">🟠 ${p.label}</span>
-           <span class="text-xs font-black text-red-600">Faltam ${formatarParaReal(p.faltam)}</span>
-         </div>`).join('')}
-     </div>`;
+      <div class="space-y-1.5">
+        ${pendentes.map(p => `
+          <div class="flex items-center justify-between bg-amber-50 rounded-xl px-3 py-2 border border-amber-100">
+            <span class="text-xs font-bold text-amber-700">🟠 ${p.label}</span>
+            <span class="text-xs font-black text-red-600">Faltam ${formatarParaReal(p.faltam)}</span>
+          </div>`).join('')}
+      </div>`;
 
 document.getElementById('alertaMinimosTitulo').innerText       = titulo;
 document.getElementById('alertaMinimosConteudo').innerHTML     = conteudo;
@@ -2893,12 +2893,12 @@ const atingiu  = total >= minimo;
 const totalFmt = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const minFmt   = minimo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 return `
-        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${atingiu ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}">
-          <span class="text-[11px]">${atingiu ? '✅' : '❌'}</span>
-          <span class="text-[10px] font-semibold ${atingiu ? 'text-emerald-700' : 'text-red-600'}">${label}</span>
-          <span class="text-[10px] font-bold ${atingiu ? 'text-emerald-800' : 'text-red-700'}">${totalFmt}</span>
-          ${!atingiu ? `<span class="text-[9px] text-red-400 font-medium">/ ${minFmt}</span>` : ''}
-        </div>`;
+         <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${atingiu ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}">
+           <span class="text-[11px]">${atingiu ? '✅' : '❌'}</span>
+           <span class="text-[10px] font-semibold ${atingiu ? 'text-emerald-700' : 'text-red-600'}">${label}</span>
+           <span class="text-[10px] font-bold ${atingiu ? 'text-emerald-800' : 'text-red-700'}">${totalFmt}</span>
+           ${!atingiu ? `<span class="text-[9px] text-red-400 font-medium">/ ${minFmt}</span>` : ''}
+         </div>`;
 }).join('');
 
 secao.classList.remove('hidden');
@@ -3020,13 +3020,13 @@ btnLimpar.classList.toggle('hidden', !temPedidos);
 
 if (!temPedidos) {
 corpo.innerHTML = `
-        <div class="flex flex-col items-center justify-center py-16 text-center gap-3">
-          <svg class="w-14 h-14 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-          </svg>
-          <p class="text-slate-400 font-bold text-sm">Nenhum pedido salvo ainda.</p>
-          <p class="text-slate-400 text-xs">Monte seu pedido e clique em <strong>"Salvar Pedido"</strong> no carrinho.</p>
-        </div>`;
+         <div class="flex flex-col items-center justify-center py-16 text-center gap-3">
+           <svg class="w-14 h-14 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+           </svg>
+           <p class="text-slate-400 font-bold text-sm">Nenhum pedido salvo ainda.</p>
+           <p class="text-slate-400 text-xs">Monte seu pedido e clique em <strong>"Salvar Pedido"</strong> no carrinho.</p>
+         </div>`;
 return;
 }
 
@@ -3045,85 +3045,85 @@ fornecedores[forn].push(item);
 });
 
 const linhasPreview = Object.entries(fornecedores).map(([forn, itens]) => `
-        <div class="mb-2">
-          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">${forn}</p>
-          ${itens.map(item => {
-            const precoFmt  = item.precoFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const totalFmt  = (item.precoFinal * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            const descTag   = item.percentual > 0 ? `<span class="text-red-500 font-bold">-${item.percentual.toFixed(0)}%</span>` : '';
-            return `<div class="flex items-start justify-between gap-2 py-1.5 border-b border-slate-50 last:border-0">
-              <div class="flex-grow min-w-0">
-                <p class="text-[11px] font-semibold text-slate-700 leading-snug truncate">${item.descricao || item.id}</p>
-                <p class="text-[9px] text-slate-400 mt-0.5">${item.marca || ''} · ${item.embalagem || ''}</p>
-              </div>
-              <div class="text-right shrink-0">
-                <p class="text-[10px] font-black text-slate-800">${item.qtd} un × ${precoFmt} ${descTag}</p>
-                <p class="text-[10px] font-bold text-emerald-700">${totalFmt}</p>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>`).join('');
+         <div class="mb-2">
+           <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">${forn}</p>
+           ${itens.map(item => {
+             const precoFmt  = item.precoFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+             const totalFmt  = (item.precoFinal * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+             const descTag   = item.percentual > 0 ? `<span class="text-red-500 font-bold">-${item.percentual.toFixed(0)}%</span>` : '';
+             return `<div class="flex items-start justify-between gap-2 py-1.5 border-b border-slate-50 last:border-0">
+               <div class="flex-grow min-w-0">
+                 <p class="text-[11px] font-semibold text-slate-700 leading-snug truncate">${item.descricao || item.id}</p>
+                 <p class="text-[9px] text-slate-400 mt-0.5">${item.marca || ''} · ${item.embalagem || ''}</p>
+               </div>
+               <div class="text-right shrink-0">
+                 <p class="text-[10px] font-black text-slate-800">${item.qtd} un × ${precoFmt} ${descTag}</p>
+                 <p class="text-[10px] font-bold text-emerald-700">${totalFmt}</p>
+               </div>
+             </div>`;
+           }).join('')}
+         </div>`).join('');
 
 return `
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-          <!-- Cabeçalho do card -->
-          <div class="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <div class="flex-grow min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.uf}</span>
-                <span class="text-[9px] text-slate-400 font-medium">${p.data}</span>
-              </div>
-              <p class="font-bold text-slate-800 text-sm mt-1 truncate" title="${cliente}">${cliente}</p>
-              ${cnpj ? `<p class="text-[10px] text-slate-400 font-mono">${cnpj}</p>` : ''}
-              <div class="flex items-center gap-3 mt-1.5 flex-wrap">
-                <span class="text-[10px] text-slate-500">${p.totais.variedades} produto${p.totais.variedades !== 1 ? 's' : ''}</span>
-                <span class="text-[10px] text-slate-400">·</span>
-                <span class="text-[10px] text-slate-500">${p.totais.unidades} unid.</span>
-                <span class="text-[10px] text-slate-400">·</span>
-                <span class="text-xs font-black text-emerald-700">${liquido}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="togglePreviewPedido('${p.id}')"
-                class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-                Ver
-              </button>
-              <button onclick="enviarPedidoSalvoParaNegociacao('${p.id}')"
-                class="px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
-                Negociação
-              </button>
-              <button onclick="baixarPedidoSalvo('${p.id}')"
-                class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Baixar
-              </button>
-              <button onclick="excluirPedidoSalvo('${p.id}')"
-                class="p-2 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl border border-red-100 transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <!-- Preview expansível -->
-          <div id="preview_${p.id}" class="hidden border-t border-slate-100 bg-slate-50/60 px-4 py-3 max-h-72 overflow-y-auto no-scrollbar">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens do Pedido</span>
-              <div class="flex gap-3 text-[10px] text-slate-400">
-                <span>Bruto: <strong class="text-slate-600">${bruto}</strong></span>
-                <span>Líquido: <strong class="text-emerald-700">${liquido}</strong></span>
-              </div>
-            </div>
-            ${linhasPreview}
-          </div>
-        </div>`;
+         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+           <!-- Cabeçalho do card -->
+           <div class="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+             <div class="flex-grow min-w-0">
+               <div class="flex items-center gap-2 flex-wrap">
+                 <span class="text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.uf}</span>
+                 <span class="text-[9px] text-slate-400 font-medium">${p.data}</span>
+               </div>
+               <p class="font-bold text-slate-800 text-sm mt-1 truncate" title="${cliente}">${cliente}</p>
+               ${cnpj ? `<p class="text-[10px] text-slate-400 font-mono">${cnpj}</p>` : ''}
+               <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                 <span class="text-[10px] text-slate-500">${p.totais.variedades} produto${p.totais.variedades !== 1 ? 's' : ''}</span>
+                 <span class="text-[10px] text-slate-400">·</span>
+                 <span class="text-[10px] text-slate-500">${p.totais.unidades} unid.</span>
+                 <span class="text-[10px] text-slate-400">·</span>
+                 <span class="text-xs font-black text-emerald-700">${liquido}</span>
+               </div>
+             </div>
+             <div class="flex items-center gap-2 shrink-0">
+               <button onclick="togglePreviewPedido('${p.id}')"
+                 class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                 </svg>
+                 Ver
+               </button>
+               <button onclick="enviarPedidoSalvoParaNegociacao('${p.id}')"
+                 class="px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
+                 Negociação
+               </button>
+               <button onclick="baixarPedidoSalvo('${p.id}')"
+                 class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                 </svg>
+                 Baixar
+               </button>
+               <button onclick="excluirPedidoSalvo('${p.id}')"
+                 class="p-2 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-700 rounded-xl border border-red-100 transition-all">
+                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                 </svg>
+               </button>
+             </div>
+           </div>
+           <!-- Preview expansível -->
+           <div id="preview_${p.id}" class="hidden border-t border-slate-100 bg-slate-50/60 px-4 py-3 max-h-72 overflow-y-auto no-scrollbar">
+             <div class="flex items-center justify-between mb-2">
+               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Itens do Pedido</span>
+               <div class="flex gap-3 text-[10px] text-slate-400">
+                 <span>Bruto: <strong class="text-slate-600">${bruto}</strong></span>
+                 <span>Líquido: <strong class="text-emerald-700">${liquido}</strong></span>
+               </div>
+             </div>
+             ${linhasPreview}
+           </div>
+         </div>`;
 }).join('');
 }
 
@@ -3286,7 +3286,7 @@ el.style.opacity = '1';
 if (pag && _AVISOS_LISTA.length > 1) {
 pag.innerHTML = _AVISOS_LISTA.map((_, i) =>
 `<button onclick="_irParaAviso(${i})"
-            class="w-1.5 h-1.5 rounded-full transition-all ${i === _AVISOS_IDX ? 'bg-orange-300' : 'bg-orange-700'} hover:bg-orange-400"></button>`
+             class="w-1.5 h-1.5 rounded-full transition-all ${i === _AVISOS_IDX ? 'bg-orange-300' : 'bg-orange-700'} hover:bg-orange-400"></button>`
 ).join('');
 } else if (pag) {
 pag.innerHTML = '';
@@ -3458,155 +3458,155 @@ let _PDF_GERANDO = false;
 const PDF_IMG_PROXY_PROPRIO = 'https://dry-hall-0bba.mouralucas955.workers.dev/?url='; // Ex.: 'https://SEU-DOMINIO.com/img-proxy?url='
 
 function _normalizarUrlImagem(urlOriginal) {
-let url = String(urlOriginal || '').trim();
-if (!url) return '';
-url = url.replace(/\s+/g, '');
-url = url.replace(/(v=\d+)h=/, '$1&h=');
-return url;
+  let url = String(urlOriginal || '').trim();
+  if (!url) return '';
+  url = url.replace(/\s+/g, '');
+  url = url.replace(/(v=\d+)h=/, '$1&h=');
+  return url;
 }
 
 function _obterUrlImagemProxy(urlOriginal) {
-const url = _normalizarUrlImagem(urlOriginal);
-if (!url) return '';
-const semProtocolo = url.replace(/^https?:\/\//, '');
-return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=${PDF_IMG_LARGURA_PROXY}&fit=contain`;
+  const url = _normalizarUrlImagem(urlOriginal);
+  if (!url) return '';
+  const semProtocolo = url.replace(/^https?:\/\//, '');
+  return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=${PDF_IMG_LARGURA_PROXY}&fit=contain`;
 }
 
 function _obterUrlImagemProxyProprio(urlOriginal) {
-if (!PDF_IMG_PROXY_PROPRIO) return '';
-return PDF_IMG_PROXY_PROPRIO + encodeURIComponent(_normalizarUrlImagem(urlOriginal));
+  if (!PDF_IMG_PROXY_PROPRIO) return '';
+  return PDF_IMG_PROXY_PROPRIO + encodeURIComponent(_normalizarUrlImagem(urlOriginal));
 }
 
 async function _fetchComTimeout(url, ms = 12000) {
-const controller = new AbortController();
-const timer = setTimeout(() => controller.abort(), ms);
-try {
-return await fetch(url, {
-signal: controller.signal,
-cache: 'force-cache',
-headers: { Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8' }
-});
-} finally {
-clearTimeout(timer);
-}
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, {
+      signal: controller.signal,
+      cache: 'force-cache',
+      headers: { Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8' }
+    });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function _baixarImagemComoBase64(url, timeoutMs) {
-if (!url) throw new Error('URL vazia');
-const resp = await _fetchComTimeout(url, timeoutMs);
-if (!resp.ok) {
-const erro = new Error('HTTP ' + resp.status);
-erro.status = resp.status;
-throw erro;
-}
+  if (!url) throw new Error('URL vazia');
+  const resp = await _fetchComTimeout(url, timeoutMs);
+  if (!resp.ok) {
+    const erro = new Error('HTTP ' + resp.status);
+    erro.status = resp.status;
+    throw erro;
+  }
 
-const tipo = (resp.headers.get('content-type') || '').toLowerCase();
-const blob = await resp.blob();
-if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
-if (tipo && !tipo.startsWith('image/')) throw new Error('Resposta nao e imagem: ' + tipo);
+  const tipo = (resp.headers.get('content-type') || '').toLowerCase();
+  const blob = await resp.blob();
+  if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
+  if (tipo && !tipo.startsWith('image/')) throw new Error('Resposta nao e imagem: ' + tipo);
 
-return await new Promise((resolve, reject) => {
-const reader = new FileReader();
-reader.onload = () => resolve(reader.result);
-reader.onerror = reject;
-reader.readAsDataURL(blob);
-});
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 async function _tentarBaixarImagem(rotulo, url, timeoutMs) {
-try {
-return await _baixarImagemComoBase64(url, timeoutMs);
-} catch (e) {
-console.warn(`Imagem (${rotulo}) falhou:`, url, e.message);
-return null;
-}
+  try {
+    return await _baixarImagemComoBase64(url, timeoutMs);
+  } catch (e) {
+    console.warn(`Imagem (${rotulo}) falhou:`, url, e.message);
+    return null;
+  }
 }
 
 async function _obterImagemBase64ComCache(urlOriginal) {
-const url = _normalizarUrlImagem(urlOriginal);
-if (!url) return null;
+  const url = _normalizarUrlImagem(urlOriginal);
+  if (!url) return null;
 
-const chave = PDF_IMG_CACHE_PREFIX + url;
-const cache = localStorage.getItem(chave);
-if (cache) return cache;
+  const chave = PDF_IMG_CACHE_PREFIX + url;
+  const cache = localStorage.getItem(chave);
+  if (cache) return cache;
 
-const tentativas = [
-['direto', url, 9000],
-['weserv', _obterUrlImagemProxy(url), 12000],
-['proxy proprio', _obterUrlImagemProxyProprio(url), 15000],
-].filter(([, u]) => !!u);
+  const tentativas = [
+    ['direto', url, 9000],
+    ['weserv', _obterUrlImagemProxy(url), 12000],
+    ['proxy proprio', _obterUrlImagemProxyProprio(url), 15000],
+  ].filter(([, u]) => !!u);
 
-for (const [rotulo, tentativaUrl, timeout] of tentativas) {
-const base64 = await _tentarBaixarImagem(rotulo, tentativaUrl, timeout);
-if (base64) {
-try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
-return base64;
-}
-}
+  for (const [rotulo, tentativaUrl, timeout] of tentativas) {
+    const base64 = await _tentarBaixarImagem(rotulo, tentativaUrl, timeout);
+    if (base64) {
+      try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
+      return base64;
+    }
+  }
 
-return null;
+  return null;
 }
 
 async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia = 3, onProgresso) {
-let indice = 0, concluidas = 0;
-async function worker(numeroWorker) {
-await new Promise(r => setTimeout(r, numeroWorker * 150)); // escalona o início
-while (indice < lista.length) {
-const i = indice++;
-const p = lista[i];
-mapaImagens[p.id] = await _obterImagemBase64ComCache(p.imagens);
-concluidas++;
-if (onProgresso) onProgresso(concluidas, lista.length);
-}
-}
-await Promise.all(Array.from({ length: concorrencia }, (_, idx) => worker(idx)));
+  let indice = 0, concluidas = 0;
+  async function worker(numeroWorker) {
+    await new Promise(r => setTimeout(r, numeroWorker * 150)); // escalona o início
+    while (indice < lista.length) {
+      const i = indice++;
+      const p = lista[i];
+      mapaImagens[p.id] = await _obterImagemBase64ComCache(p.imagens);
+      concluidas++;
+      if (onProgresso) onProgresso(concluidas, lista.length);
+    }
+  }
+  await Promise.all(Array.from({ length: concorrencia }, (_, idx) => worker(idx)));
 }
 
 function _truncarTexto(texto, maxCaracteres) {
-const t = String(texto || '').trim();
-if (t.length <= maxCaracteres) return t;
-return t.slice(0, maxCaracteres - 1).trim() + '…';
+  const t = String(texto || '').trim();
+  if (t.length <= maxCaracteres) return t;
+  return t.slice(0, maxCaracteres - 1).trim() + '…';
 }
 
 function _formatarPercentualBadge(percentual) {
-if (!percentual || percentual <= 0) return '';
-const arred = Math.round(percentual * 10) / 10;
-const texto = (arred % 1 === 0) ? arred.toFixed(0) : arred.toFixed(1).replace('.', ',');
-return `-${texto}%`;
+  if (!percentual || percentual <= 0) return '';
+  const arred = Math.round(percentual * 10) / 10;
+  const texto = (arred % 1 === 0) ? arred.toFixed(0) : arred.toFixed(1).replace('.', ',');
+  return `-${texto}%`;
 }
 
 function _gerarHtmlCardPdf(p, imgBase64) {
-const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
-const temDesconto = percentual > 0 && precoOriginal > 0;
-const economia = temDesconto ? (precoOriginal - precoFinal) : 0;
-const estoque = Number(p.estoque || 0);
-const badgePct = _formatarPercentualBadge(percentual);
+  const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+  const temDesconto = percentual > 0 && precoOriginal > 0;
+  const economia = temDesconto ? (precoOriginal - precoFinal) : 0;
+  const estoque = Number(p.estoque || 0);
+  const badgePct = _formatarPercentualBadge(percentual);
 
-return `
-   <div style="display:flex;border:1px solid #e2e2e2;border-radius:10px;overflow:hidden;background:#fff;height:160px;box-sizing:border-box;">
+  return `
+    <div style="display:flex;border:1px solid #e2e2e2;border-radius:10px;overflow:hidden;background:#fff;height:160px;box-sizing:border-box;">
 
-     <!-- LATERAL ESQUERDA: imagem -->
-     <div style="width:130px;flex-shrink:0;position:relative;background:#fafafa;display:flex;align-items:center;justify-content:center;">
-       ${badgePct ? `<span style="position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;z-index:2;">${badgePct}</span>` : ''}
-       ${imgBase64
-         ? `<img src="${imgBase64}" style="max-height:120px;max-width:118px;object-fit:contain;">`
-         : `<span style="font-size:8px;color:#c2c2c2;">sem imagem</span>`}
-     </div>
+      <!-- LATERAL ESQUERDA: imagem -->
+      <div style="width:130px;flex-shrink:0;position:relative;background:#fafafa;display:flex;align-items:center;justify-content:center;">
+        ${badgePct ? `<span style="position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;z-index:2;">${badgePct}</span>` : ''}
+        ${imgBase64
+          ? `<img src="${imgBase64}" style="max-height:120px;max-width:118px;object-fit:contain;">`
+          : `<span style="font-size:8px;color:#c2c2c2;">sem imagem</span>`}
+      </div>
 
-     <!-- LATERAL DIREITA: informações -->
-     <div style="flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;">
-       <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
+      <!-- LATERAL DIREITA: informações -->
+      <div style="flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;">
+        <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
 
-       <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.3;margin:2px 0 5px;flex-shrink:0;">
- ${_truncarTexto(p.descricao, 140)}
+        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.3;margin:2px 0 5px;flex-shrink:0;">
+  ${_truncarTexto(p.descricao, 140)}
 </p>
 
-       <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
-         <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
-         <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
-       </div>
+        <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
+          <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
+          <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
+        </div>
 
-       <div style="margin-top:auto;flex-shrink:0;">
+        <div style="margin-top:auto;flex-shrink:0;">
           ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
           <div style="font-size:15px;font-weight:800;color:#e8620a;line-height:1.2;">${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}</div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">
@@ -3628,18 +3628,18 @@ return `
     <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
   </div>
 </div>
-     </div>
-   </div>`;
+      </div>
+    </div>`;
 }
 
 function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
-const div = document.createElement('div');
-div.style.width = '850px';
-div.style.height = '1200px';
-div.style.background = '#fff';
-div.style.fontFamily = "'Plus Jakarta Sans', Arial, sans-serif";
-div.style.position = 'relative';
-div.style.boxSizing = 'border-box';
+  const div = document.createElement('div');
+  div.style.width = '850px';
+  div.style.height = '1200px';
+  div.style.background = '#fff';
+  div.style.fontFamily = "'Plus Jakarta Sans', Arial, sans-serif";
+  div.style.position = 'relative';
+  div.style.boxSizing = 'border-box';
 
   const clienteTxt  = info.cliente ? `Cliente: ${(info.cliente.razao || '').toUpperCase()}` : '';
   const vendedorTxt = info.vendedor ? `Vendedor: ${info.vendedor}` : '';
@@ -3647,97 +3647,97 @@ div.style.boxSizing = 'border-box';
   const clienteTxt = info.cliente ? `Cliente: ${(info.cliente.razao || '').toUpperCase()}` : '';
 const subLinha = [clienteTxt, info.data].filter(Boolean).join(' | ');
 
-const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id])).join('');
+  const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id])).join('');
 
-div.innerHTML = `
-   <div style="background:#FF6B00;padding:26px 34px 20px;position:relative;">
-     <h1 style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS - ${info.fornecedor}</h1>
-     <p style="color:#ffe8d6;font-size:11px;margin:6px 0 0;">${subLinha}</p>
-     <span style="position:absolute;top:26px;right:34px;color:#ffe8d6;font-size:10px;">Página ${info.numPagina}/${info.totalPaginas}</span>
-   </div>
-   <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(2, 1fr);gap:14px;">
-     ${cardsHtml}
-   </div>`;
-return div;
+  div.innerHTML = `
+    <div style="background:#FF6B00;padding:26px 34px 20px;position:relative;">
+      <h1 style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS - ${info.fornecedor}</h1>
+      <p style="color:#ffe8d6;font-size:11px;margin:6px 0 0;">${subLinha}</p>
+      <span style="position:absolute;top:26px;right:34px;color:#ffe8d6;font-size:10px;">Página ${info.numPagina}/${info.totalPaginas}</span>
+    </div>
+    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(2, 1fr);gap:14px;">
+      ${cardsHtml}
+    </div>`;
+  return div;
 }
 
 async function baixarCatalogoPdf() {
-if (_PDF_GERANDO) return;
-const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + fornecedor + filtro de estoque atuais
-if (lista.length === 0) { mostrarToast('warning', 'Nenhum produto para exportar com os filtros atuais.'); return; }
+  if (_PDF_GERANDO) return;
+  const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + fornecedor + filtro de estoque atuais
+  if (lista.length === 0) { mostrarToast('warning', 'Nenhum produto para exportar com os filtros atuais.'); return; }
 
-_PDF_GERANDO = true;
-const btn = document.getElementById('btnBaixarCatalogoPdf');
-const htmlOriginal = btn ? btn.innerHTML : null;
-if (btn) {
-btn.disabled = true;
-btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Gerando PDF...`;
-}
+  _PDF_GERANDO = true;
+  const btn = document.getElementById('btnBaixarCatalogoPdf');
+  const htmlOriginal = btn ? btn.innerHTML : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Gerando PDF...`;
+  }
 
-try {
-mostrarToast('info', `Preparando catálogo com ${lista.length} produto(s)... isso pode levar alguns segundos.`, 5000);
+  try {
+    mostrarToast('info', `Preparando catálogo com ${lista.length} produto(s)... isso pode levar alguns segundos.`, 5000);
 
-// DEPOIS:
+    // DEPOIS:
 const mapaImagens = {};
 await _prefetchImagensComConcorrencia(lista, mapaImagens, 3, (feitas, total) => {
-if (feitas % 15 === 0 || feitas === total) {
-mostrarToast('info', `Carregando imagens... ${feitas}/${total}`, 1500);
-}
+  if (feitas % 15 === 0 || feitas === total) {
+    mostrarToast('info', `Carregando imagens... ${feitas}/${total}`, 1500);
+  }
 });
-const idsSemImagem = lista.filter(p => !mapaImagens[p.id]);
+         const idsSemImagem = lista.filter(p => !mapaImagens[p.id]);
 if (idsSemImagem.length > 0) {
-console.warn('Produtos que ficaram SEM IMAGEM no PDF:');
-idsSemImagem.forEach(p => {
-console.warn(`  ID ${p.id} — URL cadastrada: ${p.imagens || '(CAMPO VAZIO NA PLANILHA)'}`);
-});
+  console.warn('Produtos que ficaram SEM IMAGEM no PDF:');
+  idsSemImagem.forEach(p => {
+    console.warn(`  ID ${p.id} — URL cadastrada: ${p.imagens || '(CAMPO VAZIO NA PLANILHA)'}`);
+  });
 }
 
-const paginas = [];
-for (let i = 0; i < lista.length; i += PDF_CARDS_POR_PAGINA) {
-paginas.push(lista.slice(i, i + PDF_CARDS_POR_PAGINA));
-}
+    const paginas = [];
+    for (let i = 0; i < lista.length; i += PDF_CARDS_POR_PAGINA) {
+      paginas.push(lista.slice(i, i + PDF_CARDS_POR_PAGINA));
+    }
 
-const { jsPDF } = window.jspdf;
-const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
 
-const containerOffscreen = document.createElement('div');
-containerOffscreen.style.position = 'fixed';
-containerOffscreen.style.left = '-99999px';
-containerOffscreen.style.top = '0';
-document.body.appendChild(containerOffscreen);
+    const containerOffscreen = document.createElement('div');
+    containerOffscreen.style.position = 'fixed';
+    containerOffscreen.style.left = '-99999px';
+    containerOffscreen.style.top = '0';
+    document.body.appendChild(containerOffscreen);
 
-const nomeVendedor = localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
-const nomeFornecedorTitulo = filtroFornecedorAtual === 'TODOS' ? 'TODOS OS FORNECEDORES' : filtroFornecedorAtual;
-const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const nomeVendedor = localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
+    const nomeFornecedorTitulo = filtroFornecedorAtual === 'TODOS' ? 'TODOS OS FORNECEDORES' : filtroFornecedorAtual;
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
 
-for (let pg = 0; pg < paginas.length; pg++) {
-const divPagina = _montarDivPaginaPdf(paginas[pg], mapaImagens, {
-fornecedor: nomeFornecedorTitulo,
-cliente: CLIENTE_SELECIONADO,
-vendedor: nomeVendedor,
-data: dataHoje,
-numPagina: pg + 1,
-totalPaginas: paginas.length
-});
-containerOffscreen.innerHTML = '';
-containerOffscreen.appendChild(divPagina);
+    for (let pg = 0; pg < paginas.length; pg++) {
+      const divPagina = _montarDivPaginaPdf(paginas[pg], mapaImagens, {
+        fornecedor: nomeFornecedorTitulo,
+        cliente: CLIENTE_SELECIONADO,
+        vendedor: nomeVendedor,
+        data: dataHoje,
+        numPagina: pg + 1,
+        totalPaginas: paginas.length
+      });
+      containerOffscreen.innerHTML = '';
+      containerOffscreen.appendChild(divPagina);
 
-const canvas = await html2canvas(divPagina, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-const imgData = canvas.toDataURL('image/jpeg', 0.92);
-if (pg > 0) pdf.addPage();
-pdf.addImage(imgData, 'JPEG', 0, 0, 595.28, 841.89);
-}
+      const canvas = await html2canvas(divPagina, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      if (pg > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, 595.28, 841.89);
+    }
 
-document.body.removeChild(containerOffscreen);
+    document.body.removeChild(containerOffscreen);
 
-const nomeArquivo = `Catalogo_${limparNomeArquivo(nomeFornecedorTitulo)}_${dataHoje.replace(/\//g, '-')}.pdf`;
-pdf.save(nomeArquivo);
-mostrarToast('success', 'Catálogo em PDF gerado com sucesso.');
-} catch (erro) {
-console.error('Erro ao gerar catálogo em PDF:', erro);
-mostrarToast('error', 'Ocorreu um erro ao gerar o PDF. Tente novamente.');
-} finally {
-_PDF_GERANDO = false;
-if (btn) { btn.disabled = false; if (htmlOriginal !== null) btn.innerHTML = htmlOriginal; }
-}
+    const nomeArquivo = `Catalogo_${limparNomeArquivo(nomeFornecedorTitulo)}_${dataHoje.replace(/\//g, '-')}.pdf`;
+    pdf.save(nomeArquivo);
+    mostrarToast('success', 'Catálogo em PDF gerado com sucesso.');
+  } catch (erro) {
+    console.error('Erro ao gerar catálogo em PDF:', erro);
+    mostrarToast('error', 'Ocorreu um erro ao gerar o PDF. Tente novamente.');
+  } finally {
+    _PDF_GERANDO = false;
+    if (btn) { btn.disabled = false; if (htmlOriginal !== null) btn.innerHTML = htmlOriginal; }
+  }
 }
