@@ -3451,7 +3451,7 @@ window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'))
 // EXPORTAÇÃO DO CATÁLOGO EM PDF (imagens via proxy + cache local)
 // =========================================================================
 const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_';
-const PDF_CARDS_POR_PAGINA = 18; // 3 colunas x 6 linhas, igual ao exemplo Kenvue/Omron
+const PDF_CARDS_POR_PAGINA = 15; // 3 colunas x 6 linhas, igual ao exemplo Kenvue/Omron
 let _PDF_GERANDO = false;
 
 // Usa images.weserv.nl como proxy: resolve CORS pro html2canvas e já redimensiona
@@ -3462,30 +3462,58 @@ function _obterUrlImagemProxy(urlOriginal) {
   return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=240&fit=contain`;
 }
 
-// Busca a imagem (via proxy) e guarda em base64 no localStorage.
-// Nas próximas exportações do mesmo produto, nem chama o proxy de novo.
-async function _obterImagemBase64ComCache(urlOriginal) {
+async function _fetchComTimeout(url, ms = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function _obterImagemBase64ComCache(urlOriginal, tentativas = 2) {
   if (!urlOriginal) return null;
   const chave = PDF_IMG_CACHE_PREFIX + urlOriginal;
   const cache = localStorage.getItem(chave);
   if (cache) return cache;
 
-  try {
-    const resp = await fetch(_obterUrlImagemProxy(urlOriginal));
-    if (!resp.ok) throw new Error('Falha ao buscar imagem: ' + resp.status);
-    const blob = await resp.blob();
-    const base64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-    try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio — segue sem cachear */ }
-    return base64;
-  } catch (e) {
-    console.warn('Imagem não carregada para o PDF:', urlOriginal, e);
-    return null;
+  for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
+    try {
+      const resp = await _fetchComTimeout(_obterUrlImagemProxy(urlOriginal), 12000);
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload  = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
+      return base64;
+    } catch (e) {
+      console.warn(`Imagem falhou (tentativa ${tentativa}/${tentativas}):`, urlOriginal, e.message);
+      if (tentativa === tentativas) return null;
+      await new Promise(r => setTimeout(r, 400 * tentativa));
+    }
   }
+  return null;
+}
+
+// Busca imagens em paralelo (com limite de concorrência) em vez de uma por vez
+async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia = 6, onProgresso) {
+  let indice = 0, concluidas = 0;
+  async function worker() {
+    while (indice < lista.length) {
+      const i = indice++;
+      const p = lista[i];
+      mapaImagens[p.id] = await _obterImagemBase64ComCache(p.imagens);
+      concluidas++;
+      if (onProgresso) onProgresso(concluidas, lista.length);
+    }
+  }
+  await Promise.all(Array.from({ length: concorrencia }, worker));
 }
 
 function _formatarPercentualBadge(percentual) {
@@ -3503,21 +3531,34 @@ function _gerarHtmlCardPdf(p, imgBase64) {
   const badgePct = _formatarPercentualBadge(percentual);
 
   return `
-    <div style="border:1px solid #e2e2e2;border-radius:10px;padding:10px;position:relative;background:#fff;display:flex;flex-direction:column;gap:4px;height:190px;box-sizing:border-box;">
-      ${badgePct ? `<span style="position:absolute;top:8px;left:8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;">${badgePct}</span>` : ''}
-      <div style="height:70px;display:flex;align-items:center;justify-content:center;">
-        ${imgBase64 ? `<img src="${imgBase64}" style="max-height:68px;max-width:100%;object-fit:contain;">` : `<span style="font-size:8px;color:#aaa;">sem imagem</span>`}
+    <div style="border:1px solid #e2e2e2;border-radius:10px;padding:10px;position:relative;background:#fff;display:flex;flex-direction:column;height:195px;box-sizing:border-box;overflow:hidden;">
+      ${badgePct ? `<span style="position:absolute;top:8px;left:8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;z-index:2;">${badgePct}</span>` : ''}
+
+      <div style="height:64px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fafafa;border-radius:6px;margin-bottom:6px;">
+        ${imgBase64
+          ? `<img src="${imgBase64}" style="max-height:60px;max-width:90%;object-fit:contain;">`
+          : `<span style="font-size:8px;color:#c2c2c2;">sem imagem</span>`}
       </div>
-      <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;">${p.fornecedor || 'GERAL'}</span>
-      <p style="font-size:9.5px;font-weight:700;color:#1e293b;line-height:1.25;margin:0;min-height:24px;overflow:hidden;">${p.descricao || ''}</p>
-      <div style="display:flex;gap:5px;font-size:7.5px;">
+
+      <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
+
+      <p style="font-size:9.5px;font-weight:700;color:#1e293b;line-height:1.25;margin:2px 0 4px;height:24px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;flex-shrink:0;">
+        ${p.descricao || ''}
+      </p>
+
+      <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:4px;">
         <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
         <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
       </div>
-      ${temDesconto ? `<span style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</span>` : ''}
-      <span style="font-size:14px;font-weight:800;color:#e8620a;">${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}</span>
-      ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;width:fit-content;">& ECON. ${formatarParaReal(economia)}</span>` : ''}
-      <span style="font-size:7.5px;color:#94a3b8;margin-top:auto;">Estoque: ${estoque}</span>
+
+      <div style="margin-top:auto;flex-shrink:0;">
+        ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
+        <div style="font-size:14px;font-weight:800;color:#e8620a;line-height:1.2;">${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">
+          ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7.5px;font-weight:700;padding:2px 6px;border-radius:5px;">ECON. ${formatarParaReal(economia)}</span>` : '<span></span>'}
+          <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
+        </div>
+      </div>
     </div>`;
 }
 
@@ -3564,11 +3605,13 @@ async function baixarCatalogoPdf() {
   try {
     mostrarToast('info', `Preparando catálogo com ${lista.length} produto(s)... isso pode levar alguns segundos.`, 5000);
 
-    // Pré-carrega todas as imagens (com cache) antes de montar as páginas
-    const mapaImagens = {};
-    for (const p of lista) {
-      mapaImagens[p.id] = await _obterImagemBase64ComCache(p.imagens);
-    }
+    // DEPOIS:
+const mapaImagens = {};
+await _prefetchImagensComConcorrencia(lista, mapaImagens, 6, (feitas, total) => {
+  if (feitas % 15 === 0 || feitas === total) {
+    mostrarToast('info', `Carregando imagens... ${feitas}/${total}`, 1500);
+  }
+});
 
     const paginas = [];
     for (let i = 0; i < lista.length; i += PDF_CARDS_POR_PAGINA) {
