@@ -3469,6 +3469,15 @@ function _obterUrlImagemProxy(urlOriginal) {
 function _obterUrlImagemProxyFallback(urlOriginal) {
   return `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(urlOriginal)}`;
 }
+async function _fetchComTimeout(url, ms = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 async function _baixarImagemComoBase64(url, timeoutMs) {
   const resp = await _fetchComTimeout(url, timeoutMs);
@@ -3482,6 +3491,7 @@ async function _baixarImagemComoBase64(url, timeoutMs) {
     reader.readAsDataURL(blob);
   });
 }
+
 
 async function _obterImagemBase64ComCache(urlOriginal, tentativas = 3) {
   if (!urlOriginal) return null;
