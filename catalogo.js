@@ -3594,30 +3594,31 @@ function _gerarHtmlCardPdf(p, imgBase64) {
       </div>
 
       <!-- LATERAL DIREITA: informações -->
-      <div style="flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;">
-        <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
+<div style="flex:1;min-width:0;padding:14px 14px;display:flex;flex-direction:column;justify-content:center;gap:7px;">
+  <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">
+    ${p.fornecedor || 'GERAL'}
+  </span>
 
-        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.3;margin:2px 0 5px;flex-shrink:0;">
-  ${_truncarTexto(p.descricao, 140)}
-</p>
+  <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.25;margin:0;flex-shrink:0;">
+    ${_truncarTexto(p.descricao, 120)}
+  </p>
 
-        <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
-          <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
-          <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
-        </div>
+  <div style="display:flex;gap:6px;font-size:7.5px;flex-shrink:0;flex-wrap:wrap;align-items:center;">
+    <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:2px 5px;border-radius:4px;">ID:${p.id}</span>
+    <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:2px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
+  </div>
 
-        <div style="margin-top:auto;flex-shrink:0;">
-  ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
+  ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;margin-top:6px;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
 
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-    <div style="font-size:15px;font-weight:800;color:#e8620a;line-height:1.2;white-space:nowrap;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div style="font-size:15px;font-weight:800;color:#e8620a;line-height:1.15;white-space:nowrap;">
       ${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}
     </div>
 
-    ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7px;font-weight:700;padding:2px 5px;border-radius:5px;white-space:nowrap;">ECON. ${formatarParaReal(economia)}</span>` : ''}
+    ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7px;font-weight:700;padding:3px 7px;border-radius:5px;white-space:nowrap;">ECON. ${formatarParaReal(economia)}</span>` : '<span></span>'}
   </div>
 
-  <div style="text-align:right;margin-top:3px;">
+  <div style="display:flex;justify-content:flex-end;">
     <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
   </div>
 </div>
