@@ -3453,7 +3453,7 @@ window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'))
 
 const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v3_';
 const PDF_IMG_LARGURA_PROXY = 480;
-const PDF_IMG_PROXY_PROPRIO = ''; // Ex.: 'https://SEU-DOMINIO.com/img-proxy?url='
+const PDF_IMG_PROXY_PROPRIO = 'https://dry-hall-0bba.mouralucas955.workers.dev/'; // Ex.: 'https://SEU-DOMINIO.com/img-proxy?url='
 
 function _normalizarUrlImagem(urlOriginal) {
   let url = String(urlOriginal || '').trim();
