@@ -6,6 +6,135 @@
     let BD_CLIENTES         = [];
     let CLIENTE_SELECIONADO = null;
     let FILTRO_APENAS_COM_ESTOQUE = false;
+// =========================================================================
+// SUGESTÃO HIT — itens pendentes de positivação do cliente Dedicado selecionado
+// =========================================================================
+let HIT_DADOS_CLIENTE   = null; // resposta de carteiraHit para o cliente atual
+let HIT_ITENS_PENDENTES = [];   // [{ alavanca, grupo, item, produto }]
+
+function carregarSugestaoHit() {
+  HIT_DADOS_CLIENTE   = null;
+  HIT_ITENS_PENDENTES = [];
+  atualizarBotaoSugestaoHit();
+
+  if (!CLIENTE_SELECIONADO) return;
+  const equipe = String(CLIENTE_SELECIONADO.equipe || '').toUpperCase().trim();
+  if (equipe !== 'DEDICADO') return;
+
+  chamarApi('carteiraHit', { uf: UF_USUARIO, codCliente: CLIENTE_SELECIONADO.id })
+    .then(resp => {
+      if (!resp || resp.erro || !resp.clientes || resp.clientes.length === 0) return;
+      HIT_DADOS_CLIENTE = resp.clientes[0];
+      montarItensPendentesHit();
+      atualizarBotaoSugestaoHit();
+    })
+    .catch(e => console.error('Erro ao carregar sugestão HIT:', e));
+}
+
+function montarItensPendentesHit() {
+  HIT_ITENS_PENDENTES = [];
+  if (!HIT_DADOS_CLIENTE) return;
+
+  (HIT_DADOS_CLIENTE.alavancas || []).forEach(al => {
+    (al.grupos || []).forEach(g => {
+      if (g.positivado) return;
+
+      // Entre as alternativas do grupo (itens "OU"), sugere a de maior estoque
+      let melhor = null;
+      (g.itens || []).forEach(item => {
+        const eanAlvo = normalizarSoDigitos(item.ean);
+        let p = BD_PRODUTOS.find(prod => normalizarSoDigitos(prod.ean) === eanAlvo && eanAlvo !== '');
+        if (!p && item.cod) p = BD_PRODUTOS.find(prod => String(prod.id).trim() === String(item.cod).trim());
+        const estoque = p ? Number(p.estoque || 0) : 0;
+        if (!melhor || estoque > melhor.estoque) melhor = { item, produto: p, estoque };
+      });
+
+      // Só sugere se o produto existir no catálogo atual
+      if (melhor && melhor.produto) {
+        HIT_ITENS_PENDENTES.push({ alavanca: al.alavanca, grupo: g.grupo, item: melhor.item, produto: melhor.produto });
+      }
+    });
+  });
+}
+
+function atualizarBotaoSugestaoHit() {
+  const btn   = document.getElementById('btnSugestaoHit');
+  const badge = document.getElementById('badgeSugestaoHit');
+  if (!btn) return;
+  // Os itens do HIT são todos Unilever — só mostra o botão navegando nesse portal
+  const estaNaUnilever = filtroFornecedorAtual === 'UNILEVER';
+  const qtd = HIT_ITENS_PENDENTES.length;
+  btn.classList.toggle('hidden', !estaNaUnilever || qtd === 0);
+  if (badge) badge.innerText = qtd;
+}
+
+function abrirPainelSugestaoHit() {
+  if (HIT_ITENS_PENDENTES.length === 0) return;
+
+  document.getElementById('sugestaoHitClienteNome').innerText =
+    CLIENTE_SELECIONADO ? (CLIENTE_SELECIONADO.razao || '').toUpperCase() : '';
+
+  const corpo = document.getElementById('corpoSugestaoHit');
+  let acBruto = 0, acLiquido = 0;
+
+  corpo.innerHTML = HIT_ITENS_PENDENTES.map(({ alavanca, item, produto }) => {
+    const { precoFinal, precoOriginal } = calcularPrecos(produto);
+    acBruto   += precoOriginal;
+    acLiquido += precoFinal;
+    return `
+      <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl p-2.5">
+        <img src="${produto.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0 mix-blend-multiply">
+        <div class="min-w-0 flex-grow">
+          <span class="text-[8px] font-black text-purple-600 uppercase tracking-wider">${alavanca}</span>
+          <p class="text-xs font-bold text-slate-800 truncate">${produto.descricao || item.descricao || item.cod}</p>
+          <p class="text-[10px] text-slate-400 font-mono">Cód ${item.cod} • EAN ${item.ean}</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-[11px] font-black text-slate-800">${formatarParaReal(precoFinal)}</p>
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('sugestaoHitTotalBruto').innerText   = formatarParaReal(acBruto);
+  document.getElementById('sugestaoHitTotalLiquido').innerText = formatarParaReal(acLiquido);
+
+  document.getElementById('overlaySugestaoHit').classList.remove('hidden');
+  document.getElementById('painelSugestaoHit').classList.remove('translate-x-full');
+}
+
+function fecharPainelSugestaoHit() {
+  document.getElementById('overlaySugestaoHit').classList.add('hidden');
+  document.getElementById('painelSugestaoHit').classList.add('translate-x-full');
+}
+
+function adicionarItensSugestaoHit() {
+  if (HIT_ITENS_PENDENTES.length === 0) return;
+
+  let adicionados = 0;
+  HIT_ITENS_PENDENTES.forEach(({ produto }) => {
+    const estoqueMax = Number(produto.estoque || 0);
+    if (estoqueMax <= 0) return; // não adiciona item sem estoque
+    const qtdAtual = CARRINHO[produto.id] || 0;
+    if (qtdAtual >= estoqueMax) return; // já está no limite do estoque
+
+    CARRINHO[produto.id] = qtdAtual + 1;
+    adicionados++;
+    const c = document.getElementById(`card-btn-${produto.id}`);
+    if (c) c.innerHTML = obterHtmlBotaoAcao(produto.id, CARRINHO[produto.id], estoqueMax, false);
+    _atualizarEstadoVisualCard(produto.id);
+  });
+
+  atualizarIndicadoresFinanceirosGlobais();
+  atualizarIndicadorMinimosBarra();
+  fecharPainelSugestaoHit();
+
+  if (adicionados > 0) {
+    mostrarToast('success', `${adicionados} item(ns) da sugestão HIT adicionados ao pedido.`);
+  } else {
+    mostrarToast('warning', 'Nenhum item pôde ser adicionado (sem estoque disponível).');
+  }
+}
+
 
     // -----------------------------------------------------------------------
     // DARK MODE — aplicado antes de qualquer render
@@ -287,8 +416,9 @@ let BD_CHAVES_VENCIDAS = new Set(); // chaves de desconto cuja validade (coluna 
       // Mini switcher: outros fornecedores
       renderizarMiniSwitcher(nomeFornecedor);
 
-      // Filtra e renderiza produtos
+     // Filtra e renderiza produtos
       executarFiltrosGerais();
+      atualizarBotaoSugestaoHit();
 
       const qtd = PRODUTOS_FILTRADOS.length;
       document.getElementById('qtdProdutosFornecedor').innerText = qtd + ' produto' + (qtd !== 1 ? 's' : '');
@@ -321,6 +451,7 @@ let BD_CHAVES_VENCIDAS = new Set(); // chaves de desconto cuja validade (coluna 
 
     function voltarParaPortais() {
       filtroFornecedorAtual = 'TODOS';
+      atualizarBotaoSugestaoHit();
       mostrarTelaPortais();
     }
 
@@ -688,6 +819,7 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       atualizarIndicadoresFinanceirosGlobais();
       atualizarPaineisOLPorFornecedor(filtroFornecedorAtual);
       atualizarResumoValoresMinimos();
+      carregarSugestaoHit();
     }
 
     function limparClienteSelecionado() {
@@ -713,6 +845,9 @@ function calcularPrecosPara(p, cliente, olAtivo, omronOlAtivo) {
       // Reset estados dos botões
       _resetBotoesOL();
       _resetBotoesOmron();
+        HIT_DADOS_CLIENTE = null;
+      HIT_ITENS_PENDENTES = [];
+      atualizarBotaoSugestaoHit();
 
       executarFiltrosGerais();
       atualizarIndicadoresFinanceirosGlobais();
