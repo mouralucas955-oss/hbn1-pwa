@@ -92,6 +92,11 @@
   .hit-estoque-zero { background:var(--danger-soft); color:var(--danger); }
 
   .hit-aviso-sugestao { display:flex; align-items:flex-start; gap:8px; background:var(--warning-soft); border:1px solid var(--warning-border); border-radius:10px; padding:9px 12px; font-size:11.5px; color:var(--warning); font-weight:600; margin-bottom:10px; }
+
+  .hit-uf-pills { display:flex; flex-wrap:wrap; gap:8px; }
+  .hit-uf-pill { font-family:inherit; font-size:12px; font-weight:700; border-radius:999px; padding:6px 14px; border:1.5px solid var(--border-default); background:var(--surface-secondary); color:var(--text-secondary); cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:5px; }
+  .hit-uf-pill:hover { border-color:var(--accent); }
+  .hit-uf-pill-ativa { background:var(--accent); color:#fff; border-color:var(--accent); }
 </style>
 </head>
 <body class="hitdesk">
@@ -119,12 +124,21 @@
         <div id="hitDropdownClientesTopo" class="hit-dropdown" style="display:none;"></div>
       </div>
 
+   
       <div class="hit-panel" style="position:relative;">
         <div class="hit-panel-title">Ver por vendedor</div>
         <input id="hitBuscaVendedor" class="hit-select" style="max-width:100%;" placeholder="🔍 Digite o nome do vendedor..." oninput="hitFiltrarVendedores()" onfocus="hitFiltrarVendedores()" autocomplete="off">
         <div id="hitDropdownVendedores" class="hit-dropdown" style="display:none;"></div>
       </div>
+
+      <div class="hit-panel" style="position:relative;">
+        <div class="hit-panel-title">Ver por rede</div>
+        <input id="hitBuscaRede" class="hit-select" style="max-width:100%;" placeholder="🔍 Digite o nome da rede..." oninput="hitFiltrarRedes()" onfocus="hitFiltrarRedes()" autocomplete="off">
+        <div id="hitDropdownRedes" class="hit-dropdown" style="display:none;"></div>
+      </div>
     </div>
+
+    <div id="hitFiltroUfsRede" style="display:none;"></div>
 
     <div id="hitConteudo"></div>
 
@@ -146,11 +160,17 @@
   let HIT_PRODUTOS     = [];  // catálogo completo (pra estoque/preço/imagem)
   let HIT_PERIODO      = null;
 
-  let HIT_MODO_ORIGEM        = null;  // 'direto' | 'vendedor'
+
+  let HIT_MODO_ORIGEM        = null;  // 'direto' | 'vendedor' | 'rede'
   let HIT_VENDEDOR_ATUAL     = null;
-  let HIT_LISTA_CLIENTES_VEND = [];   // resultado da API quando filtrado por vendedor
+  let HIT_LISTA_CLIENTES_VEND = [];   // resultado da API quando filtrado por vendedor OU por rede
   let HIT_CLIENTE_ATUAL      = null;  // objeto cliente completo (com .alavancas)
   let HIT_ALAVANCA_ATUAL     = null;  // objeto alavanca dentro de HIT_CLIENTE_ATUAL, quando no drilldown
+
+  let HIT_LISTA_REDES        = []; // lista pra autocomplete da busca de rede
+  let HIT_REDE_ATUAL         = null;
+  let HIT_REDE_UFS_TODAS     = []; // todas as UFs onde a rede tem clientes Dedicado no HIT
+  let HIT_REDE_UFS_ATIVAS    = new Set(); // UFs marcadas nas pills
 
   function hitFormatBRL(n) {
     if (!isFinite(n)) n = 0;
@@ -194,9 +214,15 @@
     }).catch(() => { HIT_CLIENTES = []; HIT_VENDEDORES = []; });
   }
 
+
   function hitCarregarProdutos() {
     return chamarApi('produtos', { uf: UF_USUARIO }).then(lista => { HIT_PRODUTOS = lista || []; })
       .catch(() => { HIT_PRODUTOS = []; });
+  }
+
+  function hitCarregarRedes() {
+    return chamarApi('redes', { uf: UF_USUARIO }).then(lista => { HIT_LISTA_REDES = lista || []; })
+      .catch(() => { HIT_LISTA_REDES = []; });
   }
 
   function hitRenderPeriodo() {
@@ -235,10 +261,17 @@
     const cliente = HIT_CLIENTES.find(c => String(c.id) === String(id));
     if (!cliente) return;
 
+   
     HIT_MODO_ORIGEM = 'direto';
     HIT_VENDEDOR_ATUAL = null;
     HIT_LISTA_CLIENTES_VEND = [];
     document.getElementById('hitBuscaVendedor').value = '';
+
+    HIT_REDE_ATUAL = null;
+    HIT_REDE_UFS_TODAS = [];
+    HIT_REDE_UFS_ATIVAS = new Set();
+    document.getElementById('hitBuscaRede').value = '';
+    hitRenderFiltroUfsRede();
 
     document.getElementById('hitBuscaClienteTopo').value = '';
     document.getElementById('hitDropdownClientesTopo').style.display = 'none';
@@ -279,16 +312,132 @@
     document.getElementById('hitBuscaVendedor').value = nome;
     document.getElementById('hitDropdownVendedores').style.display = 'none';
 
+   
     HIT_MODO_ORIGEM = 'vendedor';
     HIT_VENDEDOR_ATUAL = nome;
     HIT_CLIENTE_ATUAL = null;
     HIT_ALAVANCA_ATUAL = null;
     document.getElementById('hitBuscaClienteTopo').value = '';
 
+    HIT_REDE_ATUAL = null;
+    HIT_REDE_UFS_TODAS = [];
+    HIT_REDE_UFS_ATIVAS = new Set();
+    document.getElementById('hitBuscaRede').value = '';
+    hitRenderFiltroUfsRede();
+
     document.getElementById('hitConteudo').innerHTML =
       '<div class="hit-panel"><div class="hit-loading">Calculando positivação da carteira de ' + nome + '...</div></div>';
 
     chamarApi('carteiraHit', { uf: UF_USUARIO, vendedor: nome })
+      .then(resp => {
+        if (!resp || resp.erro) { hitMostrarErro(resp); return; }
+        HIT_PERIODO = resp.periodo; hitRenderPeriodo();
+        HIT_LISTA_CLIENTES_VEND = resp.clientes || [];
+        hitRenderConteudo();
+      })
+      .catch(() => hitMostrarErro(null));
+  }
+
+  
+  // ── BUSCA POR REDE ────────────────────────────────────────────────────
+  function hitFiltrarRedes() {
+    const termo = document.getElementById('hitBuscaRede').value.trim().toLowerCase();
+    const dropdown = document.getElementById('hitDropdownRedes');
+    const filtrados = termo ? HIT_LISTA_REDES.filter(r => r.toLowerCase().includes(termo)) : HIT_LISTA_REDES;
+
+    if (filtrados.length === 0) {
+      dropdown.innerHTML = '<div class="hit-dropdown-item" style="cursor:default; color:var(--text-secondary);">Nenhuma rede encontrada</div>';
+    } else {
+      dropdown.innerHTML = filtrados.slice(0, 20).map(r => `
+        <div class="hit-dropdown-item" onclick="hitSelecionarRede('${r.replace(/'/g, "\\'")}')">
+          <div class="nome">${r}</div>
+        </div>`).join('');
+    }
+    dropdown.style.display = 'block';
+  }
+
+  function hitSelecionarRede(nome) {
+    document.getElementById('hitBuscaRede').value = nome;
+    document.getElementById('hitDropdownRedes').style.display = 'none';
+
+    HIT_MODO_ORIGEM = 'rede';
+    HIT_REDE_ATUAL = nome;
+    HIT_CLIENTE_ATUAL = null;
+    HIT_ALAVANCA_ATUAL = null;
+    HIT_LISTA_CLIENTES_VEND = [];
+    document.getElementById('hitBuscaClienteTopo').value = '';
+
+    HIT_VENDEDOR_ATUAL = null;
+    document.getElementById('hitBuscaVendedor').value = '';
+
+    HIT_REDE_UFS_TODAS = [];
+    HIT_REDE_UFS_ATIVAS = new Set();
+    hitRenderFiltroUfsRede();
+
+    document.getElementById('hitConteudo').innerHTML =
+      '<div class="hit-panel"><div class="hit-loading">Buscando UFs da rede ' + nome + '...</div></div>';
+
+    chamarApi('ufsPorRedeHit', { rede: nome })
+      .then(ufs => {
+        HIT_REDE_UFS_TODAS = ufs || [];
+        HIT_REDE_UFS_ATIVAS = new Set(HIT_REDE_UFS_TODAS);
+        hitRenderFiltroUfsRede();
+        hitBuscarCarteiraRede();
+      })
+      .catch(() => {
+        HIT_REDE_UFS_TODAS = [];
+        HIT_REDE_UFS_ATIVAS = new Set();
+        hitRenderFiltroUfsRede();
+        hitBuscarCarteiraRede();
+      });
+  }
+
+  function hitToggleUfRede(uf) {
+    if (HIT_REDE_UFS_ATIVAS.has(uf)) HIT_REDE_UFS_ATIVAS.delete(uf);
+    else HIT_REDE_UFS_ATIVAS.add(uf);
+    hitRenderFiltroUfsRede();
+    hitBuscarCarteiraRede();
+  }
+
+  function hitRenderFiltroUfsRede() {
+    const wrap = document.getElementById('hitFiltroUfsRede');
+    if (!HIT_REDE_ATUAL || HIT_REDE_UFS_TODAS.length === 0) {
+      wrap.style.display = 'none';
+      wrap.innerHTML = '';
+      return;
+    }
+
+    const pillsHtml = HIT_REDE_UFS_TODAS.map(uf => {
+      const ativa = HIT_REDE_UFS_ATIVAS.has(uf);
+      return `<button type="button" class="hit-uf-pill ${ativa ? 'hit-uf-pill-ativa' : ''}" onclick="hitToggleUfRede('${uf.replace(/'/g, "\\'")}')">${ativa ? '✓ ' : ''}${uf}</button>`;
+    }).join('');
+
+    wrap.style.display = 'block';
+    wrap.innerHTML = `
+      <div class="hit-panel">
+        <div class="hit-panel-title">Filtrar por UF (${HIT_REDE_UFS_ATIVAS.size} de ${HIT_REDE_UFS_TODAS.length} selecionada${HIT_REDE_UFS_ATIVAS.size !== 1 ? 's' : ''})</div>
+        <div class="hit-uf-pills">${pillsHtml}</div>
+      </div>`;
+  }
+
+  function hitBuscarCarteiraRede() {
+    const nome = HIT_REDE_ATUAL;
+    if (!nome) return;
+
+    if (HIT_REDE_UFS_TODAS.length > 0 && HIT_REDE_UFS_ATIVAS.size === 0) {
+      HIT_LISTA_CLIENTES_VEND = [];
+      document.getElementById('hitConteudo').innerHTML =
+        '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhuma UF selecionada</div><div>Marque ao menos uma UF acima pra ver a carteira HIT da rede.</div></div></div>';
+      return;
+    }
+
+    document.getElementById('hitConteudo').innerHTML =
+      '<div class="hit-panel"><div class="hit-loading">Calculando positivação da rede ' + nome + '...</div></div>';
+
+    const params = { uf: UF_USUARIO, rede: nome };
+    if (HIT_REDE_UFS_TODAS.length > 0) params.ufs = Array.from(HIT_REDE_UFS_ATIVAS);
+
+    chamarApi('carteiraHit', params)
       .then(resp => {
         if (!resp || resp.erro) { hitMostrarErro(resp); return; }
         HIT_PERIODO = resp.periodo; hitRenderPeriodo();
@@ -309,19 +458,28 @@
     const iTopo = document.getElementById('hitBuscaClienteTopo');
     if (dTopo && iTopo && !dTopo.contains(e.target) && e.target !== iTopo) dTopo.style.display = 'none';
 
+    
     const dVend = document.getElementById('hitDropdownVendedores');
     const iVend = document.getElementById('hitBuscaVendedor');
     if (dVend && iVend && !dVend.contains(e.target) && e.target !== iVend) dVend.style.display = 'none';
+
+    const dRede = document.getElementById('hitDropdownRedes');
+    const iRede = document.getElementById('hitBuscaRede');
+    if (dRede && iRede && !dRede.contains(e.target) && e.target !== iRede) dRede.style.display = 'none';
   });
 
   // ── DISPATCH PRINCIPAL ────────────────────────────────────────────────
+ 
   function hitRenderConteudo() {
     if (HIT_ALAVANCA_ATUAL) { hitRenderDrilldownAlavanca(); return; }
     if (HIT_CLIENTE_ATUAL) { hitRenderCardsAlavancas(); return; }
-    if (HIT_MODO_ORIGEM === 'vendedor' && HIT_LISTA_CLIENTES_VEND.length >= 0) { hitRenderListaClientesVendedor(); return; }
+    if ((HIT_MODO_ORIGEM === 'vendedor' || HIT_MODO_ORIGEM === 'rede') && HIT_LISTA_CLIENTES_VEND.length >= 0) {
+      hitRenderListaClientesVendedor();
+      return;
+    }
 
     document.getElementById('hitConteudo').innerHTML =
-      '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum filtro selecionado</div><div>Busque um cliente Dedicado diretamente, ou escolha um vendedor para ver a carteira dele.</div></div></div>';
+      '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum filtro selecionado</div><div>Busque um cliente Dedicado diretamente, escolha um vendedor ou uma rede para ver a carteira.</div></div></div>';
   }
 
   // ── LISTA DE CLIENTES DE UM VENDEDOR ──────────────────────────────────
@@ -382,8 +540,9 @@
   }
 
   // ── CARDS POR ALAVANCA (detalhe do cliente) ───────────────────────────
+
   function hitVoltar() {
-    if (HIT_MODO_ORIGEM === 'vendedor') {
+    if (HIT_MODO_ORIGEM === 'vendedor' || HIT_MODO_ORIGEM === 'rede') {
       HIT_CLIENTE_ATUAL = null;
       HIT_ALAVANCA_ATUAL = null;
     } else {
@@ -519,8 +678,9 @@
   }
 
   // ── INIT ──────────────────────────────────────────────────────────────
+
   document.addEventListener('DOMContentLoaded', () => {
-    Promise.all([hitCarregarClientesDedicados(), hitCarregarProdutos()]).then(() => {
+    Promise.all([hitCarregarClientesDedicados(), hitCarregarProdutos(), hitCarregarRedes()]).then(() => {
       hitRenderConteudo();
     });
   });
