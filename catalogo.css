@@ -1138,3 +1138,14 @@ img[alt="HBN1"] {
   0%, 100% { transform: scale(1); }
   50%      { transform: scale(1.07); }
 }
+/* Scrollbar visível e mais fina, só no painel de Sugestão HIT */
+#corpoSugestaoHit::-webkit-scrollbar {
+  width: 4px;
+}
+#corpoSugestaoHit::-webkit-scrollbar-thumb {
+  background: #C4B5FD; /* tom roxo claro, combinando com o header do painel */
+  border-radius: 999px;
+}
+#corpoSugestaoHit::-webkit-scrollbar-track {
+  background: transparent;
+}
