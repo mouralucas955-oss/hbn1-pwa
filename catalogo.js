@@ -3447,3 +3447,175 @@ function enviarImportacaoParaNegociacao() {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
     }
+// =========================================================================
+// EXPORTAÇÃO DO CATÁLOGO EM PDF (imagens via proxy + cache local)
+// =========================================================================
+const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_';
+const PDF_CARDS_POR_PAGINA = 18; // 3 colunas x 6 linhas, igual ao exemplo Kenvue/Omron
+let _PDF_GERANDO = false;
+
+// Usa images.weserv.nl como proxy: resolve CORS pro html2canvas e já redimensiona
+// a imagem (menos peso no PDF final). Precisa da URL SEM o "https://".
+function _obterUrlImagemProxy(urlOriginal) {
+  if (!urlOriginal) return '';
+  const semProtocolo = urlOriginal.replace(/^https?:\/\//, '');
+  return `https://images.weserv.nl/?url=${encodeURIComponent(semProtocolo)}&w=240&fit=contain`;
+}
+
+// Busca a imagem (via proxy) e guarda em base64 no localStorage.
+// Nas próximas exportações do mesmo produto, nem chama o proxy de novo.
+async function _obterImagemBase64ComCache(urlOriginal) {
+  if (!urlOriginal) return null;
+  const chave = PDF_IMG_CACHE_PREFIX + urlOriginal;
+  const cache = localStorage.getItem(chave);
+  if (cache) return cache;
+
+  try {
+    const resp = await fetch(_obterUrlImagemProxy(urlOriginal));
+    if (!resp.ok) throw new Error('Falha ao buscar imagem: ' + resp.status);
+    const blob = await resp.blob();
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio — segue sem cachear */ }
+    return base64;
+  } catch (e) {
+    console.warn('Imagem não carregada para o PDF:', urlOriginal, e);
+    return null;
+  }
+}
+
+function _formatarPercentualBadge(percentual) {
+  if (!percentual || percentual <= 0) return '';
+  const arred = Math.round(percentual * 10) / 10;
+  const texto = (arred % 1 === 0) ? arred.toFixed(0) : arred.toFixed(1).replace('.', ',');
+  return `-${texto}%`;
+}
+
+function _gerarHtmlCardPdf(p, imgBase64) {
+  const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+  const temDesconto = percentual > 0 && precoOriginal > 0;
+  const economia = temDesconto ? (precoOriginal - precoFinal) : 0;
+  const estoque = Number(p.estoque || 0);
+  const badgePct = _formatarPercentualBadge(percentual);
+
+  return `
+    <div style="border:1px solid #e2e2e2;border-radius:10px;padding:10px;position:relative;background:#fff;display:flex;flex-direction:column;gap:4px;height:190px;box-sizing:border-box;">
+      ${badgePct ? `<span style="position:absolute;top:8px;left:8px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;">${badgePct}</span>` : ''}
+      <div style="height:70px;display:flex;align-items:center;justify-content:center;">
+        ${imgBase64 ? `<img src="${imgBase64}" style="max-height:68px;max-width:100%;object-fit:contain;">` : `<span style="font-size:8px;color:#aaa;">sem imagem</span>`}
+      </div>
+      <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;">${p.fornecedor || 'GERAL'}</span>
+      <p style="font-size:9.5px;font-weight:700;color:#1e293b;line-height:1.25;margin:0;min-height:24px;overflow:hidden;">${p.descricao || ''}</p>
+      <div style="display:flex;gap:5px;font-size:7.5px;">
+        <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">ID:${p.id}</span>
+        <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;padding:1px 5px;border-radius:4px;">EAN:${p.ean || 'N/A'}</span>
+      </div>
+      ${temDesconto ? `<span style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</span>` : ''}
+      <span style="font-size:14px;font-weight:800;color:#e8620a;">${precoOriginal > 0 ? formatarParaReal(precoFinal) : '—'}</span>
+      ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;width:fit-content;">& ECON. ${formatarParaReal(economia)}</span>` : ''}
+      <span style="font-size:7.5px;color:#94a3b8;margin-top:auto;">Estoque: ${estoque}</span>
+    </div>`;
+}
+
+function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
+  const div = document.createElement('div');
+  div.style.width = '850px';
+  div.style.height = '1200px';
+  div.style.background = '#fff';
+  div.style.fontFamily = "'Plus Jakarta Sans', Arial, sans-serif";
+  div.style.position = 'relative';
+  div.style.boxSizing = 'border-box';
+
+  const clienteTxt  = info.cliente ? `Cliente: ${(info.cliente.razao || '').toUpperCase()}` : '';
+  const vendedorTxt = info.vendedor ? `Vendedor: ${info.vendedor}` : '';
+  const subLinha = [clienteTxt, vendedorTxt, info.data].filter(Boolean).join(' | ');
+
+  const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id])).join('');
+
+  div.innerHTML = `
+    <div style="background:#FF6B00;padding:26px 34px 20px;position:relative;">
+      <h1 style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS - ${info.fornecedor}</h1>
+      <p style="color:#ffe8d6;font-size:11px;margin:6px 0 0;">${subLinha}</p>
+      <span style="position:absolute;top:26px;right:34px;color:#ffe8d6;font-size:10px;">Página ${info.numPagina}/${info.totalPaginas}</span>
+    </div>
+    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(3, 1fr);gap:14px;">
+      ${cardsHtml}
+    </div>`;
+  return div;
+}
+
+async function baixarCatalogoPdf() {
+  if (_PDF_GERANDO) return;
+  const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + fornecedor + filtro de estoque atuais
+  if (lista.length === 0) { mostrarToast('warning', 'Nenhum produto para exportar com os filtros atuais.'); return; }
+
+  _PDF_GERANDO = true;
+  const btn = document.getElementById('btnBaixarCatalogoPdf');
+  const htmlOriginal = btn ? btn.innerHTML : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Gerando PDF...`;
+  }
+
+  try {
+    mostrarToast('info', `Preparando catálogo com ${lista.length} produto(s)... isso pode levar alguns segundos.`, 5000);
+
+    // Pré-carrega todas as imagens (com cache) antes de montar as páginas
+    const mapaImagens = {};
+    for (const p of lista) {
+      mapaImagens[p.id] = await _obterImagemBase64ComCache(p.imagens);
+    }
+
+    const paginas = [];
+    for (let i = 0; i < lista.length; i += PDF_CARDS_POR_PAGINA) {
+      paginas.push(lista.slice(i, i + PDF_CARDS_POR_PAGINA));
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true });
+
+    const containerOffscreen = document.createElement('div');
+    containerOffscreen.style.position = 'fixed';
+    containerOffscreen.style.left = '-99999px';
+    containerOffscreen.style.top = '0';
+    document.body.appendChild(containerOffscreen);
+
+    const nomeVendedor = localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
+    const nomeFornecedorTitulo = filtroFornecedorAtual === 'TODOS' ? 'TODOS OS FORNECEDORES' : filtroFornecedorAtual;
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+
+    for (let pg = 0; pg < paginas.length; pg++) {
+      const divPagina = _montarDivPaginaPdf(paginas[pg], mapaImagens, {
+        fornecedor: nomeFornecedorTitulo,
+        cliente: CLIENTE_SELECIONADO,
+        vendedor: nomeVendedor,
+        data: dataHoje,
+        numPagina: pg + 1,
+        totalPaginas: paginas.length
+      });
+      containerOffscreen.innerHTML = '';
+      containerOffscreen.appendChild(divPagina);
+
+      const canvas = await html2canvas(divPagina, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      if (pg > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, 595.28, 841.89);
+    }
+
+    document.body.removeChild(containerOffscreen);
+
+    const nomeArquivo = `Catalogo_${limparNomeArquivo(nomeFornecedorTitulo)}_${dataHoje.replace(/\//g, '-')}.pdf`;
+    pdf.save(nomeArquivo);
+    mostrarToast('success', 'Catálogo em PDF gerado com sucesso.');
+  } catch (erro) {
+    console.error('Erro ao gerar catálogo em PDF:', erro);
+    mostrarToast('error', 'Ocorreu um erro ao gerar o PDF. Tente novamente.');
+  } finally {
+    _PDF_GERANDO = false;
+    if (btn) { btn.disabled = false; if (htmlOriginal !== null) btn.innerHTML = htmlOriginal; }
+  }
+}
