@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIT — Alavancas | HBN1</title>
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
+<link rel="stylesheet" href="catalogo.css">
+<style>
+  .hitdesk { font-family:'Plus Jakarta Sans', system-ui, sans-serif; background:var(--surface-page); color:var(--text-primary); min-height:100vh; }
+  .hitdesk * { box-sizing:border-box; }
+  .disp { font-family:'Space Grotesk', sans-serif; }
+  .mono { font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .hit-topbar { background:var(--surface-header); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .hit-back { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:8px 12px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; transition:background .15s; text-decoration:none; }
+  .hit-back:hover { background:rgba(255,255,255,0.16); }
+  .hit-topbar-info { font-size:11.5px; color:#94a3b8; margin-top:2px; }
+
+  .hit-body { max-width:1300px; margin:0 auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+
+  .hit-panel { background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:16px; }
+  .hit-panel-title { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); margin-bottom:10px; font-weight:700; }
+
+  .hit-select { width:100%; max-width:420px; background:var(--surface-secondary); border:1px solid var(--border-default); color:var(--text-primary); border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit; font-weight:600; }
+  .hit-select:focus { border-color:var(--accent); outline:none; }
+
+  .hit-btn { font-family:inherit; font-size:12.5px; font-weight:700; border-radius:9px; padding:8px 14px; border:1px solid var(--border-default); background:var(--surface-secondary); color:var(--text-primary); cursor:pointer; transition:border-color .15s, background .15s; display:inline-flex; align-items:center; gap:6px; }
+  .hit-btn:hover { border-color:var(--accent); }
+  .hit-btn-gold { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .hit-btn-gold:hover { filter:brightness(1.06); }
+
+  .hit-input { width:100%; max-width:320px; background:var(--surface-secondary); border:1px solid var(--border-default); color:var(--text-primary); border-radius:8px; padding:8px 11px; font-size:13px; font-family:inherit; }
+  .hit-input:focus { border-color:var(--accent); outline:none; }
+
+  .hit-empty { text-align:center; padding:56px 20px; color:var(--text-secondary); }
+  .hit-empty .disp { font-size:17px; color:var(--text-primary); margin-bottom:6px; }
+
+  .hit-filtros-row { display:flex; gap:14px; flex-wrap:wrap; }
+  .hit-filtros-row .hit-panel { flex:1; min-width:260px; }
+
+  .hit-dropdown { position:absolute; top:100%; left:16px; right:16px; margin-top:4px; background:var(--surface-card); border:1px solid var(--border-default); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.18); max-height:240px; overflow-y:auto; z-index:50; }
+  .hit-dropdown-item { padding:9px 12px; cursor:pointer; border-bottom:1px solid var(--border-subtle); }
+  .hit-dropdown-item:last-child { border-bottom:none; }
+  .hit-dropdown-item:hover { background:var(--accent-soft); }
+  .hit-dropdown-item .nome { font-size:12px; font-weight:700; }
+  .hit-dropdown-item .meta { font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between; gap:10px; margin-top:2px; }
+
+  .hit-loading { text-align:center; padding:40px 20px; color:var(--text-secondary); font-size:13px; font-weight:600; }
+
+  .hit-periodo-badge { display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); border:1px solid var(--accent-border); color:var(--accent); font-size:11px; font-weight:800; padding:5px 12px; border-radius:999px; }
+
+  /* Grid de clientes (quando navega por vendedor) */
+  .hit-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px; }
+  .hit-card { border:1px solid var(--border-subtle); border-radius:16px; overflow:hidden; background:var(--surface-card); box-shadow:var(--shadow-sm); display:flex; flex-direction:column; }
+  .hit-card-body { padding:14px 16px; display:flex; flex-direction:column; gap:8px; flex-grow:1; }
+  .hit-card-nome { font-weight:800; font-size:13px; line-height:1.2; }
+  .hit-card-cnpj { font-size:10.5px; color:var(--text-secondary); }
+  .hit-card-footer { padding:12px 16px; border-top:1px solid var(--border-subtle); }
+  .hit-card-footer .hit-btn { width:100%; justify-content:center; }
+
+  .hit-progress-track { position:relative; height:8px; background:var(--surface-secondary); border-radius:6px; overflow:hidden; }
+  .hit-progress-fill { height:100%; border-radius:6px; transition:width .3s ease; }
+  .hit-progress-label { display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-secondary); margin-top:5px; }
+
+  .hit-badge-ok { background:var(--success-soft); color:var(--success); border:1px solid var(--success-border); font-size:10px; font-weight:800; padding:3px 9px; border-radius:999px; display:inline-flex; align-items:center; gap:4px; }
+  .hit-badge-nao { background:var(--surface-tertiary); color:var(--text-muted); border:1px solid var(--border-subtle); font-size:10px; font-weight:800; padding:3px 9px; border-radius:999px; display:inline-flex; align-items:center; gap:4px; }
+
+  /* Cards de alavanca (dentro do detalhe do cliente) */
+  .hit-alavanca-card { border:1px solid var(--border-subtle); border-radius:16px; background:var(--surface-card); box-shadow:var(--shadow-sm); padding:16px; cursor:pointer; transition:border-color .15s, transform .15s; display:flex; flex-direction:column; gap:10px; }
+  .hit-alavanca-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .hit-alavanca-nome { font-weight:800; font-size:14px; letter-spacing:.01em; }
+
+  /* Grupos no drilldown */
+  .hit-grupo-card { border:1px solid var(--border-subtle); border-radius:14px; padding:12px 14px; background:var(--surface-card); }
+  .hit-grupo-card.positivado { border-color:var(--success-border); background:var(--success-soft); }
+  .hit-grupo-card.pendente { border-color:var(--border-subtle); }
+  .hit-grupo-tag { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; padding:2px 7px; border-radius:6px; background:var(--surface-tertiary); color:var(--text-secondary); }
+
+  .hit-item-mini { display:flex; align-items:center; gap:10px; padding:8px; border-radius:10px; background:var(--surface-secondary); border:1px solid var(--border-subtle); }
+  .hit-item-mini img { width:38px; height:38px; object-fit:contain; background:#fff; border-radius:8px; padding:2px; flex-shrink:0; mix-blend-mode:multiply; }
+  .hit-item-mini-desc { font-size:11.5px; font-weight:600; line-height:1.25; }
+  .hit-item-mini-meta { font-size:10px; color:var(--text-secondary); margin-top:2px; }
+  .hit-estoque-pill { font-size:9.5px; font-weight:800; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+  .hit-estoque-ok { background:var(--success-soft); color:var(--success); }
+  .hit-estoque-baixo { background:var(--warning-soft); color:var(--warning); }
+  .hit-estoque-zero { background:var(--danger-soft); color:var(--danger); }
+
+  .hit-aviso-sugestao { display:flex; align-items:flex-start; gap:8px; background:var(--warning-soft); border:1px solid var(--warning-border); border-radius:10px; padding:9px 12px; font-size:11.5px; color:var(--warning); font-weight:600; margin-bottom:10px; }
+</style>
+</head>
+<body class="hitdesk">
+
+  <div class="hit-topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="catalogo.html" class="hit-back">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <span>Voltar ao Catálogo</span>
+      </a>
+      <div>
+        <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">HIT — Alavancas</div>
+        <div class="hit-topbar-info">Positivação da campanha • Clientes Dedicado</div>
+      </div>
+    </div>
+    <div id="hitPeriodoWrap"></div>
+  </div>
+
+  <div class="hit-body">
+
+    <div class="hit-filtros-row">
+      <div class="hit-panel" style="position:relative;">
+        <div class="hit-panel-title">Buscar cliente diretamente</div>
+        <input id="hitBuscaClienteTopo" class="hit-select" style="max-width:100%;" placeholder="🔍 Nome, CNPJ ou código do cliente..." oninput="hitFiltrarClientesTopo()" autocomplete="off">
+        <div id="hitDropdownClientesTopo" class="hit-dropdown" style="display:none;"></div>
+      </div>
+
+      <div class="hit-panel" style="position:relative;">
+        <div class="hit-panel-title">Ver por vendedor</div>
+        <input id="hitBuscaVendedor" class="hit-select" style="max-width:100%;" placeholder="🔍 Digite o nome do vendedor..." oninput="hitFiltrarVendedores()" onfocus="hitFiltrarVendedores()" autocomplete="off">
+        <div id="hitDropdownVendedores" class="hit-dropdown" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div id="hitConteudo"></div>
+
+  </div>
+
+<script>
+  if (!localStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
+
+  (function() {
+    const tema = localStorage.getItem('hbn1_tema') || 'light';
+    document.documentElement.setAttribute('data-theme', tema);
+  })();
+
+  const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+
+  // ── ESTADO GLOBAL ─────────────────────────────────────────────────────
+  let HIT_CLIENTES     = [];  // clientes Dedicado da UF (pra busca direta)
+  let HIT_VENDEDORES   = [];  // vendedores únicos derivados de HIT_CLIENTES
+  let HIT_PRODUTOS     = [];  // catálogo completo (pra estoque/preço/imagem)
+  let HIT_PERIODO      = null;
+
+  let HIT_MODO_ORIGEM        = null;  // 'direto' | 'vendedor'
+  let HIT_VENDEDOR_ATUAL     = null;
+  let HIT_LISTA_CLIENTES_VEND = [];   // resultado da API quando filtrado por vendedor
+  let HIT_CLIENTE_ATUAL      = null;  // objeto cliente completo (com .alavancas)
+  let HIT_ALAVANCA_ATUAL     = null;  // objeto alavanca dentro de HIT_CLIENTE_ATUAL, quando no drilldown
+
+  function hitFormatBRL(n) {
+    if (!isFinite(n)) n = 0;
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function hitFormatarCNPJ(digits) {
+    const d = String(digits || '').replace(/\D/g, '');
+    if (d.length !== 14) return digits || '—';
+    return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  }
+
+  function hitFormatarData(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR');
+  }
+
+  function hitSoDigitos(v) { return String(v || '').replace(/[^0-9]/g, ''); }
+
+  function hitBuscarProduto(item) {
+    // item = { cod, ean, descricao, marca, categoria }
+    const eanAlvo = hitSoDigitos(item.ean);
+    let p = HIT_PRODUTOS.find(prod => hitSoDigitos(prod.ean) === eanAlvo && eanAlvo !== '');
+    if (!p && item.cod) p = HIT_PRODUTOS.find(prod => String(prod.id).trim() === String(item.cod).trim());
+    return p || null;
+  }
+
+  function hitEstoquePillHtml(estoque) {
+    const e = Number(estoque || 0);
+    const classe = e <= 0 ? 'hit-estoque-zero' : e <= 10 ? 'hit-estoque-baixo' : 'hit-estoque-ok';
+    const texto = e <= 0 ? 'Sem estoque' : e + ' un';
+    return `<span class="hit-estoque-pill ${classe}">${texto}</span>`;
+  }
+
+  // ── CARREGAMENTO INICIAL ──────────────────────────────────────────────
+  function hitCarregarClientesDedicados() {
+    return chamarApi('clientes', { uf: UF_USUARIO }).then(lista => {
+      HIT_CLIENTES = (lista || []).filter(c => String(c.equipe || '').toUpperCase().trim() === 'DEDICADO');
+      HIT_VENDEDORES = [...new Set(HIT_CLIENTES.map(c => c.vendedor).filter(Boolean))].sort();
+    }).catch(() => { HIT_CLIENTES = []; HIT_VENDEDORES = []; });
+  }
+
+  function hitCarregarProdutos() {
+    return chamarApi('produtos', { uf: UF_USUARIO }).then(lista => { HIT_PRODUTOS = lista || []; })
+      .catch(() => { HIT_PRODUTOS = []; });
+  }
+
+  function hitRenderPeriodo() {
+    const wrap = document.getElementById('hitPeriodoWrap');
+    if (!HIT_PERIODO || (!HIT_PERIODO.dataInicio && !HIT_PERIODO.dataFim)) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `<span class="hit-periodo-badge">🗓 Campanha: ${hitFormatarData(HIT_PERIODO.dataInicio)} – ${hitFormatarData(HIT_PERIODO.dataFim)}</span>`;
+  }
+
+  // ── BUSCA DIRETA DE CLIENTE ───────────────────────────────────────────
+  function hitFiltrarClientesTopo() {
+    const termo = document.getElementById('hitBuscaClienteTopo').value.trim().toLowerCase();
+    const dropdown = document.getElementById('hitDropdownClientesTopo');
+    if (!termo) { dropdown.style.display = 'none'; dropdown.innerHTML = ''; return; }
+
+    const filtrados = HIT_CLIENTES.filter(c =>
+      String(c.razao || '').toLowerCase().includes(termo) ||
+      String(c.cnpj || '').replace(/\D/g, '').includes(termo) ||
+      String(c.id || '').toLowerCase().includes(termo)
+    ).slice(0, 12);
+
+    if (filtrados.length === 0) {
+      dropdown.innerHTML = '<div class="hit-dropdown-item" style="cursor:default; color:var(--text-secondary);">Nenhum cliente Dedicado encontrado</div>';
+      dropdown.style.display = 'block';
+      return;
+    }
+
+    dropdown.innerHTML = filtrados.map(c => `
+      <div class="hit-dropdown-item" onclick="hitSelecionarClienteTopo('${String(c.id).replace(/'/g, "\\'")}')">
+        <div class="nome">${(c.razao || '').toUpperCase()}</div>
+        <div class="meta"><span>ID: ${c.id}</span><span>${c.cnpj || ''}</span></div>
+      </div>`).join('');
+    dropdown.style.display = 'block';
+  }
+
+  function hitSelecionarClienteTopo(id) {
+    const cliente = HIT_CLIENTES.find(c => String(c.id) === String(id));
+    if (!cliente) return;
+
+    HIT_MODO_ORIGEM = 'direto';
+    HIT_VENDEDOR_ATUAL = null;
+    HIT_LISTA_CLIENTES_VEND = [];
+    document.getElementById('hitBuscaVendedor').value = '';
+
+    document.getElementById('hitBuscaClienteTopo').value = '';
+    document.getElementById('hitDropdownClientesTopo').style.display = 'none';
+
+    HIT_ALAVANCA_ATUAL = null;
+    HIT_CLIENTE_ATUAL = null;
+    document.getElementById('hitConteudo').innerHTML =
+      '<div class="hit-panel"><div class="hit-loading">Calculando positivação de ' + (cliente.razao || cliente.id) + '...</div></div>';
+
+    chamarApi('carteiraHit', { uf: UF_USUARIO, codCliente: cliente.id })
+      .then(resp => {
+        if (!resp || resp.erro) { hitMostrarErro(resp); return; }
+        HIT_PERIODO = resp.periodo; hitRenderPeriodo();
+        HIT_CLIENTE_ATUAL = (resp.clientes && resp.clientes[0]) || null;
+        hitRenderConteudo();
+      })
+      .catch(() => hitMostrarErro(null));
+  }
+
+  // ── BUSCA POR VENDEDOR ────────────────────────────────────────────────
+  function hitFiltrarVendedores() {
+    const termo = document.getElementById('hitBuscaVendedor').value.trim().toLowerCase();
+    const dropdown = document.getElementById('hitDropdownVendedores');
+    const filtrados = termo ? HIT_VENDEDORES.filter(v => v.toLowerCase().includes(termo)) : HIT_VENDEDORES;
+
+    if (filtrados.length === 0) {
+      dropdown.innerHTML = '<div class="hit-dropdown-item" style="cursor:default; color:var(--text-secondary);">Nenhum vendedor com clientes Dedicado</div>';
+    } else {
+      dropdown.innerHTML = filtrados.slice(0, 20).map(v => `
+        <div class="hit-dropdown-item" onclick="hitSelecionarVendedor('${v.replace(/'/g, "\\'")}')">
+          <div class="nome">${v}</div>
+        </div>`).join('');
+    }
+    dropdown.style.display = 'block';
+  }
+
+  function hitSelecionarVendedor(nome) {
+    document.getElementById('hitBuscaVendedor').value = nome;
+    document.getElementById('hitDropdownVendedores').style.display = 'none';
+
+    HIT_MODO_ORIGEM = 'vendedor';
+    HIT_VENDEDOR_ATUAL = nome;
+    HIT_CLIENTE_ATUAL = null;
+    HIT_ALAVANCA_ATUAL = null;
+    document.getElementById('hitBuscaClienteTopo').value = '';
+
+    document.getElementById('hitConteudo').innerHTML =
+      '<div class="hit-panel"><div class="hit-loading">Calculando positivação da carteira de ' + nome + '...</div></div>';
+
+    chamarApi('carteiraHit', { uf: UF_USUARIO, vendedor: nome })
+      .then(resp => {
+        if (!resp || resp.erro) { hitMostrarErro(resp); return; }
+        HIT_PERIODO = resp.periodo; hitRenderPeriodo();
+        HIT_LISTA_CLIENTES_VEND = resp.clientes || [];
+        hitRenderConteudo();
+      })
+      .catch(() => hitMostrarErro(null));
+  }
+
+  function hitMostrarErro(resp) {
+    document.getElementById('hitConteudo').innerHTML =
+      '<div class="hit-panel"><div class="hit-empty"><div class="disp">Não foi possível carregar</div><div>' +
+      (resp && resp.mensagem ? resp.mensagem : 'Verifique a conexão e tente novamente.') + '</div></div></div>';
+  }
+
+  document.addEventListener('click', function(e) {
+    const dTopo = document.getElementById('hitDropdownClientesTopo');
+    const iTopo = document.getElementById('hitBuscaClienteTopo');
+    if (dTopo && iTopo && !dTopo.contains(e.target) && e.target !== iTopo) dTopo.style.display = 'none';
+
+    const dVend = document.getElementById('hitDropdownVendedores');
+    const iVend = document.getElementById('hitBuscaVendedor');
+    if (dVend && iVend && !dVend.contains(e.target) && e.target !== iVend) dVend.style.display = 'none';
+  });
+
+  // ── DISPATCH PRINCIPAL ────────────────────────────────────────────────
+  function hitRenderConteudo() {
+    if (HIT_ALAVANCA_ATUAL) { hitRenderDrilldownAlavanca(); return; }
+    if (HIT_CLIENTE_ATUAL) { hitRenderCardsAlavancas(); return; }
+    if (HIT_MODO_ORIGEM === 'vendedor' && HIT_LISTA_CLIENTES_VEND.length >= 0) { hitRenderListaClientesVendedor(); return; }
+
+    document.getElementById('hitConteudo').innerHTML =
+      '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum filtro selecionado</div><div>Busque um cliente Dedicado diretamente, ou escolha um vendedor para ver a carteira dele.</div></div></div>';
+  }
+
+  // ── LISTA DE CLIENTES DE UM VENDEDOR ──────────────────────────────────
+  function hitCalcularTotais(cliente) {
+    let totalGrupos = 0, totalPositivados = 0, alavancasCompletas = 0;
+    (cliente.alavancas || []).forEach(al => {
+      totalGrupos += al.totalGrupos;
+      totalPositivados += al.gruposPositivados;
+      if (al.completa) alavancasCompletas++;
+    });
+    return { totalGrupos, totalPositivados, alavancasCompletas, totalAlavancas: (cliente.alavancas || []).length };
+  }
+
+  function hitRenderListaClientesVendedor() {
+    const wrap = document.getElementById('hitConteudo');
+    if (HIT_LISTA_CLIENTES_VEND.length === 0) {
+      wrap.innerHTML = '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum cliente Dedicado</div><div>Este vendedor não possui clientes com equipe Dedicado nesta UF.</div></div></div>';
+      return;
+    }
+
+    const cardsHtml = HIT_LISTA_CLIENTES_VEND.map(cli => {
+      const t = hitCalcularTotais(cli);
+      const pct = t.totalGrupos > 0 ? (t.totalPositivados / t.totalGrupos * 100) : 0;
+      const corBarra = pct >= 70 ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
+      return `
+        <div class="hit-card">
+          <div class="hit-card-body">
+            <div>
+              <div class="hit-card-nome">${(cli.razao || '').toUpperCase()}</div>
+              <div class="hit-card-cnpj mono">${hitFormatarCNPJ(cli.cnpj)}</div>
+            </div>
+            <div class="hit-progress-track">
+              <div class="hit-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
+            </div>
+            <div class="hit-progress-label">
+              <span>${t.totalPositivados} de ${t.totalGrupos} itens</span>
+              <span style="font-weight:800; color:${corBarra};">${pct.toFixed(0)}%</span>
+            </div>
+            <div>${t.alavancasCompletas === t.totalAlavancas
+              ? '<span class="hit-badge-ok">✓ Todas as alavancas completas</span>'
+              : `<span class="hit-badge-nao">${t.alavancasCompletas} de ${t.totalAlavancas} alavancas completas</span>`}</div>
+          </div>
+          <div class="hit-card-footer">
+            <button type="button" class="hit-btn hit-btn-gold" onclick="hitVerClienteDaLista('${cli.codCliente}')">Ver alavancas →</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = `<div class="hit-grid">${cardsHtml}</div>`;
+  }
+
+  function hitVerClienteDaLista(codCliente) {
+    const cliente = HIT_LISTA_CLIENTES_VEND.find(c => c.codCliente === codCliente);
+    if (!cliente) return;
+    HIT_CLIENTE_ATUAL = cliente;
+    HIT_ALAVANCA_ATUAL = null;
+    hitRenderConteudo();
+  }
+
+  // ── CARDS POR ALAVANCA (detalhe do cliente) ───────────────────────────
+  function hitVoltar() {
+    if (HIT_MODO_ORIGEM === 'vendedor') {
+      HIT_CLIENTE_ATUAL = null;
+      HIT_ALAVANCA_ATUAL = null;
+    } else {
+      HIT_CLIENTE_ATUAL = null;
+      HIT_ALAVANCA_ATUAL = null;
+      HIT_MODO_ORIGEM = null;
+    }
+    hitRenderConteudo();
+  }
+
+  function hitRenderCardsAlavancas() {
+    const wrap = document.getElementById('hitConteudo');
+    const cli = HIT_CLIENTE_ATUAL;
+
+    const cardsHtml = (cli.alavancas || []).map(al => {
+      const pct = al.totalGrupos > 0 ? (al.gruposPositivados / al.totalGrupos * 100) : 0;
+      const corBarra = al.completa ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
+      return `
+        <div class="hit-alavanca-card" onclick="hitAbrirAlavanca('${al.alavanca.replace(/'/g, "\\'")}')">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span class="hit-alavanca-nome">${al.alavanca}</span>
+            ${al.completa ? '<span class="hit-badge-ok">✓ Completa</span>' : ''}
+          </div>
+          <div class="hit-progress-track">
+            <div class="hit-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
+          </div>
+          <div class="hit-progress-label">
+            <span>${al.gruposPositivados} de ${al.totalGrupos} itens positivados</span>
+            <span style="font-weight:800; color:${corBarra};">${pct.toFixed(0)}%</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="hit-panel" style="margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button type="button" class="hit-btn" onclick="hitVoltar()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+            Voltar
+          </button>
+          <div>
+            <div class="disp" style="font-size:15px; font-weight:700;">${(cli.razao || '').toUpperCase()}</div>
+            <div class="mono" style="font-size:11px; color:var(--text-secondary);">${hitFormatarCNPJ(cli.cnpj)} • Vendedor: ${cli.vendedor || '—'}</div>
+          </div>
+        </div>
+      </div>
+      <div class="hit-grid">${cardsHtml}</div>`;
+  }
+
+  // ── DRILLDOWN — GRUPOS DE UMA ALAVANCA ────────────────────────────────
+  function hitAbrirAlavanca(nomeAlavanca) {
+    const al = (HIT_CLIENTE_ATUAL.alavancas || []).find(a => a.alavanca === nomeAlavanca);
+    if (!al) return;
+    HIT_ALAVANCA_ATUAL = al;
+    hitRenderConteudo();
+  }
+
+  function hitVoltarParaCards() {
+    HIT_ALAVANCA_ATUAL = null;
+    hitRenderConteudo();
+  }
+
+  function hitRenderDrilldownAlavanca() {
+    const wrap = document.getElementById('hitConteudo');
+    const al = HIT_ALAVANCA_ATUAL;
+    const cli = HIT_CLIENTE_ATUAL;
+
+    const gruposHtml = al.grupos.map(g => {
+      const tagOu = g.itens.length > 1 ? '<span class="hit-grupo-tag">OU — qualquer um destes</span>' : '<span class="hit-grupo-tag">SKU único</span>';
+
+      if (g.positivado) {
+        const itemComprado = g.itemPositivado || g.itens[0];
+        return `
+          <div class="hit-grupo-card positivado">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+              ${tagOu}
+              <span class="hit-badge-ok">✓ Positivado</span>
+            </div>
+            <div class="hit-item-mini" style="background:transparent; border:none;">
+              <div style="min-width:0;">
+                <div class="hit-item-mini-desc">${itemComprado.descricao || itemComprado.cod}</div>
+                <div class="hit-item-mini-meta">Comprado: EAN ${itemComprado.ean} • Cód ${itemComprado.cod}</div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      // Pendente — monta lista de alternativas com estoque/preço/imagem, ordenadas por estoque desc
+      const itensComEstoque = g.itens.map(item => {
+        const p = hitBuscarProduto(item);
+        return { item, produto: p, estoque: p ? Number(p.estoque || 0) : 0 };
+      }).sort((a, b) => b.estoque - a.estoque);
+
+      const itensHtml = itensComEstoque.map(({ item, produto, estoque }) => {
+        const imagem = produto ? produto.imagens : 'https://via.placeholder.com/60?text=?';
+        const preco = produto ? (Number(produto.preco) || 0) : 0;
+        return `
+          <div class="hit-item-mini">
+            <img src="${imagem}" onerror="this.style.opacity=0.3">
+            <div style="min-width:0; flex-grow:1;">
+              <div class="hit-item-mini-desc">${item.descricao || produto?.descricao || item.cod}</div>
+              <div class="hit-item-mini-meta">EAN ${item.ean} • Cód ${item.cod}${preco > 0 ? ' • ' + hitFormatBRL(preco) : ''}</div>
+            </div>
+            ${hitEstoquePillHtml(estoque)}
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="hit-grupo-card pendente">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+            ${tagOu}
+            <span class="hit-badge-nao">— Pendente</span>
+          </div>
+          <div class="hit-aviso-sugestao">
+            ⚠ Sugestão: ofereça ${g.itens.length > 1 ? 'um destes itens' : 'este item'} para fechar essa alavanca com ${(cli.razao || '').toUpperCase()}.
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px;">${itensHtml}</div>
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="hit-panel" style="margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+        <button type="button" class="hit-btn" onclick="hitVoltarParaCards()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          Voltar às alavancas
+        </button>
+        <div>
+          <div class="disp" style="font-size:15px; font-weight:700;">${al.alavanca}</div>
+          <div style="font-size:11px; color:var(--text-secondary);">${(cli.razao || '').toUpperCase()} • ${al.gruposPositivados} de ${al.totalGrupos} itens positivados</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">${gruposHtml}</div>`;
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    Promise.all([hitCarregarClientesDedicados(), hitCarregarProdutos()]).then(() => {
+      hitRenderConteudo();
+    });
+  });
+</script>
+</body>
+</html>
