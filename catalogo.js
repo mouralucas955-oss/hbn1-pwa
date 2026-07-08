@@ -3547,6 +3547,12 @@ async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia 
   await Promise.all(Array.from({ length: concorrencia }, (_, idx) => worker(idx)));
 }
 
+function _truncarTexto(texto, maxCaracteres) {
+  const t = String(texto || '').trim();
+  if (t.length <= maxCaracteres) return t;
+  return t.slice(0, maxCaracteres - 1).trim() + '…';
+}
+
 function _formatarPercentualBadge(percentual) {
   if (!percentual || percentual <= 0) return '';
   const arred = Math.round(percentual * 10) / 10;
@@ -3576,8 +3582,8 @@ function _gerarHtmlCardPdf(p, imgBase64) {
       <div style="flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;">
         <span style="font-size:8px;font-weight:800;color:#e8620a;text-transform:uppercase;flex-shrink:0;">${p.fornecedor || 'GERAL'}</span>
 
-        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.25;margin:2px 0 5px;max-height:37.5px;overflow:hidden;flex-shrink:0;">
-  ${p.descricao || ''}
+        <p style="font-size:10px;font-weight:700;color:#1e293b;line-height:1.3;margin:2px 0 5px;flex-shrink:0;">
+  ${_truncarTexto(p.descricao, 140)}
 </p>
 
         <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
@@ -3647,6 +3653,13 @@ await _prefetchImagensComConcorrencia(lista, mapaImagens, 3, (feitas, total) => 
     mostrarToast('info', `Carregando imagens... ${feitas}/${total}`, 1500);
   }
 });
+         const idsSemImagem = lista.filter(p => !mapaImagens[p.id]);
+if (idsSemImagem.length > 0) {
+  console.warn('Produtos que ficaram SEM IMAGEM no PDF:');
+  idsSemImagem.forEach(p => {
+    console.warn(`  ID ${p.id} — URL cadastrada: ${p.imagens || '(CAMPO VAZIO NA PLANILHA)'}`);
+  });
+}
 
     const paginas = [];
     for (let i = 0; i < lista.length; i += PDF_CARDS_POR_PAGINA) {
