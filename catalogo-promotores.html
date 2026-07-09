@@ -58,6 +58,33 @@
       min-width: 0;
     }
 
+    .marca-texto {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .btn-sair {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      background: rgba(17, 24, 39, 0.28);
+      color: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .btn-sair:hover { background: rgba(17, 24, 39, 0.42); }
+
+    .btn-sair svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.4;
+    }
+
     .logo {
       width: 44px;
       height: 44px;
@@ -664,10 +691,16 @@
     <div class="topo-inner">
       <div class="marca">
         <img class="logo" src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazaria">
-        <div>
+        <div class="marca-texto">
           <h1>Catalogo Promotores <span id="ufTitulo"></span></h1>
           <p class="subtitulo">Visualizacao separada com dados do produto e preco fabrica</p>
         </div>
+        <button class="btn-sair" type="button" onclick="sairParaLogin()" title="Sair / voltar ao login" aria-label="Sair e voltar ao login">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 12H9.75m0 0l3-3m-3 3l3 3"/>
+          </svg>
+        </button>
       </div>
 
       <div class="controles">
@@ -757,6 +790,16 @@
     const CHAVE_CLIENTE = "hbn1_levantamento_promotores_cliente_" + UF_USUARIO;
 
     document.getElementById("ufTitulo").innerText = "(" + UF_USUARIO + ")";
+
+    function sairParaLogin() {
+      localStorage.removeItem("hbn1_usuario");
+      localStorage.removeItem("hbn1_uf");
+      localStorage.removeItem("hbn1_nome");
+      localStorage.removeItem("hbn1_tipo");
+      localStorage.removeItem("hbn1_login_ts");
+      localStorage.removeItem("hbn1_session");
+      window.location.href = "index.html";
+    }
 
     function validarAcesso() {
       if (!USUARIO_ATUAL) {
