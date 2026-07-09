@@ -518,6 +518,13 @@
       color: #fff;
     }
 
+    .btn-whatsapp {
+      background: #16a34a;
+      color: #fff;
+    }
+
+    .btn-whatsapp:hover { background: #15803d; }
+
     .btn-secundario {
       background: #e2e8f0;
       color: #0f172a;
@@ -641,7 +648,7 @@
       border-top: 1px solid #e2e8f0;
       padding: 12px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
     }
 
@@ -752,6 +759,7 @@
     <div id="listaResumo" class="resumo-lista"></div>
     <div class="painel-rodape">
       <button id="btnLimparLevantamento" class="btn-perigo" type="button">Limpar</button>
+      <button id="btnCompartilharWhatsApp" class="btn-primario btn-whatsapp" type="button">WhatsApp</button>
       <button id="btnBaixarLevantamento" class="btn-primario" type="button">Baixar Excel</button>
     </div>
   </aside>
@@ -1048,6 +1056,61 @@
       salvarLevantamento();
       renderizarProdutos();
       atualizarResumoLevantamento();
+    }
+
+    function montarMensagemWhatsApp() {
+      const { itens, totalUnidades, totalValor } = calcularTotaisLevantamento();
+      const nomePromotor = localStorage.getItem("hbn1_nome") || USUARIO_ATUAL || "-";
+      const linhas = [];
+
+      linhas.push("*LEVANTAMENTO HBN1 - PROMOTOR*");
+      linhas.push("");
+      linhas.push("*Cliente:* " + (CLIENTE_SELECIONADO ? texto(CLIENTE_SELECIONADO.razao) : "Nao selecionado"));
+      if (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.cnpj) linhas.push("*CNPJ:* " + CLIENTE_SELECIONADO.cnpj);
+      if (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.id) linhas.push("*ID Cliente:* " + CLIENTE_SELECIONADO.id);
+      linhas.push("*UF:* " + UF_USUARIO);
+      linhas.push("*Promotor:* " + nomePromotor);
+      linhas.push("*Data:* " + new Date().toLocaleString("pt-BR"));
+      linhas.push("");
+      linhas.push("*Resumo:*");
+      linhas.push("- Variedades: " + itens.length);
+      linhas.push("- Unidades: " + totalUnidades);
+      linhas.push("- Total fabrica: " + formatarParaReal(totalValor));
+      linhas.push("");
+      linhas.push("*Itens:*");
+
+      itens.forEach(({ produto, qtd }, idx) => {
+        const preco = converterPrecoValido(produto.preco);
+        linhas.push(`${idx + 1}. ${texto(produto.descricao, "Produto")} | Cod ${texto(produto.id)} | EAN ${texto(produto.ean)} | Qtd ${qtd} | ${formatarParaReal(preco)} | Total ${formatarParaReal(preco * qtd)}`);
+      });
+
+      return linhas.join("\n");
+    }
+
+    async function compartilharWhatsApp() {
+      const { itens } = calcularTotaisLevantamento();
+      if (itens.length === 0) {
+        alert("Adicione pelo menos um produto ao levantamento antes de compartilhar.");
+        return;
+      }
+      if (!CLIENTE_SELECIONADO) {
+        alert("Selecione um cliente antes de compartilhar o levantamento.");
+        elBuscaCliente.focus();
+        return;
+      }
+
+      const mensagem = montarMensagemWhatsApp();
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "Levantamento HBN1", text: mensagem });
+          return;
+        } catch (e) {
+          if (e && e.name === "AbortError") return;
+        }
+      }
+
+      window.open("https://wa.me/?text=" + encodeURIComponent(mensagem), "_blank", "noopener,noreferrer");
     }
 
     function aplicarBorda(range, color = "FFD9D9D9") {
@@ -1413,6 +1476,7 @@
     document.getElementById("overlayResumo").addEventListener("click", fecharResumo);
     document.getElementById("btnLimparCliente").addEventListener("click", limparClienteSelecionado);
     document.getElementById("btnLimparLevantamento").addEventListener("click", limparLevantamento);
+    document.getElementById("btnCompartilharWhatsApp").addEventListener("click", compartilharWhatsApp);
     document.getElementById("btnBaixarLevantamento").addEventListener("click", baixarLevantamento);
 
     if (validarAcesso()) {
