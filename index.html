@@ -199,7 +199,10 @@
                              localStorage.getItem('hbn1_uf') &&
                              (Date.now() - ultimoLoginTs) < SESSAO_DURACAO_MS;
   if (sessaoValida) {
-    window.location.href = 'catalogo.html?uf=' + encodeURIComponent(localStorage.getItem('hbn1_uf'));
+    window.location.href = obterDestinoUsuario(
+  localStorage.getItem('hbn1_tipo'),
+  localStorage.getItem('hbn1_uf')
+);
   }
 
   // ── 2. PRÉ-AQUECIMENTO DO APPS SCRIPT ──────────────────────────────────
@@ -210,6 +213,16 @@
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: 'ping' })
   }).catch(() => {}); // ignora erros — é só aquecimento
+
+  function obterDestinoUsuario(tipo, uf) {
+  var perfil = String(tipo || '').toUpperCase().trim();
+
+  if (perfil === 'PROMOTOR') {
+    return 'catalogo-promotores.html?uf=' + encodeURIComponent(uf);
+  }
+
+  return 'catalogo.html?uf=' + encodeURIComponent(uf);
+}
 
   // ── LOGIN ───────────────────────────────────────────────────────────────
   async function iniciarPedido() {
@@ -242,8 +255,10 @@
         localStorage.setItem('hbn1_uf',       uf);
         localStorage.setItem('hbn1_nome',     resposta.nome || usuario);
         localStorage.setItem('hbn1_login_ts', Date.now().toString()); // ← timestamp da sessão
-        localStorage.setItem('hbn1_session', resposta.sessionToken);
-        window.location.href = 'catalogo.html?uf=' + encodeURIComponent(uf);
+        var tipo = resposta.tipo || 'VENDEDOR';
+localStorage.setItem('hbn1_tipo', tipo);
+localStorage.setItem('hbn1_session', resposta.sessionToken);
+window.location.href = obterDestinoUsuario(tipo, uf);
       } else {
         msgErro.innerText = (resposta && resposta.mensagem)
           ? resposta.mensagem
