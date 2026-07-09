@@ -1100,6 +1100,24 @@
       }
 
       const mensagem = montarMensagemWhatsApp();
+      const arquivoExcel = await gerarArquivoExcelLevantamento();
+      if (!arquivoExcel) return;
+
+      if (navigator.canShare && window.File) {
+        const arquivo = new File([arquivoExcel.blob], arquivoExcel.nomeArquivo, { type: arquivoExcel.blob.type });
+        if (navigator.canShare({ files: [arquivo] })) {
+          try {
+            await navigator.share({
+              title: "Levantamento HBN1",
+              text: "Segue levantamento HBN1 em Excel.",
+              files: [arquivo]
+            });
+            return;
+          } catch (e) {
+            if (e && e.name === "AbortError") return;
+          }
+        }
+      }
 
       if (navigator.share) {
         try {
@@ -1110,6 +1128,8 @@
         }
       }
 
+      baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
+      alert("Seu navegador nao permite anexar o Excel automaticamente. O arquivo foi baixado; anexe manualmente no WhatsApp.");
       window.open("https://wa.me/?text=" + encodeURIComponent(mensagem), "_blank", "noopener,noreferrer");
     }
 
@@ -1174,22 +1194,22 @@
       URL.revokeObjectURL(url);
     }
 
-    async function baixarLevantamento() {
+    async function gerarArquivoExcelLevantamento() {
       const { itens, totalUnidades, totalValor } = calcularTotaisLevantamento();
       if (itens.length === 0) {
         alert("Adicione pelo menos um produto ao levantamento antes de baixar.");
-        return;
+        return null;
       }
 
       if (!CLIENTE_SELECIONADO) {
         alert("Selecione um cliente antes de baixar o levantamento.");
         elBuscaCliente.focus();
-        return;
+        return null;
       }
 
       if (!window.ExcelJS) {
         alert("Biblioteca ExcelJS nao carregada. Verifique sua conexao e tente novamente.");
-        return;
+        return null;
       }
 
       const workbook = new ExcelJS.Workbook();
@@ -1309,7 +1329,14 @@
       const razao = limparNomeArquivo(String(CLIENTE_SELECIONADO.razao || "CLIENTE").toUpperCase());
       const cnpj = limparNomeArquivo(String(CLIENTE_SELECIONADO.cnpj || ""));
       const nomeArquivo = `${razao}${cnpj ? " - " + cnpj : ""} - ${formatarDataArquivo(agora)}.xlsx`;
-      baixarBlob(nomeArquivo, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      return { nomeArquivo, blob };
+    }
+
+    async function baixarLevantamento() {
+      const arquivoExcel = await gerarArquivoExcelLevantamento();
+      if (!arquivoExcel) return;
+      baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
     }
 
     function montarFornecedores() {
