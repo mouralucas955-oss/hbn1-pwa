@@ -1206,10 +1206,67 @@
     // navigator.share. Isso preserva o "gesto do usuario" exigido pelo
     // navegador para abrir o menu nativo de compartilhamento, que costuma
     // se perder quando o share e chamado logo depois de gerar o Excel.
+    // ------------------------------------------------------------------
+    // Integracao opcional com Capacitor. Se este site for empacotado como
+    // app nativo (Android/iOS) via Capacitor, window.Capacitor existe e
+    // podemos usar os plugins Filesystem + Share, que abrem a folha de
+    // compartilhamento NATIVA do sistema — muito mais confiavel do que o
+    // navigator.share do navegador, que varia de aparelho pra aparelho.
+    // Quando nao estiver empacotado (uso normal no navegador), essas
+    // funcoes simplesmente nao sao chamadas e tudo continua como antes.
+    // ------------------------------------------------------------------
+    function rodandoComoAppNativo() {
+      return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+    }
+
+    function blobParaBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const leitor = new FileReader();
+        leitor.onloadend = () => resolve(String(leitor.result).split(",")[1] || "");
+        leitor.onerror = reject;
+        leitor.readAsDataURL(blob);
+      });
+    }
+
+    async function compartilharViaCapacitor(blob, nomeArquivo, mensagem) {
+      const { Filesystem, Directory } = window.Capacitor.Plugins;
+      const { Share } = window.Capacitor.Plugins;
+
+      const base64 = await blobParaBase64(blob);
+      const salvo = await Filesystem.writeFile({
+        path: nomeArquivo,
+        data: base64,
+        directory: Directory.Cache
+      });
+
+      await Share.share({
+        title: "Levantamento HBN1",
+        text: mensagem,
+        url: salvo.uri,
+        dialogTitle: "Compartilhar levantamento"
+      });
+    }
+
     async function compartilharArquivoGerado() {
       if (!ULTIMO_ARQUIVO_GERADO || ULTIMO_ARQUIVO_GERADO.assinatura !== assinaturaLevantamentoAtual()) {
         // O carrinho mudou desde o ultimo arquivo gerado: cai no fluxo normal.
         return compartilharWhatsApp();
+      }
+
+      const { blob, nomeArquivo } = ULTIMO_ARQUIVO_GERADO;
+      const mensagem = montarMensagemWhatsApp();
+
+      // Se estiver empacotado como app (Capacitor), usa a folha de
+      // compartilhamento nativa do sistema — nao depende do navigator.share.
+      if (rodandoComoAppNativo()) {
+        try {
+          await compartilharViaCapacitor(blob, nomeArquivo, mensagem);
+          return;
+        } catch (e) {
+          console.warn("Falha ao compartilhar via Capacitor:", e);
+          alert("Nao foi possivel abrir o menu de compartilhamento nativo. Tente novamente ou anexe manualmente o arquivo salvo.");
+          return;
+        }
       }
 
       if (!(navigator.canShare && window.File)) {
@@ -1217,7 +1274,6 @@
         return;
       }
 
-      const { blob, nomeArquivo } = ULTIMO_ARQUIVO_GERADO;
       const arquivo = new File([blob], nomeArquivo, { type: blob.type });
 
       if (!navigator.canShare({ files: [arquivo] })) {
@@ -1228,7 +1284,7 @@
       try {
         await navigator.share({
           title: "Levantamento HBN1",
-          text: montarMensagemWhatsApp(),
+          text: mensagem,
           files: [arquivo]
         });
       } catch (e) {
@@ -1260,6 +1316,7 @@
       const btn = elBtnCompartilhar;
       const textoOriginalBtn = btn.innerText;
       const suportaCompartilharArquivo = !!(navigator.canShare && window.File);
+      const podeCompartilharDireto = rodandoComoAppNativo() || suportaCompartilharArquivo;
 
       // IMPORTANTE: window.open precisa ser chamado o mais perto possivel do
       // clique original. Se abrirmos so depois do "await" (gerar o Excel),
@@ -1267,7 +1324,7 @@
       // bloqueiam silenciosamente. Por isso reservamos a aba AGORA (ainda
       // sincrono, dentro do clique) e so definimos o endereco dela depois.
       let abaReservada = null;
-      if (!suportaCompartilharArquivo) {
+      if (!podeCompartilharDireto) {
         try { abaReservada = window.open("", "_blank"); } catch (e) { abaReservada = null; }
       }
 
@@ -1282,9 +1339,22 @@
           return;
         }
 
-        // 1) Tenta compartilhar o proprio arquivo Excel (funciona no WhatsApp
-        // mobile via Web Share API - Android Chrome e iOS Safari 15+, desde
-        // que o app esteja instalado pelo proprio Chrome/Safari).
+        // 1) Empacotado como app (Capacitor): usa a folha de compartilhamento
+        // NATIVA do sistema, que nao depende do navegador ter implementado
+        // compartilhamento de arquivos.
+        if (rodandoComoAppNativo()) {
+          try {
+            await compartilharViaCapacitor(arquivoExcel.blob, arquivoExcel.nomeArquivo, mensagem);
+            return;
+          } catch (e) {
+            console.warn("Falha ao compartilhar via Capacitor, tentando alternativa:", e);
+          }
+        }
+
+        // 2) Tenta compartilhar o proprio arquivo Excel pelo navegador
+        // (funciona no WhatsApp mobile via Web Share API - Android Chrome e
+        // iOS Safari 15+, desde que o app esteja instalado pelo proprio
+        // Chrome/Safari).
         if (suportaCompartilharArquivo) {
           const arquivo = new File([arquivoExcel.blob], arquivoExcel.nomeArquivo, { type: arquivoExcel.blob.type });
           if (navigator.canShare({ files: [arquivo] })) {
@@ -1302,7 +1372,7 @@
           }
         }
 
-        // 2) Sem suporte a compartilhar arquivos: baixa o Excel, mantem o
+        // 3) Sem suporte a compartilhar arquivos: baixa o Excel, mantem o
         // arquivo em cache (para o botao virar "Compartilhar arquivo" e
         // permitir nova tentativa instantanea) e usa a aba ja reservada
         // para abrir o WhatsApp com o texto pronto.
