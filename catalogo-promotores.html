@@ -536,6 +536,11 @@
 
     .btn-whatsapp:hover { background: #15803d; }
 
+    .btn-whatsapp.pronto-compartilhar {
+      background: #16a34a;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.28);
+    }
+
     .btn-primario:disabled, .btn-whatsapp:disabled {
       opacity: 0.65;
       cursor: not-allowed;
@@ -849,7 +854,7 @@
     let FILTRO_ESTOQUE = false;
     let LEVANTAMENTO = {};
     let CLIENTE_SELECIONADO = null;
-    let ARQUIVO_EXCEL_CACHE = null;
+    let ULTIMO_ARQUIVO_GERADO = null; // { blob, nomeArquivo, assinatura }
 
     const elGrid = document.getElementById("grid");
     const elBusca = document.getElementById("busca");
@@ -1032,7 +1037,7 @@
       salvarClienteSelecionado();
       atualizarClienteSelecionadoUI();
       atualizarResumoLevantamento();
-      invalidarCacheExcel();
+      atualizarBotaoCompartilhar();
     }
 
     function limparClienteSelecionado() {
@@ -1040,41 +1045,7 @@
       salvarClienteSelecionado();
       atualizarClienteSelecionadoUI();
       atualizarResumoLevantamento();
-      invalidarCacheExcel();
-    }
-
-    // --- Cache do Excel gerado, para permitir compartilhar com um unico
-    // toque, sem precisar gerar o arquivo de novo. Isso evita perder a
-    // autorizacao de gesto do usuario exigida pelo navigator.share quando
-    // ha um "await" (geracao do Excel) entre o clique e a chamada do
-    // compartilhamento nativo. ---
-
-    function assinaturaLevantamentoAtual() {
-      return JSON.stringify({
-        itens: LEVANTAMENTO,
-        cliente: CLIENTE_SELECIONADO ? CLIENTE_SELECIONADO.id : null
-      });
-    }
-
-    function invalidarCacheExcel() {
-      if (!ARQUIVO_EXCEL_CACHE) return;
-      ARQUIVO_EXCEL_CACHE = null;
-      atualizarEstadoBotaoCompartilhar();
-    }
-
-    function atualizarEstadoBotaoCompartilhar() {
-      const suportaCompartilharArquivo = !!(navigator.canShare && window.File);
-      const cacheValido = !!(ARQUIVO_EXCEL_CACHE && ARQUIVO_EXCEL_CACHE.assinatura === assinaturaLevantamentoAtual());
-
-      if (!cacheValido) ARQUIVO_EXCEL_CACHE = null;
-
-      if (cacheValido && suportaCompartilharArquivo) {
-        elBtnCompartilhar.innerText = "Compartilhar arquivo";
-        elBtnCompartilhar.dataset.modo = "arquivo-pronto";
-      } else {
-        elBtnCompartilhar.innerText = "WhatsApp";
-        elBtnCompartilhar.dataset.modo = "padrao";
-      }
+      atualizarBotaoCompartilhar();
     }
 
     function obterProdutoPorId(id) {
@@ -1092,6 +1063,26 @@
       const totalUnidades = itens.reduce((acc, item) => acc + item.qtd, 0);
       const totalValor = itens.reduce((acc, item) => acc + (converterPrecoValido(item.produto.preco) * item.qtd), 0);
       return { itens, totalItens: itens.length, totalUnidades, totalValor };
+    }
+
+    // Identifica exclusivamente o conteudo atual do levantamento + cliente,
+    // para sabermos se o arquivo ja gerado/baixado ainda esta valido ou se
+    // o carrinho mudou desde entao.
+    function assinaturaLevantamentoAtual() {
+      const idsOrdenados = Object.keys(LEVANTAMENTO).sort().map(id => id + ":" + LEVANTAMENTO[id]).join(",");
+      const idCliente = CLIENTE_SELECIONADO ? CLIENTE_SELECIONADO.id : "sem-cliente";
+      return idCliente + "|" + idsOrdenados;
+    }
+
+    // Deixa claro visualmente quando ja existe um arquivo pronto na memoria
+    // (baixado ou compartilhado antes) que pode ser reenviado na hora, sem
+    // esperar a geracao do Excel de novo — isso preserva o "gesto do
+    // usuario" exigido pelo navegador para abrir o menu de compartilhar.
+    function atualizarBotaoCompartilhar() {
+      if (!elBtnCompartilhar || elBtnCompartilhar.disabled) return;
+      const pronto = ULTIMO_ARQUIVO_GERADO && ULTIMO_ARQUIVO_GERADO.assinatura === assinaturaLevantamentoAtual();
+      elBtnCompartilhar.innerText = pronto ? "Compartilhar arquivo" : "WhatsApp";
+      elBtnCompartilhar.classList.toggle("pronto-compartilhar", !!pronto);
     }
 
     function atualizarResumoLevantamento() {
@@ -1138,7 +1129,7 @@
       salvarLevantamento();
       atualizarInputCard(id);
       atualizarResumoLevantamento();
-      invalidarCacheExcel();
+      atualizarBotaoCompartilhar();
     }
 
     function definirQtdLevantamento(id, valor) {
@@ -1148,7 +1139,7 @@
       salvarLevantamento();
       atualizarInputCard(id);
       atualizarResumoLevantamento();
-      invalidarCacheExcel();
+      atualizarBotaoCompartilhar();
     }
 
     function ajustarLarguraPainel() {
@@ -1175,9 +1166,10 @@
       if (!confirm("Limpar todo o levantamento?")) return;
       LEVANTAMENTO = {};
       salvarLevantamento();
+      ULTIMO_ARQUIVO_GERADO = null;
       renderizarProdutos();
       atualizarResumoLevantamento();
-      invalidarCacheExcel();
+      atualizarBotaoCompartilhar();
     }
 
     function montarMensagemWhatsApp() {
@@ -1209,48 +1201,40 @@
       return linhas.join("\n");
     }
 
-    // Dispara pelo clique no botao "WhatsApp" / "Compartilhar arquivo".
-    // Se ja existe um Excel valido em cache (gerado por "Baixar Excel" ou
-    // por uma tentativa anterior desta funcao), compartilha na hora, sem
-    // gerar nada de novo. Caso contrario, roda o fluxo completo.
-    function aoClicarCompartilhar() {
-      const cacheValido = !!(ARQUIVO_EXCEL_CACHE && ARQUIVO_EXCEL_CACHE.assinatura === assinaturaLevantamentoAtual());
-      if (cacheValido && elBtnCompartilhar.dataset.modo === "arquivo-pronto") {
-        compartilharArquivoCache();
-      } else {
-        compartilharWhatsApp();
+    // Compartilha um arquivo que ja foi gerado nesta sessao (por exemplo,
+    // apos clicar em "Baixar Excel"), sem nenhuma espera assincrona antes do
+    // navigator.share. Isso preserva o "gesto do usuario" exigido pelo
+    // navegador para abrir o menu nativo de compartilhamento, que costuma
+    // se perder quando o share e chamado logo depois de gerar o Excel.
+    async function compartilharArquivoGerado() {
+      if (!ULTIMO_ARQUIVO_GERADO || ULTIMO_ARQUIVO_GERADO.assinatura !== assinaturaLevantamentoAtual()) {
+        // O carrinho mudou desde o ultimo arquivo gerado: cai no fluxo normal.
+        return compartilharWhatsApp();
       }
-    }
 
-    // Compartilha o arquivo ja gerado e guardado em cache. Chamada direto
-    // no clique, sem nenhum "await" antes do navigator.share, para
-    // preservar a autorizacao de gesto do usuario.
-    function compartilharArquivoCache() {
-      const cache = ARQUIVO_EXCEL_CACHE;
-      if (!cache) {
-        compartilharWhatsApp();
+      if (!(navigator.canShare && window.File)) {
+        alert("Este navegador nao suporta compartilhar arquivos diretamente. O Excel ja esta na pasta Downloads — anexe-o manualmente na conversa do WhatsApp.");
+        return;
+      }
+
+      const { blob, nomeArquivo } = ULTIMO_ARQUIVO_GERADO;
+      const arquivo = new File([blob], nomeArquivo, { type: blob.type });
+
+      if (!navigator.canShare({ files: [arquivo] })) {
+        alert("Este navegador nao suporta compartilhar este tipo de arquivo. O Excel ja esta na pasta Downloads — anexe-o manualmente na conversa do WhatsApp.");
         return;
       }
 
       try {
-        const arquivo = new File([cache.blob], cache.nomeArquivo, { type: cache.blob.type });
-        if (!(navigator.canShare && navigator.canShare({ files: [arquivo] }))) {
-          alert("Nao foi possivel compartilhar o arquivo diretamente neste navegador. O arquivo ja esta baixado em Downloads — anexe manualmente no WhatsApp.");
-          return;
-        }
-
-        navigator.share({
+        await navigator.share({
           title: "Levantamento HBN1",
-          text: cache.mensagem,
+          text: montarMensagemWhatsApp(),
           files: [arquivo]
-        }).catch(e => {
-          if (e && e.name === "AbortError") return;
-          console.error("Erro ao compartilhar arquivo em cache:", e);
-          alert("Nao foi possivel abrir o menu de compartilhamento. O arquivo ja esta baixado em Downloads.");
         });
       } catch (e) {
-        console.error("Erro ao preparar compartilhamento do cache:", e);
-        alert("Nao foi possivel compartilhar o arquivo. O arquivo ja esta baixado em Downloads.");
+        if (e && e.name === "AbortError") return;
+        console.warn("Falha ao compartilhar arquivo em cache:", e);
+        alert("Nao foi possivel abrir o menu de compartilhamento. O Excel ja esta na pasta Downloads — anexe-o manualmente na conversa do WhatsApp.");
       }
     }
 
@@ -1266,7 +1250,15 @@
         return;
       }
 
+      // Ja temos um arquivo pronto e valido para o carrinho atual (por
+      // exemplo, baixado ha pouco): compartilha na hora, sem gerar de novo,
+      // pra nao perder o gesto do usuario com uma espera assincrona.
+      if (ULTIMO_ARQUIVO_GERADO && ULTIMO_ARQUIVO_GERADO.assinatura === assinaturaLevantamentoAtual()) {
+        return compartilharArquivoGerado();
+      }
+
       const btn = elBtnCompartilhar;
+      const textoOriginalBtn = btn.innerText;
       const suportaCompartilharArquivo = !!(navigator.canShare && window.File);
 
       // IMPORTANTE: window.open precisa ser chamado o mais perto possivel do
@@ -1290,18 +1282,6 @@
           return;
         }
 
-        // Guarda o arquivo em cache assim que fica pronto. Mesmo que a
-        // tentativa de compartilhamento direto abaixo nao funcione (porque
-        // a geracao do Excel "gastou" a autorizacao de gesto do usuario),
-        // o arquivo fica pronto para compartilhar com um unico toque depois
-        // — o botao muda para "Compartilhar arquivo" no finally.
-        ARQUIVO_EXCEL_CACHE = {
-          blob: arquivoExcel.blob,
-          nomeArquivo: arquivoExcel.nomeArquivo,
-          mensagem,
-          assinatura: assinaturaLevantamentoAtual()
-        };
-
         // 1) Tenta compartilhar o proprio arquivo Excel (funciona no WhatsApp
         // mobile via Web Share API - Android Chrome e iOS Safari 15+, desde
         // que o app esteja instalado pelo proprio Chrome/Safari).
@@ -1317,18 +1297,18 @@
               return;
             } catch (e) {
               if (e && e.name === "AbortError") return;
-              console.warn("Compartilhamento direto falhou (possivel perda do gesto do usuario apos gerar o Excel); arquivo permanece em cache para nova tentativa com um toque.", e);
+              console.warn("Falha ao compartilhar arquivo diretamente, usando alternativa:", e);
             }
           }
         }
 
-        // 2) Sem sucesso no compartilhamento direto: baixa o Excel e usa a
-        // aba ja reservada para abrir o WhatsApp com o texto pronto. O botao
-        // passara a oferecer "Compartilhar arquivo" para tentar de novo com
-        // um unico toque, sem precisar gerar o arquivo outra vez.
+        // 2) Sem suporte a compartilhar arquivos: baixa o Excel, mantem o
+        // arquivo em cache (para o botao virar "Compartilhar arquivo" e
+        // permitir nova tentativa instantanea) e usa a aba ja reservada
+        // para abrir o WhatsApp com o texto pronto.
         baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
         const linkWhatsApp = "https://wa.me/?text=" + encodeURIComponent(mensagem);
-        alert("Nao foi possivel anexar o Excel automaticamente ao WhatsApp.\n\nO arquivo ja foi baixado (confira em Downloads). O WhatsApp sera aberto com o resumo em texto. Toque em \"Compartilhar arquivo\" para tentar anexar o arquivo ja baixado com um unico toque.");
+        alert("Este atalho/navegador nao permite anexar o Excel automaticamente ao WhatsApp.\n\nO arquivo ja foi baixado (confira em Downloads). O botao agora vira \"Compartilhar arquivo\" — toque nele para tentar anexar de novo, ou anexe manualmente na conversa que sera aberta.");
 
         if (abaReservada && !abaReservada.closed) {
           abaReservada.location.href = linkWhatsApp;
@@ -1347,7 +1327,7 @@
         alert("Nao foi possivel concluir o compartilhamento. Se voce abriu este catalogo por um atalho salvo, tente abrir o link direto no Chrome ou Safari e repetir.");
       } finally {
         btn.disabled = false;
-        atualizarEstadoBotaoCompartilhar();
+        atualizarBotaoCompartilhar();
       }
     }
 
@@ -1548,6 +1528,12 @@
       const cnpj = limparNomeArquivo(String(CLIENTE_SELECIONADO.cnpj || ""));
       const nomeArquivo = `${razao}${cnpj ? " - " + cnpj : ""} - ${formatarDataArquivo(agora)}.xlsx`;
       const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+      // Guarda o arquivo pronto na memoria para permitir compartilhar
+      // instantaneamente depois, sem gerar de novo (ver compartilharArquivoGerado).
+      ULTIMO_ARQUIVO_GERADO = { blob, nomeArquivo, assinatura: assinaturaLevantamentoAtual() };
+      atualizarBotaoCompartilhar();
+
       return { nomeArquivo, blob };
     }
 
@@ -1555,17 +1541,6 @@
       const arquivoExcel = await gerarArquivoExcelLevantamento();
       if (!arquivoExcel) return;
       baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
-
-      // Guarda o arquivo recem-gerado em cache: se o navegador suportar
-      // compartilhar arquivos, o botao "WhatsApp" vira "Compartilhar
-      // arquivo" e o proximo toque compartilha na hora, sem gerar de novo.
-      ARQUIVO_EXCEL_CACHE = {
-        blob: arquivoExcel.blob,
-        nomeArquivo: arquivoExcel.nomeArquivo,
-        mensagem: montarMensagemWhatsApp(),
-        assinatura: assinaturaLevantamentoAtual()
-      };
-      atualizarEstadoBotaoCompartilhar();
     }
 
     function montarFornecedores() {
@@ -1732,7 +1707,7 @@
     document.getElementById("overlayResumo").addEventListener("click", fecharResumo);
     document.getElementById("btnLimparCliente").addEventListener("click", limparClienteSelecionado);
     document.getElementById("btnLimparLevantamento").addEventListener("click", limparLevantamento);
-    document.getElementById("btnCompartilharWhatsApp").addEventListener("click", aoClicarCompartilhar);
+    document.getElementById("btnCompartilharWhatsApp").addEventListener("click", compartilharWhatsApp);
     document.getElementById("btnBaixarLevantamento").addEventListener("click", baixarLevantamento);
     window.addEventListener("resize", ajustarLarguraPainel);
     window.addEventListener("orientationchange", ajustarLarguraPainel);
@@ -1758,7 +1733,6 @@
       carregarLevantamentoSalvo();
       carregarClienteSalvo();
       atualizarResumoLevantamento();
-      atualizarEstadoBotaoCompartilhar();
       verificarCompatibilidadeAtalho();
       carregarProdutos();
       carregarClientes();
