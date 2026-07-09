@@ -3642,7 +3642,7 @@ const subLinha = [clienteTxt, info.data].filter(Boolean).join(' | ');
 
   div.innerHTML = `
     <div style="background:#FF6B00;padding:26px 34px 20px;position:relative;">
-      <h1 style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS - ${info.fornecedor}</h1>
+      <h1 style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS NAZARIA - ${info.fornecedor}</h1>
       <p style="color:#ffe8d6;font-size:11px;margin:6px 0 0;">${subLinha}</p>
       <span style="position:absolute;top:26px;right:34px;color:#ffe8d6;font-size:10px;">Página ${info.numPagina}/${info.totalPaginas}</span>
     </div>
