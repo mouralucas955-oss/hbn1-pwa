@@ -525,6 +525,11 @@
 
     .btn-whatsapp:hover { background: #15803d; }
 
+    .btn-primario:disabled, .btn-whatsapp:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
     .btn-secundario {
       background: #e2e8f0;
       color: #0f172a;
@@ -1099,38 +1104,44 @@
         return;
       }
 
-      const mensagem = montarMensagemWhatsApp();
-      const arquivoExcel = await gerarArquivoExcelLevantamento();
-      if (!arquivoExcel) return;
+      const btn = document.getElementById("btnCompartilharWhatsApp");
+      const textoOriginalBtn = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = "Gerando...";
 
-      if (navigator.canShare && window.File) {
-        const arquivo = new File([arquivoExcel.blob], arquivoExcel.nomeArquivo, { type: arquivoExcel.blob.type });
-        if (navigator.canShare({ files: [arquivo] })) {
-          try {
-            await navigator.share({
-              title: "Levantamento HBN1",
-              text: "Segue levantamento HBN1 em Excel.",
-              files: [arquivo]
-            });
-            return;
-          } catch (e) {
-            if (e && e.name === "AbortError") return;
+      try {
+        const mensagem = montarMensagemWhatsApp();
+        const arquivoExcel = await gerarArquivoExcelLevantamento();
+        if (!arquivoExcel) return;
+
+        // 1) Tenta compartilhar o proprio arquivo Excel (funciona no WhatsApp
+        // mobile via Web Share API - Android Chrome e iOS Safari 15+).
+        if (navigator.canShare && window.File) {
+          const arquivo = new File([arquivoExcel.blob], arquivoExcel.nomeArquivo, { type: arquivoExcel.blob.type });
+          if (navigator.canShare({ files: [arquivo] })) {
+            try {
+              await navigator.share({
+                title: "Levantamento HBN1",
+                text: mensagem,
+                files: [arquivo]
+              });
+              return;
+            } catch (e) {
+              if (e && e.name === "AbortError") return;
+              console.warn("Falha ao compartilhar arquivo diretamente, usando alternativa:", e);
+            }
           }
         }
-      }
 
-      if (navigator.share) {
-        try {
-          await navigator.share({ title: "Levantamento HBN1", text: mensagem });
-          return;
-        } catch (e) {
-          if (e && e.name === "AbortError") return;
-        }
+        // 2) Sem suporte a compartilhar arquivos (comum em desktop): baixa o
+        // Excel e abre o WhatsApp com o texto pronto para o usuario anexar.
+        baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
+        alert("Este navegador/dispositivo nao permite anexar o Excel automaticamente ao WhatsApp.\n\nO arquivo ja foi baixado. O WhatsApp sera aberto com o resumo em texto — basta anexar o arquivo baixado na conversa.");
+        window.open("https://wa.me/?text=" + encodeURIComponent(mensagem), "_blank", "noopener,noreferrer");
+      } finally {
+        btn.disabled = false;
+        btn.innerText = textoOriginalBtn;
       }
-
-      baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
-      alert("Seu navegador nao permite anexar o Excel automaticamente. O arquivo foi baixado; anexe manualmente no WhatsApp.");
-      window.open("https://wa.me/?text=" + encodeURIComponent(mensagem), "_blank", "noopener,noreferrer");
     }
 
     function aplicarBorda(range, color = "FFD9D9D9") {
