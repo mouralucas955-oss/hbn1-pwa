@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Catalogo Promotores HBN1</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#FF6B00">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HBN1">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="icon" href="./icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -112,9 +120,12 @@
 
     .controles {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 10px;
+      align-items: start;
     }
+
+    .controles > * { min-width: 0; }
 
     .cliente-box {
       position: relative;
@@ -657,6 +668,35 @@
       gap: 8px;
     }
 
+    .aviso-compat {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .aviso-compat.mostrar { display: flex; }
+
+    .aviso-compat a {
+      background: #ff6b00;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
     .vazio, .erro {
       grid-column: 1 / -1;
       border: 1px dashed #cbd5e1;
@@ -679,10 +719,6 @@
       .topo-inner {
         grid-template-columns: auto minmax(460px, 1fr);
         align-items: center;
-      }
-
-      .controles {
-        grid-template-columns: minmax(240px, 1.4fr) minmax(220px, 1fr) 190px 150px;
       }
     }
 
@@ -737,6 +773,10 @@
   </header>
 
   <main>
+    <div id="avisoCompat" class="aviso-compat">
+      <span>Este catalogo abriu por um atalho salvo que pode limitar downloads e compartilhamento. Para melhor funcionamento, abra no navegador.</span>
+      <a id="linkAbrirNavegador" href="#" target="_blank" rel="noopener noreferrer">Abrir no navegador</a>
+    </div>
     <div class="barra-info">
       <div id="contador" class="contador">Carregando produtos...</div>
       <div id="ultimaAtualizacao" class="atualizacao"></div>
@@ -770,6 +810,34 @@
   </aside>
 
   <script>
+    // Corrige o viewport em WebViews/atalhos que ignoram a tag <meta viewport>
+    // (comum em "Adicionar a tela inicial" fora do Chrome/Safari padrao).
+    // Forcar um valor numerico explicito costuma funcionar mesmo quando a
+    // palavra-chave "device-width" e ignorada pelo motor de renderizacao.
+    (function corrigirViewport() {
+      try {
+        const meta = document.querySelector('meta[name="viewport"]');
+        if (!meta) return;
+        function aplicar() {
+          const larguraReal = (window.screen && window.screen.width) ? window.screen.width : window.innerWidth;
+          meta.setAttribute("content", "width=" + larguraReal + ", initial-scale=1, maximum-scale=1, viewport-fit=cover");
+        }
+        aplicar();
+        window.addEventListener("orientationchange", aplicar);
+        window.addEventListener("resize", aplicar);
+      } catch (e) { /* silencioso */ }
+    })();
+
+    // Registra o Service Worker para que esta pagina passe a ser instalavel
+    // como app (PWA) com suporte completo a compartilhamento/download.
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(erro => {
+          console.warn("Falha ao registrar o service worker:", erro);
+        });
+      });
+    }
+
     const ACESSO_PROMOTORES = [];
     const params = new URLSearchParams(window.location.search);
     const UF_USUARIO = (params.get("uf") || localStorage.getItem("hbn1_uf") || "PI").toUpperCase();
@@ -1043,8 +1111,16 @@
       atualizarResumoLevantamento();
     }
 
+    function ajustarLarguraPainel() {
+      // Usa window.innerWidth (medido em JS) em vez de depender só de vw/%
+      // no CSS, que pode ficar incorreto em WebViews com bug de viewport.
+      const largura = Math.min(460, window.innerWidth || document.documentElement.clientWidth || 460);
+      elPainelResumo.style.width = largura + "px";
+    }
+
     function abrirResumo() {
       atualizarResumoLevantamento();
+      ajustarLarguraPainel();
       elOverlayResumo.classList.add("aberto");
       elPainelResumo.classList.add("aberto");
     }
@@ -1106,17 +1182,33 @@
 
       const btn = document.getElementById("btnCompartilharWhatsApp");
       const textoOriginalBtn = btn.innerText;
+      const suportaCompartilharArquivo = !!(navigator.canShare && window.File);
+
+      // IMPORTANTE: window.open precisa ser chamado o mais perto possivel do
+      // clique original. Se abrirmos so depois do "await" (gerar o Excel),
+      // varios navegadores/WebViews tratam como pop-up nao solicitado e
+      // bloqueiam silenciosamente. Por isso reservamos a aba AGORA (ainda
+      // sincrono, dentro do clique) e so definimos o endereco dela depois.
+      let abaReservada = null;
+      if (!suportaCompartilharArquivo) {
+        try { abaReservada = window.open("", "_blank"); } catch (e) { abaReservada = null; }
+      }
+
       btn.disabled = true;
       btn.innerText = "Gerando...";
 
       try {
         const mensagem = montarMensagemWhatsApp();
         const arquivoExcel = await gerarArquivoExcelLevantamento();
-        if (!arquivoExcel) return;
+        if (!arquivoExcel) {
+          if (abaReservada && !abaReservada.closed) abaReservada.close();
+          return;
+        }
 
         // 1) Tenta compartilhar o proprio arquivo Excel (funciona no WhatsApp
-        // mobile via Web Share API - Android Chrome e iOS Safari 15+).
-        if (navigator.canShare && window.File) {
+        // mobile via Web Share API - Android Chrome e iOS Safari 15+, desde
+        // que o app esteja instalado pelo proprio Chrome/Safari).
+        if (suportaCompartilharArquivo) {
           const arquivo = new File([arquivoExcel.blob], arquivoExcel.nomeArquivo, { type: arquivoExcel.blob.type });
           if (navigator.canShare({ files: [arquivo] })) {
             try {
@@ -1133,11 +1225,27 @@
           }
         }
 
-        // 2) Sem suporte a compartilhar arquivos (comum em desktop): baixa o
-        // Excel e abre o WhatsApp com o texto pronto para o usuario anexar.
+        // 2) Sem suporte a compartilhar arquivos: baixa o Excel e usa a aba
+        // ja reservada para abrir o WhatsApp com o texto pronto.
         baixarBlob(arquivoExcel.nomeArquivo, arquivoExcel.blob);
-        alert("Este navegador/dispositivo nao permite anexar o Excel automaticamente ao WhatsApp.\n\nO arquivo ja foi baixado. O WhatsApp sera aberto com o resumo em texto — basta anexar o arquivo baixado na conversa.");
-        window.open("https://wa.me/?text=" + encodeURIComponent(mensagem), "_blank", "noopener,noreferrer");
+        const linkWhatsApp = "https://wa.me/?text=" + encodeURIComponent(mensagem);
+        alert("Este atalho/navegador nao permite anexar o Excel automaticamente ao WhatsApp.\n\nO arquivo ja foi baixado (confira em Downloads). O WhatsApp sera aberto com o resumo em texto — basta anexar o arquivo baixado na conversa.");
+
+        if (abaReservada && !abaReservada.closed) {
+          abaReservada.location.href = linkWhatsApp;
+        } else {
+          const link = document.createElement("a");
+          link.href = linkWhatsApp;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
+      } catch (erro) {
+        if (abaReservada && !abaReservada.closed) abaReservada.close();
+        console.error("Erro ao compartilhar:", erro);
+        alert("Nao foi possivel concluir o compartilhamento. Se voce abriu este catalogo por um atalho salvo, tente abrir o link direto no Chrome ou Safari e repetir.");
       } finally {
         btn.disabled = false;
         btn.innerText = textoOriginalBtn;
@@ -1516,11 +1624,31 @@
     document.getElementById("btnLimparLevantamento").addEventListener("click", limparLevantamento);
     document.getElementById("btnCompartilharWhatsApp").addEventListener("click", compartilharWhatsApp);
     document.getElementById("btnBaixarLevantamento").addEventListener("click", baixarLevantamento);
+    window.addEventListener("resize", ajustarLarguraPainel);
+    window.addEventListener("orientationchange", ajustarLarguraPainel);
+
+    function verificarCompatibilidadeAtalho() {
+      try {
+        const rodandoComoAtalho = window.matchMedia && (
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true
+        );
+        const semCompartilhamentoDeArquivo = !(navigator.canShare && window.File);
+
+        if (rodandoComoAtalho && semCompartilhamentoDeArquivo) {
+          const aviso = document.getElementById("avisoCompat");
+          const link = document.getElementById("linkAbrirNavegador");
+          link.href = window.location.href;
+          aviso.classList.add("mostrar");
+        }
+      } catch (e) { /* silencioso */ }
+    }
 
     if (validarAcesso()) {
       carregarLevantamentoSalvo();
       carregarClienteSalvo();
       atualizarResumoLevantamento();
+      verificarCompatibilidadeAtalho();
       carregarProdutos();
       carregarClientes();
       setInterval(carregarProdutos, 180000);
