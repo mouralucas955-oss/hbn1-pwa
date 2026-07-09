@@ -3589,7 +3589,7 @@ function _gerarHtmlCardPdf(p, imgBase64) {
       <!-- LATERAL ESQUERDA: imagem -->
       <div style="width:130px;flex-shrink:0;position:relative;background:#fafafa;display:flex;align-items:center;justify-content:center;">
        ${badgePct ? `<span style="position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;height:20px;min-width:38px;padding:0 7px;border-radius:6px;z-index:2;display:inline-flex;align-items:center;justify-content:center;line-height:20px;box-sizing:border-box;">
-  <span style="display:block;transform:translateY(-1px);">${badgePct}</span>
+  <span style="display:block;transform:translateY(-2px);">${badgePct}</span>
 </span>` : ''}
         ${imgBase64
           ? `<img src="${imgBase64}" style="max-height:120px;max-width:118px;object-fit:contain;">`
@@ -3606,11 +3606,11 @@ function _gerarHtmlCardPdf(p, imgBase64) {
 
         <div style="display:flex;gap:5px;font-size:7.5px;flex-shrink:0;margin-bottom:6px;flex-wrap:wrap;">
           <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;height:16px;padding:0 6px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;line-height:16px;box-sizing:border-box;">
-  <span style="display:block;transform:translateY(-1px);">ID:${p.id}</span>
+  <span style="display:block;transform:translateY(-2px);">ID:${p.id}</span>
 </span>
 
 <span style="background:#eef2ff;color:#3b5aa8;font-weight:700;height:16px;padding:0 6px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;line-height:16px;box-sizing:border-box;">
-  <span style="display:block;transform:translateY(-1px);">EAN:${p.ean || 'N/A'}</span>
+  <span style="display:block;transform:translateY(-2px);">EAN:${p.ean || 'N/A'}</span>
 </span>
         </div>
 
@@ -3623,7 +3623,7 @@ function _gerarHtmlCardPdf(p, imgBase64) {
     </div>
 
     ${economia > 0 ? `<span style="background:#22c55e;color:#fff;font-size:7px;font-weight:700;height:17px;padding:0 7px;border-radius:5px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;line-height:17px;box-sizing:border-box;">
-  <span style="display:block;transform:translateY(-1px);">ECON. ${formatarParaReal(economia)}</span>
+  <span style="display:block;transform:translateY(-2px);">ECON. ${formatarParaReal(economia)}</span>
 </span>` : ''}
   </div>
 
