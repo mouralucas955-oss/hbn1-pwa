@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalogo Promotores HBN1</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="api.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <style>
+    :root {
+      --laranja: #ff6b00;
+      --laranja-escuro: #c94f00;
+      --grafite: #111827;
+      --borda: #e5e7eb;
+      --texto: #1f2937;
+      --muted: #64748b;
+      --fundo: #f8fafc;
+      --card: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--fundo);
+      color: var(--texto);
+      font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+
+    .topo {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+    }
+
+    .topo-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #fff;
+      padding: 6px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 4vw, 30px);
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 900;
+    }
+
+    .subtitulo {
+      margin: 5px 0 0;
+      color: #ffedd5;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .controles {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .cliente-box {
+      position: relative;
+      min-width: 0;
+    }
+
+    .cliente-chip {
+      min-height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.14);
+      color: #fff;
+      padding: 8px 12px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cliente-chip.ativo { display: flex; }
+
+    .cliente-chip strong {
+      display: block;
+      max-width: 360px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .cliente-chip span {
+      display: block;
+      color: #ffedd5;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .btn-cliente-limpar {
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.25);
+      color: #fff;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .dropdown-clientes {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 6px);
+      z-index: 40;
+      max-height: 270px;
+      overflow: auto;
+      display: none;
+      background: #fff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 20px 42px rgba(15, 23, 42, 0.22);
+    }
+
+    .dropdown-clientes.aberto { display: block; }
+
+    .cliente-opcao {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid #f1f5f9;
+      background: #fff;
+      color: #0f172a;
+      cursor: pointer;
+      text-align: left;
+      padding: 10px 12px;
+    }
+
+    .cliente-opcao:hover { background: #fff7ed; }
+
+    .cliente-opcao strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .cliente-opcao span {
+      display: block;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .campo, .select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      background: rgba(17, 24, 39, 0.32);
+      color: #fff;
+      outline: none;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .campo::placeholder { color: #fed7aa; }
+    .select option { color: #111827; }
+
+    .toggle {
+      min-height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 0 14px;
+    }
+
+    .toggle.ativo {
+      background: #fff;
+      color: var(--laranja-escuro);
+    }
+
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .barra-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .contador {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .atualizacao {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--borda);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #fdba74;
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+    }
+
+    .foto-wrap {
+      position: relative;
+      height: 158px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .foto {
+      max-width: 132px;
+      max-height: 132px;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+    }
+
+    .sem-foto {
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .pill {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 900;
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .pill.baixo { background: #fef3c7; color: #a16207; }
+    .pill.esgotado { background: #fee2e2; color: #b91c1c; }
+
+    .tag {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      max-width: calc(100% - 20px);
+      border-radius: 999px;
+      background: var(--laranja);
+      color: #fff;
+      padding: 5px 8px;
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .corpo {
+      padding: 13px;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .fornecedor {
+      color: var(--laranja);
+      font-size: 10px;
+      line-height: 1.2;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .descricao {
+      min-height: 42px;
+      margin: 0;
+      color: #0f172a;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 800;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .meta {
+      display: grid;
+      gap: 5px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .linha-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px dashed #e2e8f0;
+      padding-bottom: 5px;
+    }
+
+    .linha-meta strong {
+      color: #334155;
+      font-weight: 900;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .preco-box {
+      margin-top: auto;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 11px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .preco-label {
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .preco {
+      color: #0f172a;
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .levantamento-card {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 38px 1fr 38px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-qtd {
+      height: 38px;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      background: #fff7ed;
+      color: var(--laranja-escuro);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .btn-qtd:hover { background: #ffedd5; }
+
+    .input-qtd {
+      width: 100%;
+      height: 38px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      color: #0f172a;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      outline: none;
+    }
+
+    .input-qtd:focus {
+      border-color: var(--laranja);
+      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+    }
+
+    .barra-levantamento {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      z-index: 20;
+      max-width: 760px;
+      margin: 0 auto;
+      background: #0f172a;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.32);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .barra-levantamento strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .barra-levantamento span {
+      display: block;
+      margin-top: 2px;
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .btn-primario, .btn-secundario, .btn-perigo {
+      min-height: 38px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      padding: 0 13px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .btn-primario {
+      background: var(--laranja);
+      color: #fff;
+    }
+
+    .btn-secundario {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn-perigo {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: rgba(15, 23, 42, 0.58);
+      display: none;
+    }
+
+    .overlay.aberto { display: block; }
+
+    .painel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 31;
+      width: min(460px, 100vw);
+      height: 100vh;
+      background: #fff;
+      box-shadow: -18px 0 42px rgba(15, 23, 42, 0.24);
+      transform: translateX(100%);
+      transition: transform 0.22s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .painel.aberto { transform: translateX(0); }
+
+    .painel-topo {
+      padding: 18px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .painel-topo h2 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .painel-topo p {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .btn-fechar {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      color: #0f172a;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .resumo-lista {
+      flex: 1;
+      overflow: auto;
+      padding: 12px 14px;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .resumo-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .resumo-item h3 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 900;
+    }
+
+    .resumo-item p {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .resumo-qtd {
+      min-width: 46px;
+      height: 34px;
+      border-radius: 8px;
+      background: #fff7ed;
+      color: var(--laranja-escuro);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .painel-rodape {
+      border-top: 1px solid #e2e8f0;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .vazio, .erro {
+      grid-column: 1 / -1;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #64748b;
+      padding: 40px 20px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .erro {
+      border-color: #fecaca;
+      color: #b91c1c;
+      background: #fff7f7;
+    }
+
+    @media (min-width: 760px) {
+      .topo-inner {
+        grid-template-columns: auto minmax(460px, 1fr);
+        align-items: center;
+      }
+
+      .controles {
+        grid-template-columns: minmax(240px, 1.4fr) minmax(220px, 1fr) 190px 150px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main { padding-bottom: 90px; }
+      .barra-levantamento {
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+      }
+      .barra-levantamento .btn-primario { padding: 0 10px; }
+      .painel-rodape { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <div class="topo-inner">
+      <div class="marca">
+        <img class="logo" src="https://epedidos.nazaria.com.br/img/logo-nazaria-white.png" alt="Nazaria">
+        <div>
+          <h1>Catalogo Promotores <span id="ufTitulo"></span></h1>
+          <p class="subtitulo">Visualizacao separada com dados do produto e preco fabrica</p>
+        </div>
+      </div>
+
+      <div class="controles">
+        <div id="clienteBox" class="cliente-box">
+          <input id="buscaCliente" class="campo" type="search" placeholder="Buscar cliente por razao, CNPJ ou ID">
+          <div id="clienteSelecionadoChip" class="cliente-chip">
+            <div>
+              <strong id="clienteChipRazao">Cliente selecionado</strong>
+              <span id="clienteChipCnpj"></span>
+            </div>
+            <button id="btnLimparCliente" class="btn-cliente-limpar" type="button" aria-label="Limpar cliente">x</button>
+          </div>
+          <div id="dropdownClientes" class="dropdown-clientes"></div>
+        </div>
+        <input id="busca" class="campo" type="search" placeholder="Buscar por ID, EAN, descricao, marca ou franquia">
+        <select id="fornecedor" class="select" aria-label="Fornecedor">
+          <option value="TODOS">Todos fornecedores</option>
+        </select>
+        <button id="btnEstoque" class="toggle" type="button" aria-pressed="false">Com estoque</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="barra-info">
+      <div id="contador" class="contador">Carregando produtos...</div>
+      <div id="ultimaAtualizacao" class="atualizacao"></div>
+    </div>
+    <section id="grid" class="grid" aria-live="polite"></section>
+  </main>
+
+  <div id="barraLevantamento" class="barra-levantamento">
+    <div>
+      <strong id="resumoBarraTitulo">Levantamento vazio</strong>
+      <span id="resumoBarraSub">Adicione quantidades nos produtos</span>
+    </div>
+    <button id="btnAbrirResumo" class="btn-primario" type="button">Ver resumo</button>
+  </div>
+
+  <div id="overlayResumo" class="overlay"></div>
+  <aside id="painelResumo" class="painel" aria-label="Resumo do levantamento">
+    <div class="painel-topo">
+      <div>
+        <h2>Resumo do levantamento</h2>
+        <p id="resumoPainelSub">Nenhum item selecionado</p>
+      </div>
+      <button id="btnFecharResumo" class="btn-fechar" type="button" aria-label="Fechar">x</button>
+    </div>
+    <div id="listaResumo" class="resumo-lista"></div>
+    <div class="painel-rodape">
+      <button id="btnLimparLevantamento" class="btn-perigo" type="button">Limpar</button>
+      <button id="btnBaixarLevantamento" class="btn-primario" type="button">Baixar Excel</button>
+    </div>
+  </aside>
+
+  <script>
+    const ACESSO_PROMOTORES = [];
+    const params = new URLSearchParams(window.location.search);
+    const UF_USUARIO = (params.get("uf") || localStorage.getItem("hbn1_uf") || "PI").toUpperCase();
+    const USUARIO_ATUAL = localStorage.getItem("hbn1_usuario") || "";
+
+    let BD_PRODUTOS = [];
+    let BD_CLIENTES = [];
+    let PRODUTOS_FILTRADOS = [];
+    let FILTRO_ESTOQUE = false;
+    let LEVANTAMENTO = {};
+    let CLIENTE_SELECIONADO = null;
+
+    const elGrid = document.getElementById("grid");
+    const elBusca = document.getElementById("busca");
+    const elFornecedor = document.getElementById("fornecedor");
+    const elBuscaCliente = document.getElementById("buscaCliente");
+    const elDropdownClientes = document.getElementById("dropdownClientes");
+    const elClienteChip = document.getElementById("clienteSelecionadoChip");
+    const elClienteChipRazao = document.getElementById("clienteChipRazao");
+    const elClienteChipCnpj = document.getElementById("clienteChipCnpj");
+    const elContador = document.getElementById("contador");
+    const elAtualizacao = document.getElementById("ultimaAtualizacao");
+    const btnEstoque = document.getElementById("btnEstoque");
+    const elBarraTitulo = document.getElementById("resumoBarraTitulo");
+    const elBarraSub = document.getElementById("resumoBarraSub");
+    const elPainelResumo = document.getElementById("painelResumo");
+    const elOverlayResumo = document.getElementById("overlayResumo");
+    const elListaResumo = document.getElementById("listaResumo");
+    const elResumoPainelSub = document.getElementById("resumoPainelSub");
+    const CHAVE_LEVANTAMENTO = "hbn1_levantamento_promotores_" + UF_USUARIO;
+    const CHAVE_CLIENTE = "hbn1_levantamento_promotores_cliente_" + UF_USUARIO;
+
+    document.getElementById("ufTitulo").innerText = "(" + UF_USUARIO + ")";
+
+    function validarAcesso() {
+      if (!USUARIO_ATUAL) {
+        window.location.href = "index.html";
+        return false;
+      }
+
+      if (ACESSO_PROMOTORES.length > 0 && !ACESSO_PROMOTORES.includes(USUARIO_ATUAL.toLowerCase())) {
+        elGrid.innerHTML = '<div class="erro">Usuario sem permissao para acessar o catalogo de promotores.</div>';
+        return false;
+      }
+
+      return true;
+    }
+
+    function converterPrecoValido(valor) {
+      if (!valor && valor !== 0) return 0;
+      let str = String(valor).replace("R$", "").replace(/\s/g, "").trim();
+      if (str.includes(",") && str.includes(".")) str = str.replace(/\./g, "").replace(",", ".");
+      else if (str.includes(",")) str = str.replace(",", ".");
+      const n = parseFloat(str);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatarParaReal(numero) {
+      return Number(numero || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function texto(valor, fallback = "-") {
+      const t = String(valor || "").trim();
+      return t || fallback;
+    }
+
+    function escaparHtml(valor) {
+      return String(valor || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escaparJs(valor) {
+      return String(valor || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    }
+
+    function normalizarDigitos(valor) {
+      return String(valor || "").replace(/\D/g, "");
+    }
+
+    function limparNomeArquivo(valor) {
+      return String(valor || "")
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\\/:*?"<>|]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function formatarDataArquivo(data) {
+      const d = String(data.getDate()).padStart(2, "0");
+      const m = String(data.getMonth() + 1).padStart(2, "0");
+      const a = data.getFullYear();
+      return `${d}-${m}-${a}`;
+    }
+
+    function produtoValido(p) {
+      const id = String(p.id || "").trim();
+      return id && id !== "Sem ID";
+    }
+
+    function salvarLevantamento() {
+      localStorage.setItem(CHAVE_LEVANTAMENTO, JSON.stringify(LEVANTAMENTO));
+    }
+
+    function carregarLevantamentoSalvo() {
+      try {
+        LEVANTAMENTO = JSON.parse(localStorage.getItem(CHAVE_LEVANTAMENTO) || "{}") || {};
+      } catch (e) {
+        LEVANTAMENTO = {};
+      }
+    }
+
+    function salvarClienteSelecionado() {
+      if (CLIENTE_SELECIONADO) localStorage.setItem(CHAVE_CLIENTE, JSON.stringify(CLIENTE_SELECIONADO));
+      else localStorage.removeItem(CHAVE_CLIENTE);
+    }
+
+    function carregarClienteSalvo() {
+      try {
+        CLIENTE_SELECIONADO = JSON.parse(localStorage.getItem(CHAVE_CLIENTE) || "null");
+      } catch (e) {
+        CLIENTE_SELECIONADO = null;
+      }
+      atualizarClienteSelecionadoUI();
+    }
+
+    function atualizarClienteSelecionadoUI() {
+      if (CLIENTE_SELECIONADO) {
+        elBuscaCliente.style.display = "none";
+        elClienteChip.classList.add("ativo");
+        elClienteChipRazao.innerText = String(CLIENTE_SELECIONADO.razao || "Cliente selecionado").toUpperCase();
+        elClienteChipCnpj.innerText = [
+          CLIENTE_SELECIONADO.cnpj ? "CNPJ: " + CLIENTE_SELECIONADO.cnpj : "",
+          CLIENTE_SELECIONADO.id ? "ID: " + CLIENTE_SELECIONADO.id : ""
+        ].filter(Boolean).join(" | ");
+      } else {
+        elBuscaCliente.style.display = "";
+        elClienteChip.classList.remove("ativo");
+        elBuscaCliente.value = "";
+      }
+      elDropdownClientes.classList.remove("aberto");
+    }
+
+    function filtrarClientes() {
+      const termo = elBuscaCliente.value.trim().toLowerCase();
+      const termoDigitos = normalizarDigitos(termo);
+      if (!termo) {
+        elDropdownClientes.innerHTML = "";
+        elDropdownClientes.classList.remove("aberto");
+        return;
+      }
+
+      const filtrados = BD_CLIENTES.filter(c => {
+        return String(c.id || "").toLowerCase().includes(termo) ||
+          String(c.razao || "").toLowerCase().includes(termo) ||
+          (termoDigitos && normalizarDigitos(c.cnpj).includes(termoDigitos));
+      }).slice(0, 12);
+
+      if (filtrados.length === 0) {
+        elDropdownClientes.innerHTML = '<div class="cliente-opcao">Nenhum cliente encontrado</div>';
+        elDropdownClientes.classList.add("aberto");
+        return;
+      }
+
+      elDropdownClientes.innerHTML = filtrados.map(c => `
+        <button class="cliente-opcao" type="button" onclick="selecionarCliente('${escaparJs(c.id)}')">
+          <strong>${escaparHtml(String(c.razao || "").toUpperCase())}</strong>
+          <span>ID: ${escaparHtml(texto(c.id))} | CNPJ: ${escaparHtml(texto(c.cnpj))}</span>
+        </button>`).join("");
+      elDropdownClientes.classList.add("aberto");
+    }
+
+    function selecionarCliente(id) {
+      const cliente = BD_CLIENTES.find(c => String(c.id) === String(id));
+      if (!cliente) return;
+      CLIENTE_SELECIONADO = cliente;
+      salvarClienteSelecionado();
+      atualizarClienteSelecionadoUI();
+      atualizarResumoLevantamento();
+    }
+
+    function limparClienteSelecionado() {
+      CLIENTE_SELECIONADO = null;
+      salvarClienteSelecionado();
+      atualizarClienteSelecionadoUI();
+      atualizarResumoLevantamento();
+    }
+
+    function obterProdutoPorId(id) {
+      return BD_PRODUTOS.find(p => String(p.id) === String(id));
+    }
+
+    function obterItensLevantamento() {
+      return Object.keys(LEVANTAMENTO)
+        .map(id => ({ produto: obterProdutoPorId(id), qtd: Number(LEVANTAMENTO[id] || 0) }))
+        .filter(item => item.produto && item.qtd > 0);
+    }
+
+    function calcularTotaisLevantamento() {
+      const itens = obterItensLevantamento();
+      const totalUnidades = itens.reduce((acc, item) => acc + item.qtd, 0);
+      const totalValor = itens.reduce((acc, item) => acc + (converterPrecoValido(item.produto.preco) * item.qtd), 0);
+      return { itens, totalItens: itens.length, totalUnidades, totalValor };
+    }
+
+    function atualizarResumoLevantamento() {
+      const { itens, totalItens, totalUnidades, totalValor } = calcularTotaisLevantamento();
+      elBarraTitulo.innerText = totalItens > 0
+        ? `${totalItens} item${totalItens === 1 ? "" : "s"} no levantamento`
+        : "Levantamento vazio";
+      elBarraSub.innerText = totalItens > 0
+        ? `${totalUnidades} unidade${totalUnidades === 1 ? "" : "s"} | ${formatarParaReal(totalValor)} fabrica`
+        : "Adicione quantidades nos produtos";
+      elResumoPainelSub.innerText = totalItens > 0
+        ? `${totalUnidades} unidade${totalUnidades === 1 ? "" : "s"} | ${formatarParaReal(totalValor)} fabrica${CLIENTE_SELECIONADO ? " | " + CLIENTE_SELECIONADO.razao : ""}`
+        : "Nenhum item selecionado";
+
+      if (itens.length === 0) {
+        elListaResumo.innerHTML = '<div class="vazio">Nenhum produto adicionado ao levantamento.</div>';
+        return;
+      }
+
+      elListaResumo.innerHTML = itens.map(({ produto, qtd }) => {
+        const preco = converterPrecoValido(produto.preco);
+        return `
+          <div class="resumo-item">
+            <div>
+              <h3>${escaparHtml(texto(produto.descricao, "Produto sem descricao"))}</h3>
+              <p>ID ${escaparHtml(texto(produto.id))} | EAN ${escaparHtml(texto(produto.ean))} | ${escaparHtml(texto(produto.fornecedor, "Geral"))}</p>
+              <p>Preco fabrica: ${preco > 0 ? formatarParaReal(preco) : "-"} | Total: ${formatarParaReal(preco * qtd)}</p>
+            </div>
+            <div class="resumo-qtd">${qtd}</div>
+          </div>`;
+      }).join("");
+    }
+
+    function atualizarInputCard(id) {
+      const input = document.getElementById("qtd-" + String(id).replace(/[^a-zA-Z0-9_-]/g, "_"));
+      if (input) input.value = LEVANTAMENTO[id] || 0;
+    }
+
+    function alterarQtdLevantamento(id, delta) {
+      const atual = Number(LEVANTAMENTO[id] || 0);
+      const novaQtd = Math.max(0, atual + delta);
+      if (novaQtd > 0) LEVANTAMENTO[id] = novaQtd;
+      else delete LEVANTAMENTO[id];
+      salvarLevantamento();
+      atualizarInputCard(id);
+      atualizarResumoLevantamento();
+    }
+
+    function definirQtdLevantamento(id, valor) {
+      const novaQtd = Math.max(0, Math.floor(Number(valor || 0)));
+      if (novaQtd > 0) LEVANTAMENTO[id] = novaQtd;
+      else delete LEVANTAMENTO[id];
+      salvarLevantamento();
+      atualizarInputCard(id);
+      atualizarResumoLevantamento();
+    }
+
+    function abrirResumo() {
+      atualizarResumoLevantamento();
+      elOverlayResumo.classList.add("aberto");
+      elPainelResumo.classList.add("aberto");
+    }
+
+    function fecharResumo() {
+      elOverlayResumo.classList.remove("aberto");
+      elPainelResumo.classList.remove("aberto");
+    }
+
+    function limparLevantamento() {
+      if (Object.keys(LEVANTAMENTO).length === 0) return;
+      if (!confirm("Limpar todo o levantamento?")) return;
+      LEVANTAMENTO = {};
+      salvarLevantamento();
+      renderizarProdutos();
+      atualizarResumoLevantamento();
+    }
+
+    function aplicarBorda(range, color = "FFD9D9D9") {
+      range.eachCell({ includeEmpty: true }, cell => {
+        cell.border = {
+          top: { style: "thin", color: { argb: color } },
+          left: { style: "thin", color: { argb: color } },
+          bottom: { style: "thin", color: { argb: color } },
+          right: { style: "thin", color: { argb: color } }
+        };
+      });
+    }
+
+    function pintarLinha(ws, rowNumber, fillColor) {
+      for (let col = 1; col <= 9; col++) {
+        ws.getCell(rowNumber, col).fill = { type: "pattern", pattern: "solid", fgColor: { argb: fillColor } };
+      }
+    }
+
+    function estilizarSecao(ws, rowNumber, titulo) {
+      ws.mergeCells(rowNumber, 1, rowNumber, 9);
+      const cell = ws.getCell(rowNumber, 1);
+      cell.value = titulo;
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE55300" } };
+      cell.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: "FFFFFFFF" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      ws.getRow(rowNumber).height = 20;
+    }
+
+    function estilizarCabecalhoTabela(ws, rowNumber) {
+      const row = ws.getRow(rowNumber);
+      ["COD.", "EAN", "DESCRICAO", "PRECO", "DESC%", "PR.FINAL", "QT", "SUBTOTAL", "STATUS"]
+        .forEach((valor, idx) => ws.getCell(rowNumber, idx + 1).value = valor);
+      row.height = 17;
+      for (let col = 1; col <= 9; col++) {
+        const cell = ws.getCell(rowNumber, col);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF6B00" } };
+        cell.font = { size: 9.5, bold: true, color: { argb: "FFFFFFFF" } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      }
+      aplicarBorda(ws.getRow(rowNumber));
+    }
+
+    function agruparItensPorFornecedor(itens) {
+      return itens.reduce((acc, item) => {
+        const fornecedor = String(item.produto.fornecedor || "GERAL").trim().toUpperCase() || "GERAL";
+        if (!acc[fornecedor]) acc[fornecedor] = [];
+        acc[fornecedor].push(item);
+        return acc;
+      }, {});
+    }
+
+    function baixarBlob(nomeArquivo, blob) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nomeArquivo;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function baixarLevantamento() {
+      const { itens, totalUnidades, totalValor } = calcularTotaisLevantamento();
+      if (itens.length === 0) {
+        alert("Adicione pelo menos um produto ao levantamento antes de baixar.");
+        return;
+      }
+
+      if (!CLIENTE_SELECIONADO) {
+        alert("Selecione um cliente antes de baixar o levantamento.");
+        elBuscaCliente.focus();
+        return;
+      }
+
+      if (!window.ExcelJS) {
+        alert("Biblioteca ExcelJS nao carregada. Verifique sua conexao e tente novamente.");
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Catalogo Promotores HBN1";
+      workbook.created = new Date();
+      const ws = workbook.addWorksheet("Pedido HBN1", {
+        pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
+      });
+
+      ws.views = [{ showGridLines: false }];
+      ws.columns = [
+        { width: 11 }, { width: 16 }, { width: 42 }, { width: 12 }, { width: 10 },
+        { width: 12 }, { width: 7 }, { width: 13 }, { width: 16 }
+      ];
+
+      const agora = new Date();
+      const dataHora = agora.toLocaleDateString("pt-BR") + ", " + agora.toLocaleTimeString("pt-BR");
+
+      ws.mergeCells("A1:I3");
+      const titulo = ws.getCell("A1");
+      titulo.value = `VENDAS HBN1\nLEVANTAMENTO DE PROMOTOR - CATALOGO HBN1\nUF: ${UF_USUARIO} - ${dataHora} - ${itens.length} variedade(s)`;
+      titulo.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF6B00" } };
+      titulo.font = { name: "Calibri", size: 11, color: { argb: "FFFFFFFF" } };
+      titulo.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      ws.getRow(1).height = 18;
+      ws.getRow(2).height = 16;
+      ws.getRow(3).height = 16;
+
+      estilizarSecao(ws, 5, "DADOS DO CLIENTE");
+      const dadosCliente = [
+        ["Nome", CLIENTE_SELECIONADO.razao || ""],
+        ["CNPJ/CPF", CLIENTE_SELECIONADO.cnpj || ""],
+        ["ID Cliente", CLIENTE_SELECIONADO.id || ""],
+        ["UF", UF_USUARIO],
+        ["Grupo Unilever", CLIENTE_SELECIONADO.grupoUnilever || ""],
+        ["Perfil Danone", CLIENTE_SELECIONADO.perfilDanone || ""],
+        ["Painel Transfer", CLIENTE_SELECIONADO.painelTransfer || ""],
+        ["Promotor", localStorage.getItem("hbn1_nome") || USUARIO_ATUAL]
+      ];
+
+      dadosCliente.forEach((linha, idx) => {
+        const rowNumber = 6 + idx;
+        ws.mergeCells(rowNumber, 2, rowNumber, 9);
+        ws.getCell(rowNumber, 1).value = linha[0];
+        ws.getCell(rowNumber, 2).value = linha[1];
+        ws.getRow(rowNumber).height = 16;
+        ws.getCell(rowNumber, 1).font = { size: 10, bold: true, color: { argb: "FF555555" } };
+        ws.getCell(rowNumber, 2).font = { size: 10, bold: true, color: { argb: "FF1E1E1E" } };
+      });
+
+      const resumoRow = 16;
+      estilizarSecao(ws, resumoRow, "RESUMO GERAL DO LEVANTAMENTO");
+      const resumo = [
+        ["Total de Variedades", itens.length],
+        ["Volume Total de Unidades", totalUnidades],
+        ["Valor Total Fabrica", totalValor]
+      ];
+      resumo.forEach((linha, idx) => {
+        const rowNumber = resumoRow + 1 + idx;
+        ws.mergeCells(rowNumber, 2, rowNumber, 9);
+        ws.getCell(rowNumber, 1).value = linha[0];
+        ws.getCell(rowNumber, 2).value = linha[1];
+        ws.getRow(rowNumber).height = 16;
+        ws.getCell(rowNumber, 1).font = { size: 10, bold: true, color: { argb: "FF555555" } };
+        ws.getCell(rowNumber, 2).font = { size: 10, bold: true, color: { argb: "FF1E1E1E" } };
+      });
+      ws.getCell(resumoRow + 3, 2).numFmt = '"R$" #,##0.00';
+
+      let rowNumber = 21;
+      const grupos = agruparItensPorFornecedor(itens);
+      Object.keys(grupos).sort().forEach(fornecedor => {
+        estilizarSecao(ws, rowNumber, "FABRICANTE: " + fornecedor);
+        rowNumber++;
+        estilizarCabecalhoTabela(ws, rowNumber);
+        rowNumber++;
+
+        grupos[fornecedor].forEach(({ produto, qtd }, idx) => {
+          const preco = converterPrecoValido(produto.preco);
+          const fillColor = idx % 2 === 0 ? "FFFFFFFF" : "FFF4F4F4";
+          const row = ws.getRow(rowNumber);
+          [
+            String(produto.id || ""),
+            String(produto.ean || ""),
+            produto.descricao || "",
+            preco,
+            0,
+            preco,
+            qtd,
+            preco * qtd,
+            "OK"
+          ].forEach((valor, colIdx) => ws.getCell(rowNumber, colIdx + 1).value = valor);
+          row.height = 16;
+          pintarLinha(ws, rowNumber, fillColor);
+          for (let col = 1; col <= 9; col++) {
+            const cell = ws.getCell(rowNumber, col);
+            cell.font = { size: 9.5, color: { argb: "FF1E1E1E" }, bold: col === 9 };
+            cell.alignment = { horizontal: col === 3 ? "left" : "center", vertical: "middle", wrapText: col === 3 };
+          }
+          ws.getCell(rowNumber, 4).numFmt = '"R$" #,##0.00';
+          ws.getCell(rowNumber, 5).numFmt = "0%";
+          ws.getCell(rowNumber, 6).numFmt = '"R$" #,##0.00';
+          ws.getCell(rowNumber, 8).numFmt = '"R$" #,##0.00';
+          ws.getCell(rowNumber, 9).font = { size: 9.5, bold: true, color: { argb: "FF15803D" } };
+          aplicarBorda(ws.getRow(rowNumber));
+          rowNumber++;
+        });
+
+        rowNumber++;
+      });
+
+      ws.mergeCells(rowNumber, 1, rowNumber, 9);
+      ws.getCell(rowNumber, 1).value = `HBN1 - Nazaria Distribuidora Farmaceutica  -  Gerado em ${dataHora}`;
+      ws.getCell(rowNumber, 1).font = { size: 8, color: { argb: "FF9CA3AF" } };
+      ws.getCell(rowNumber, 1).alignment = { horizontal: "center" };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const razao = limparNomeArquivo(String(CLIENTE_SELECIONADO.razao || "CLIENTE").toUpperCase());
+      const cnpj = limparNomeArquivo(String(CLIENTE_SELECIONADO.cnpj || ""));
+      const nomeArquivo = `${razao}${cnpj ? " - " + cnpj : ""} - ${formatarDataArquivo(agora)}.xlsx`;
+      baixarBlob(nomeArquivo, new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+    }
+
+    function montarFornecedores() {
+      const fornecedores = [...new Set(BD_PRODUTOS
+        .filter(produtoValido)
+        .map(p => String(p.fornecedor || "").trim().toUpperCase())
+        .filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+
+      elFornecedor.innerHTML = '<option value="TODOS">Todos fornecedores</option>' +
+        fornecedores.map(f => `<option value="${escaparHtml(f)}">${escaparHtml(f)}</option>`).join("");
+    }
+
+    function aplicarFiltros() {
+      const busca = elBusca.value.toLowerCase().trim();
+      const fornecedor = elFornecedor.value;
+
+      PRODUTOS_FILTRADOS = BD_PRODUTOS.filter(p => {
+        if (!produtoValido(p)) return false;
+        if (fornecedor !== "TODOS" && String(p.fornecedor || "").trim().toUpperCase() !== fornecedor) return false;
+        if (FILTRO_ESTOQUE && (Number(p.estoque || 0) <= 0)) return false;
+        if (!busca) return true;
+
+        return [
+          p.id, p.ean, p.descricao, p.marca, p.divisao, p.franquia, p.tag, p.fornecedor
+        ].some(campo => String(campo || "").toLowerCase().includes(busca));
+      });
+
+      renderizarProdutos();
+    }
+
+    function classeEstoque(estoque) {
+      if (estoque <= 0) return "pill esgotado";
+      if (estoque <= 10) return "pill baixo";
+      return "pill";
+    }
+
+    function rotuloEstoque(estoque) {
+      if (estoque <= 0) return "Esgotado";
+      return estoque + " un";
+    }
+
+    function criarCardProduto(p) {
+      const estoque = Number(p.estoque || 0);
+      const precoFabrica = converterPrecoValido(p.preco);
+      const imagem = String(p.imagens || "").trim();
+      const tag = String(p.tag || "").trim();
+      const qtdLevantamento = Number(LEVANTAMENTO[p.id] || 0);
+      const inputId = "qtd-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const idJs = escaparJs(p.id);
+
+      return `
+        <article class="card">
+          <div class="foto-wrap">
+            ${tag ? `<span class="tag">${escaparHtml(tag)}</span>` : ""}
+            ${imagem
+              ? `<img class="foto" src="${escaparHtml(imagem)}" alt="${escaparHtml(p.descricao || "Produto")}" loading="lazy" onerror="this.outerHTML='<span class=&quot;sem-foto&quot;>sem imagem</span>'">`
+              : '<span class="sem-foto">sem imagem</span>'}
+            <span class="${classeEstoque(estoque)}">${rotuloEstoque(estoque)}</span>
+          </div>
+          <div class="corpo">
+            <div class="fornecedor">${escaparHtml(texto(p.fornecedor, "Geral"))}</div>
+            <p class="descricao">${escaparHtml(texto(p.descricao, "Produto sem descricao"))}</p>
+
+            <div class="meta">
+              <div class="linha-meta"><span>ID</span><strong>${escaparHtml(texto(p.id))}</strong></div>
+              <div class="linha-meta"><span>EAN</span><strong>${escaparHtml(texto(p.ean))}</strong></div>
+              <div class="linha-meta"><span>Marca</span><strong>${escaparHtml(texto(p.marca))}</strong></div>
+              <div class="linha-meta"><span>Franquia</span><strong>${escaparHtml(texto(p.franquia))}</strong></div>
+              <div class="linha-meta"><span>Embalagem</span><strong>${escaparHtml(texto(p.embalagem))}</strong></div>
+            </div>
+
+            <div class="preco-box">
+              <div>
+                <div class="preco-label">Preco fabrica</div>
+                <div class="preco">${precoFabrica > 0 ? formatarParaReal(precoFabrica) : "-"}</div>
+              </div>
+            </div>
+            <div class="levantamento-card">
+              <button class="btn-qtd" type="button" onclick="alterarQtdLevantamento('${idJs}', -1)" aria-label="Diminuir quantidade">-</button>
+              <input id="${escaparHtml(inputId)}" class="input-qtd" type="number" min="0" step="1" value="${qtdLevantamento}" onchange="definirQtdLevantamento('${idJs}', this.value)" onkeydown="if(event.key==='Enter') this.blur();" aria-label="Quantidade para levantamento">
+              <button class="btn-qtd" type="button" onclick="alterarQtdLevantamento('${idJs}', 1)" aria-label="Aumentar quantidade">+</button>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function renderizarProdutos() {
+      elContador.innerText = `${PRODUTOS_FILTRADOS.length} produto${PRODUTOS_FILTRADOS.length === 1 ? "" : "s"} encontrado${PRODUTOS_FILTRADOS.length === 1 ? "" : "s"}`;
+
+      if (PRODUTOS_FILTRADOS.length === 0) {
+        elGrid.innerHTML = '<div class="vazio">Nenhum produto localizado para os filtros informados.</div>';
+        return;
+      }
+
+      elGrid.innerHTML = PRODUTOS_FILTRADOS.map(criarCardProduto).join("");
+    }
+
+    function atualizarTextoSincronizacao() {
+      const agora = new Date();
+      elAtualizacao.innerText = "Atualizado em " +
+        agora.toLocaleDateString("pt-BR") + " as " +
+        agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    async function carregarProdutos() {
+      if (typeof chamarApi !== "function") {
+        elGrid.innerHTML = '<div class="erro">Nao encontrei a funcao chamarApi. Confirme se este HTML esta na mesma pasta do api.js.</div>';
+        return;
+      }
+
+      elGrid.innerHTML = '<div class="vazio">Carregando catalogo de promotores...</div>';
+
+      try {
+        const dados = await chamarApi("produtos", { uf: UF_USUARIO });
+        BD_PRODUTOS = Array.isArray(dados) ? dados : [];
+        BD_PRODUTOS.sort((a, b) => {
+          const fA = String(a.fornecedor || "").localeCompare(String(b.fornecedor || ""));
+          if (fA !== 0) return fA;
+          return String(a.descricao || "").localeCompare(String(b.descricao || ""));
+        });
+
+        montarFornecedores();
+        carregarLevantamentoSalvo();
+        aplicarFiltros();
+        atualizarResumoLevantamento();
+        atualizarTextoSincronizacao();
+      } catch (erro) {
+        console.error("Erro ao carregar produtos:", erro);
+        elContador.innerText = "Falha ao carregar produtos";
+        elGrid.innerHTML = '<div class="erro">Erro ao conectar com os dados de produtos. Atualize a pagina e tente novamente.</div>';
+      }
+    }
+
+    async function carregarClientes() {
+      if (typeof chamarApi !== "function") return;
+      try {
+        const lista = await chamarApi("clientes", { uf: UF_USUARIO });
+        BD_CLIENTES = Array.isArray(lista) ? lista : [];
+        if (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.id) {
+          const atualizado = BD_CLIENTES.find(c => String(c.id) === String(CLIENTE_SELECIONADO.id));
+          if (atualizado) {
+            CLIENTE_SELECIONADO = atualizado;
+            salvarClienteSelecionado();
+            atualizarClienteSelecionadoUI();
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao carregar clientes:", e);
+      }
+    }
+
+    elBusca.addEventListener("input", aplicarFiltros);
+    elBuscaCliente.addEventListener("input", filtrarClientes);
+    elFornecedor.addEventListener("change", aplicarFiltros);
+    btnEstoque.addEventListener("click", () => {
+      FILTRO_ESTOQUE = !FILTRO_ESTOQUE;
+      btnEstoque.classList.toggle("ativo", FILTRO_ESTOQUE);
+      btnEstoque.setAttribute("aria-pressed", String(FILTRO_ESTOQUE));
+      aplicarFiltros();
+    });
+    document.getElementById("btnAbrirResumo").addEventListener("click", abrirResumo);
+    document.getElementById("btnFecharResumo").addEventListener("click", fecharResumo);
+    document.getElementById("overlayResumo").addEventListener("click", fecharResumo);
+    document.getElementById("btnLimparCliente").addEventListener("click", limparClienteSelecionado);
+    document.getElementById("btnLimparLevantamento").addEventListener("click", limparLevantamento);
+    document.getElementById("btnBaixarLevantamento").addEventListener("click", baixarLevantamento);
+
+    if (validarAcesso()) {
+      carregarLevantamentoSalvo();
+      carregarClienteSalvo();
+      atualizarResumoLevantamento();
+      carregarProdutos();
+      carregarClientes();
+      setInterval(carregarProdutos, 180000);
+      setInterval(carregarClientes, 300000);
+    }
+  </script>
+</body>
+</html>
