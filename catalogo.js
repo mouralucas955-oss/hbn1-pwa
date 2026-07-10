@@ -2915,7 +2915,18 @@ catch { return []; }
 }
 
 function persistirPedidosSalvos(lista) {
-localStorage.setItem(CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista));
+  try {
+    localStorage.setItem(CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista));
+    return true;
+  } catch (e) {
+    console.error('Falha ao salvar pedidos:', e);
+    mostrarToast(
+      'error',
+      'Não foi possível salvar o pedido — armazenamento local cheio. Tente limpar o cache de imagens do catálogo e salve novamente.',
+      6000
+    );
+    return false;
+  }
 }
 
 function atualizarBadgesPedidosSalvos() {
@@ -2937,7 +2948,6 @@ mostrarAlertaMinimos(() => _executarSalvarPedido(), 'Salvar Mesmo Assim');
 
 function _executarSalvarPedido() {
 const chaves = Object.keys(CARRINHO);
-// todo o resto do corpo original de salvarPedidoAtual
 
 const itens = [];
 let acBruto = 0, acLiquido = 0, acUnidades = 0;
@@ -2968,7 +2978,12 @@ totais: { bruto: acBruto, liquido: acLiquido, unidades: acUnidades, variedades: 
 
 const lista = carregarPedidosSalvos();
 lista.unshift(pedido); // mais recente primeiro
-persistirPedidosSalvos(lista);
+
+// NOVO: checa se realmente salvou antes de seguir em frente.
+// Se falhou, não limpa o carrinho — o usuário não perde o pedido montado.
+const salvouComSucesso = persistirPedidosSalvos(lista);
+if (!salvouComSucesso) return;
+
 atualizarBadgesPedidosSalvos();
 
 // Inicia automaticamente um novo pedido (limpa o carrinho atual)
@@ -2989,11 +3004,10 @@ btn.classList.replace('bg-blue-600', 'bg-blue-800');
 setTimeout(() => {
 btn.innerHTML = htmlOriginal;
 btn.className = classeOriginal;
-if (id === 'btnSalvarPedidoFlutuante') btn.classList.add('hidden'); // carrinho já está vazio
+if (id === 'btnSalvarPedidoFlutuante') btn.classList.add('hidden');
 }, 2000);
 });
 
-// Atualiza o modal do carrinho se estiver aberto (mostra o pedido novo, vazio)
 if (!document.getElementById('modalCarrinho').classList.contains('hidden')) abrirModalCarrinho();
 }
 
@@ -3360,6 +3374,8 @@ atualizarClientesInvisivel();
 carregarST();
 carregarValoresMinimos();
 atualizarBadgesPedidosSalvos();
+verificarEExibirAvisoCache();
+setInterval(verificarEExibirAvisoCache, 300000); // reavalia a cada 5 min, igual aos outros polls
 // Mostra portais imediatamente e já desenha o skeleton (grid atualiza quando produtos chegarem)
 document.getElementById('telaPortais').classList.remove('hidden');
 document.getElementById('portaisNomeUsuario').innerText =
@@ -3451,7 +3467,7 @@ window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'))
 // Resolve Amazon/Google Drive tentando direto, mantém weserv para CDNs compatíveis
 // e deixa um ponto claro para proxy próprio nos domínios sem CORS, como RaiaDrogasil.
 
-const PDF_IMG_CACHE_PREFIX = 'hbn1_imgcache_v3_';
+const PDF_IMG_CACHE_NAME = 'hbn1-img-cache-v1';
 const PDF_IMG_LARGURA_PROXY = 480;
 const PDF_CARDS_POR_PAGINA = 12;
 let _PDF_GERANDO = false;
@@ -3492,21 +3508,8 @@ async function _fetchComTimeout(url, ms = 12000) {
   }
 }
 
-async function _baixarImagemComoBase64(url, timeoutMs) {
-  if (!url) throw new Error('URL vazia');
-  const resp = await _fetchComTimeout(url, timeoutMs);
-  if (!resp.ok) {
-    const erro = new Error('HTTP ' + resp.status);
-    erro.status = resp.status;
-    throw erro;
-  }
-
-  const tipo = (resp.headers.get('content-type') || '').toLowerCase();
-  const blob = await resp.blob();
-  if (blob.size < 100) throw new Error('Imagem vazia/corrompida');
-  if (tipo && !tipo.startsWith('image/')) throw new Error('Resposta nao e imagem: ' + tipo);
-
-  return await new Promise((resolve, reject) => {
+function _blobParaBase64(blob) {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
@@ -3514,23 +3517,24 @@ async function _baixarImagemComoBase64(url, timeoutMs) {
   });
 }
 
-async function _tentarBaixarImagem(rotulo, url, timeoutMs) {
-  try {
-    return await _baixarImagemComoBase64(url, timeoutMs);
-  } catch (e) {
-    console.warn(`Imagem (${rotulo}) falhou:`, url, e.message);
-    return null;
-  }
-}
-
 async function _obterImagemBase64ComCache(urlOriginal) {
   const url = _normalizarUrlImagem(urlOriginal);
   if (!url) return null;
 
-  const chave = PDF_IMG_CACHE_PREFIX + url;
-  const cache = localStorage.getItem(chave);
-  if (cache) return cache;
+  // 1) Tenta achar no Cache API (persiste entre sessões, sem custo de localStorage)
+  let cache = null;
+  try {
+    cache = await caches.open(PDF_IMG_CACHE_NAME);
+    const cachedResponse = await cache.match(url);
+    if (cachedResponse) {
+      const blob = await cachedResponse.blob();
+      return await _blobParaBase64(blob);
+    }
+  } catch (e) {
+    console.warn('Cache API indisponível, seguindo sem cache persistente:', e);
+  }
 
+  // 2) Não achou — tenta baixar (direto / weserv / proxy próprio)
   const tentativas = [
     ['direto', url, 9000],
     ['weserv', _obterUrlImagemProxy(url), 12000],
@@ -3538,14 +3542,71 @@ async function _obterImagemBase64ComCache(urlOriginal) {
   ].filter(([, u]) => !!u);
 
   for (const [rotulo, tentativaUrl, timeout] of tentativas) {
-    const base64 = await _tentarBaixarImagem(rotulo, tentativaUrl, timeout);
-    if (base64) {
-      try { localStorage.setItem(chave, base64); } catch (e) { /* cache cheio */ }
-      return base64;
+    try {
+      const resp = await _fetchComTimeout(tentativaUrl, timeout);
+      if (!resp.ok) continue;
+      const tipo = (resp.headers.get('content-type') || '').toLowerCase();
+      const blob = await resp.blob();
+      if (blob.size < 100) continue;
+      if (tipo && !tipo.startsWith('image/')) continue;
+
+      // Salva no Cache API pra próxima vez — clone antes, porque o body só pode ser lido uma vez
+      if (cache) {
+        try {
+          await cache.put(url, new Response(blob.slice(), { headers: { 'Content-Type': tipo || 'image/jpeg' } }));
+        } catch (e) {
+          console.warn('Não foi possível persistir no Cache API (seguindo sem cache):', e.message);
+        }
+      }
+
+      return await _blobParaBase64(blob);
+    } catch (e) {
+      console.warn(`Imagem (${rotulo}) falhou:`, tentativaUrl, e.message);
     }
   }
 
   return null;
+}
+
+// ── Utilitários de cache: limpar e diagnosticar espaço ──────────────────
+async function limparCacheImagensPdf() {
+  try {
+    await caches.delete(PDF_IMG_CACHE_NAME);
+    mostrarToast('success', 'Cache de imagens do catálogo limpo.');
+    await verificarEExibirAvisoCache(); // reavalia — deve sumir agora
+  } catch (e) {
+    mostrarToast('error', 'Não foi possível limpar o cache de imagens.');
+  }
+}
+
+async function verificarEspacoDisponivel() {
+  if (!navigator.storage || !navigator.storage.estimate) return null;
+  const { usage, quota } = await navigator.storage.estimate();
+  return {
+    usadoMB: (usage / 1024 / 1024).toFixed(1),
+    totalMB: (quota / 1024 / 1024).toFixed(1),
+    percentUsado: quota ? ((usage / quota) * 100).toFixed(1) : null
+  };
+}
+
+const LIMITE_AVISO_CACHE_PCT = 80; // a partir de quanto % de uso o aviso aparece
+
+async function verificarEExibirAvisoCache() {
+  const btn = document.getElementById('btnAvisoCacheCheio');
+  if (!btn) return;
+
+  const info = await verificarEspacoDisponivel();
+  if (!info || info.percentUsado === null) {
+    btn.classList.add('hidden');
+    btn.classList.remove('flex');
+    return;
+  }
+
+  const percentUsado = parseFloat(info.percentUsado);
+  const estaCheio = percentUsado >= LIMITE_AVISO_CACHE_PCT;
+
+  btn.classList.toggle('hidden', !estaCheio);
+  btn.classList.toggle('flex', estaCheio);
 }
 
 async function _prefetchImagensComConcorrencia(lista, mapaImagens, concorrencia = 3, onProgresso) {
@@ -3737,7 +3798,8 @@ if (idsSemImagem.length > 0) {
     console.error('Erro ao gerar catálogo em PDF:', erro);
     mostrarToast('error', 'Ocorreu um erro ao gerar o PDF. Tente novamente.');
   } finally {
-    _PDF_GERANDO = false;
-    if (btn) { btn.disabled = false; if (htmlOriginal !== null) btn.innerHTML = htmlOriginal; }
-  }
+  _PDF_GERANDO = false;
+  if (btn) { btn.disabled = false; if (htmlOriginal !== null) btn.innerHTML = htmlOriginal; }
+  verificarEExibirAvisoCache(); // NOVO — reflete o uso imediatamente após gerar o PDF
+}
 }
