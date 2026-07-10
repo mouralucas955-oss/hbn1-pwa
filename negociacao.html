@@ -959,6 +959,7 @@ const NEG_FIELD_DEFS = [
    PERSISTÊNCIA (localStorage)
    ========================================================================= */
 function negSaveState() {
+  const el = document.getElementById('neg-save-status');
   try {
     localStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
       products: NEG_PRODUCTS, mode: NEG_MODE,
@@ -966,9 +967,11 @@ function negSaveState() {
       cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO,
       olDanone: NEG_OL_DANONE, olOmron: NEG_OL_OMRON
     }));
-    const el = document.getElementById('neg-save-status');
-    if (el) { el.innerText = 'Salvo'; setTimeout(() => { el.innerText = ''; }, 1200); }
-  } catch (e) { /* localStorage indisponível */ }
+    if (el) { el.innerText = 'Salvo'; el.style.color = ''; setTimeout(() => { el.innerText = ''; }, 1200); }
+  } catch (e) {
+    console.error('Falha ao salvar rascunho da negociação:', e);
+    if (el) { el.innerText = '⚠ Não salvo'; el.style.color = 'var(--red)'; }
+  }
 }
 
 function negLoadState() {
@@ -1248,8 +1251,15 @@ function negCarregarPedidosSalvos() {
 }
 
 function negPersistirPedidosSalvos(lista) {
-  try { localStorage.setItem(NEG_CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista)); } catch (e) {}
-  negAtualizarBadgePedidosSalvos();
+  try {
+    localStorage.setItem(NEG_CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista));
+    negAtualizarBadgePedidosSalvos();
+    return true;
+  } catch (e) {
+    console.error('Falha ao salvar pedido (negociação):', e);
+    alert('Não foi possível salvar o pedido — o armazenamento local está cheio.\n\nVá até o Catálogo e limpe o cache de imagens do PDF (Configurações), depois tente salvar novamente.');
+    return false;
+  }
 }
 
 function negAtualizarBadgePedidosSalvos() {
@@ -1310,7 +1320,12 @@ function negSalvarPedidoAtual() {
 
   const lista = negCarregarPedidosSalvos();
   lista.unshift(pedido); // mais recente primeiro
-  negPersistirPedidosSalvos(lista);
+
+  // NOVO: só limpa a lista atual se o pedido realmente foi persistido.
+  // Se a cota do localStorage estourou, negPersistirPedidosSalvos já mostrou
+  // o alerta explicando o motivo — aqui a gente só evita perder o trabalho do usuário.
+  const salvouComSucesso = negPersistirPedidosSalvos(lista);
+  if (!salvouComSucesso) return;
 
   // Igual ao catálogo: salva e já inicia um pedido novo em branco
   NEG_PRODUCTS = [];
