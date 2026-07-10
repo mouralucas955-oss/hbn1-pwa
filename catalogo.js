@@ -3589,7 +3589,7 @@ async function verificarEspacoDisponivel() {
   };
 }
 
-const LIMITE_AVISO_CACHE_PCT = 80; // a partir de quanto % de uso o aviso aparece
+const LIMITE_AVISO_CACHE_PCT = 0; // a partir de quanto % de uso o aviso aparece
 
 async function verificarEExibirAvisoCache() {
   const btn = document.getElementById('btnAvisoCacheCheio');
