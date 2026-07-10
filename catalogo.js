@@ -2686,11 +2686,13 @@ BD_CHAVES_VENCIDAS = new Set();
 if (!item.chave) return;
 if (item.vencido) {
 BD_CHAVES_VENCIDAS.add(item.chave);
-} else {
+} else if (item.minimo > 0) {
+// Só vira exigência de faturamento mínimo se o valor for > 0.
+// Linhas com mínimo zerado existem só pra controlar validade
+// (ex: descontoPadrao com data de vencimento, sem meta de compra).
 BD_VALORES_MINIMOS[item.chave] = { minimo: item.minimo, label: item.label };
 }
 });
-// Re-renderiza os produtos já visíveis para refletir descontos que venceram
 executarFiltrosGerais();
 })
 .catch(e => console.error('Valores mínimos não disponíveis:', e));
