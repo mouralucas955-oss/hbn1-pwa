@@ -17,6 +17,7 @@ HIT_DADOS_CLIENTE   = null;
 HIT_ITENS_PENDENTES = [];
 atualizarBotaoSugestaoHit();
 
+if (TIPO_USUARIO === 'VENDEDOR_FARMA') return;
 if (!CLIENTE_SELECIONADO) return;
 const equipe = String(CLIENTE_SELECIONADO.equipe || '').toUpperCase().trim();
 if (equipe !== 'DEDICADO') return;
@@ -214,6 +215,11 @@ if (!localStorage.getItem('hbn1_usuario')) {
 window.location.href = 'index.html';
 }
 document.getElementById('ufBadgeTitulo').innerText = '(' + UF_USUARIO + ')';
+
+// Tipo do usuário logado (PROMOTOR / VENDEDOR_FARMA / VENDEDOR_DEDICADO / ADMIN).
+// Compatibilidade: cadastros antigos com "VENDEDOR" puro contam como Farma.
+let TIPO_USUARIO = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
+if (TIPO_USUARIO === 'VENDEDOR') TIPO_USUARIO = 'VENDEDOR_FARMA';
 
 // Controle de OL Danone: 0 = sem OL, 250 | 500 | 1000
 let OL_ATIVO = 0;
@@ -3261,11 +3267,17 @@ e.returnValue = 'Você tem itens no seu pedido. Se sair ou atualizar a página, 
 return e.returnValue;
 }
 });
-// INICIALIZAÇÃO
 window.addEventListener('DOMContentLoaded', () => {
 // Sincroniza ícone do dark mode
 const icon = document.getElementById('iconDarkMode');
 if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
+
+// Farma não vê o HIT — Alavancas no menu
+if (TIPO_USUARIO === 'VENDEDOR_FARMA') {
+const linkHit = document.getElementById('linkHitAlavancas');
+if (linkHit) linkHit.remove();
+}
+
 iniciarSplashAbertura();
 
 // ── MURAL COM FADE ──────────────────────────────────────────────────
