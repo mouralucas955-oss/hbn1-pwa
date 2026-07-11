@@ -3278,6 +3278,12 @@ const linkHit = document.getElementById('linkHitAlavancas');
 if (linkHit) linkHit.remove();
 }
 
+// Campanhas Mensais é exclusivo do Dedicado (e Admin)
+if (TIPO_USUARIO !== 'VENDEDOR_DEDICADO' && TIPO_USUARIO !== 'ADMIN') {
+const linkMetas = document.getElementById('linkCampanhasMetas');
+if (linkMetas) linkMetas.remove();
+}
+
 iniciarSplashAbertura();
 
 // ── MURAL COM FADE ──────────────────────────────────────────────────
