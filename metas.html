@@ -94,6 +94,15 @@
 <script>
   if (!localStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
 
+  // Bloqueia acesso direto por URL para quem não é Dedicado (nem Admin).
+  (function() {
+    let tipo = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
+    if (tipo === 'VENDEDOR') tipo = 'VENDEDOR_FARMA';
+    if (tipo !== 'VENDEDOR_DEDICADO' && tipo !== 'ADMIN') {
+      window.location.href = 'catalogo.html';
+    }
+  })();
+
   (function() {
     const tema = localStorage.getItem('hbn1_tema') || 'light';
     document.documentElement.setAttribute('data-theme', tema);
