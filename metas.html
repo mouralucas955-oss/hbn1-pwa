@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campanhas Mensais — HBN1</title>
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="api.js"></script>
+<link rel="stylesheet" href="catalogo.css">
+<style>
+  .campdesk { font-family:'Plus Jakarta Sans', system-ui, sans-serif; background:var(--surface-page); color:var(--text-primary); min-height:100vh; }
+  .campdesk * { box-sizing:border-box; }
+  .disp { font-family:'Space Grotesk', sans-serif; }
+  .mono { font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+
+  .camp-topbar { background:var(--surface-header); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .camp-back { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:#fff; padding:8px 12px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; transition:background .15s; text-decoration:none; }
+  .camp-back:hover { background:rgba(255,255,255,0.16); }
+  .camp-topbar-info { font-size:11.5px; color:#94a3b8; margin-top:2px; }
+
+  .camp-body { max-width:1300px; margin:0 auto; padding:20px; display:flex; flex-direction:column; gap:16px; }
+
+  .camp-panel { background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:16px; }
+  .camp-panel-title { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); margin-bottom:10px; font-weight:700; }
+
+  .camp-select { width:100%; max-width:420px; background:var(--surface-secondary); border:1px solid var(--border-default); color:var(--text-primary); border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit; font-weight:600; }
+  .camp-select:focus { border-color:var(--accent); outline:none; }
+
+  .camp-empty { text-align:center; padding:56px 20px; color:var(--text-secondary); }
+  .camp-empty .disp { font-size:17px; color:var(--text-primary); margin-bottom:6px; }
+  .camp-loading { text-align:center; padding:40px 20px; color:var(--text-secondary); font-size:13px; font-weight:600; }
+
+  /* Barra de total geral (estilo "CD NAZARIA") */
+  .camp-total-bar { display:grid; grid-template-columns: 1.6fr 1fr 1fr 0.7fr 1fr; gap:0; border-radius:12px; overflow:hidden; border:1px solid var(--border-subtle); }
+  .camp-total-bar > div { padding:12px 14px; background:var(--surface-header); color:#fff; }
+  .camp-total-bar .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; opacity:.65; margin-bottom:2px; }
+  .camp-total-bar .val { font-size:14px; font-weight:800; }
+
+  /* Cabeçalho de cada equipe (barra azul) */
+  .camp-equipe-header { background:var(--surface-header); color:#fff; padding:9px 14px; border-radius:10px 10px 0 0; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:12.5px; font-weight:800; }
+  .camp-equipe-header .val { font-family:'IBM Plex Mono', monospace; font-weight:700; }
+
+  .camp-table-scroll { overflow-x:auto; border:1px solid var(--border-subtle); border-top:none; border-radius:0 0 10px 10px; margin-bottom:16px; }
+  .camp-table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:760px; }
+  .camp-table thead th {
+    background:var(--surface-secondary); color:var(--text-secondary); text-transform:uppercase; letter-spacing:.04em;
+    font-size:10px; font-weight:700; text-align:left; padding:8px 12px; border-bottom:1px solid var(--border-subtle); white-space:nowrap;
+  }
+  .camp-table tbody td { padding:8px 12px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; }
+  .camp-table tbody tr:last-child td { border-bottom:none; }
+  .camp-num { text-align:right; }
+
+  .camp-pct-pill { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; display:inline-block; min-width:56px; text-align:center; }
+  .camp-pct-verde  { background: var(--success-soft); color: var(--success); border:1px solid var(--success-border); }
+  .camp-pct-amber  { background: rgba(245,158,11,0.12); color:#b45309; border:1px solid rgba(245,158,11,0.35); }
+  .camp-pct-vermelho { background: rgba(220,38,38,0.10); color:#dc2626; border:1px solid rgba(220,38,38,0.30); }
+
+  .camp-gap-neg { color:#dc2626; font-weight:700; }
+  .camp-gap-pos { color:var(--text-muted); }
+</style>
+</head>
+<body class="campdesk">
+
+  <div class="camp-topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <a href="catalogo.html" class="camp-back">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <span>Voltar ao Catálogo</span>
+      </a>
+      <div>
+        <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Campanhas Mensais</div>
+        <div class="camp-topbar-info" id="campMesAtualLabel"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="camp-body">
+
+    <div class="camp-panel" style="position:relative;">
+      <div class="camp-panel-title">Selecione o fornecedor da campanha</div>
+      <select id="campSelectFornecedor" class="camp-select" onchange="campCarregarCampanha()">
+        <option value="">Carregando fornecedores...</option>
+      </select>
+    </div>
+
+    <div id="campConteudo"></div>
+
+  </div>
+
+<script>
+  if (!localStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
+
+  (function() {
+    const tema = localStorage.getItem('hbn1_tema') || 'light';
+    document.documentElement.setAttribute('data-theme', tema);
+  })();
+
+  const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+
+  const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('campMesAtualLabel').innerText =
+    'Campanha de ' + MESES_PT[new Date().getMonth()] + '/' + new Date().getFullYear();
+
+  function campFormatBRL(n) {
+    if (!isFinite(n)) n = 0;
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function campClassePct(pct) {
+    if (pct >= 100) return 'camp-pct-verde';
+    if (pct >= 70)  return 'camp-pct-amber';
+    return 'camp-pct-vermelho';
+  }
+
+  function campPctPillHtml(meta, realizado) {
+    const pct = meta > 0 ? (realizado / meta * 100) : (realizado > 0 ? 999 : 0);
+    const pctExibir = meta > 0 ? pct.toFixed(1) + '%' : '—';
+    return `<span class="camp-pct-pill ${campClassePct(pct)}">${pctExibir}</span>`;
+  }
+
+  function campCarregarFornecedores() {
+    chamarApi('fornecedoresCampanha', { uf: UF_USUARIO })
+      .then(lista => {
+        const select = document.getElementById('campSelectFornecedor');
+        if (!lista || lista.length === 0) {
+          select.innerHTML = '<option value="">Nenhum fornecedor com dados este mês</option>';
+          return;
+        }
+        select.innerHTML = '<option value="">Selecione...</option>' +
+          lista.map(f => `<option value="${f}">${f}</option>`).join('');
+      })
+      .catch(() => {
+        document.getElementById('campSelectFornecedor').innerHTML = '<option value="">Erro ao carregar</option>';
+      });
+  }
+
+  function campCarregarCampanha() {
+    const fornecedor = document.getElementById('campSelectFornecedor').value;
+    const wrap = document.getElementById('campConteudo');
+    if (!fornecedor) {
+      wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Selecione um fornecedor</div><div>Escolha acima qual campanha do mês você quer ver.</div></div></div>';
+      return;
+    }
+
+    wrap.innerHTML = '<div class="camp-panel"><div class="camp-loading">Calculando campanha de ' + fornecedor + '...</div></div>';
+
+    chamarApi('campanhaMetas', { fornecedor })
+      .then(resp => {
+        if (!resp || resp.erro) {
+          wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Não foi possível carregar</div><div>' +
+            (resp && resp.mensagem ? resp.mensagem : 'Tente novamente.') + '</div></div></div>';
+          return;
+        }
+        campRenderizar(resp);
+      })
+      .catch(() => {
+        wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Erro de conexão</div><div>Não foi possível buscar os dados. Tente novamente.</div></div></div>';
+      });
+  }
+
+  function campRenderizar(resp) {
+    const wrap = document.getElementById('campConteudo');
+
+    if (!resp.equipes || resp.equipes.length === 0) {
+      wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Nenhuma meta cadastrada</div><div>Não há linhas na aba "Metas" para este fornecedor.</div></div></div>';
+      return;
+    }
+
+    const diasRestantes = resp.diasRestantesMes || 1;
+    const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
+
+    const totalBarHtml = `
+      <div class="camp-total-bar" style="margin-bottom:16px;">
+        <div><div class="lbl">Campanha</div><div class="val">${resp.fornecedor} — Total Geral</div></div>
+        <div><div class="lbl">Meta</div><div class="val mono">${campFormatBRL(resp.totalGeral.meta)}</div></div>
+        <div><div class="lbl">Realizado</div><div class="val mono">${campFormatBRL(resp.totalGeral.realizado)}</div></div>
+        <div><div class="lbl">Cobertura</div><div class="val">${campPctPillHtml(resp.totalGeral.meta, resp.totalGeral.realizado)}</div></div>
+        <div><div class="lbl">Gap</div><div class="val mono">${gapGeral > 0 ? campFormatBRL(gapGeral) : campFormatBRL(0)}</div></div>
+      </div>`;
+
+    const equipesHtml = resp.equipes.map(eq => {
+      const linhasHtml = eq.vendedores.map(v => {
+        const gap = v.meta - v.realizado;
+        const mediaNecessaria = gap > 0 ? gap / diasRestantes : 0;
+        return `
+          <tr>
+            <td><div style="font-weight:700;">${v.vendedor}</div><div class="mono" style="font-size:10px; color:var(--text-secondary);">UF: ${v.uf}</div></td>
+            <td class="camp-num mono">${campFormatBRL(v.meta)}</td>
+            <td class="camp-num mono">${campFormatBRL(v.realizado)}</td>
+            <td class="camp-num">${campPctPillHtml(v.meta, v.realizado)}</td>
+            <td class="camp-num mono ${gap > 0 ? 'camp-gap-neg' : 'camp-gap-pos'}">${gap > 0 ? campFormatBRL(gap) : '—'}</td>
+            <td class="camp-num mono">${mediaNecessaria > 0 ? campFormatBRL(mediaNecessaria) : '—'}</td>
+          </tr>`;
+      }).join('');
+
+      const gapEquipe = eq.meta - eq.realizado;
+
+      return `
+        <div class="camp-equipe-header">
+          <span>${eq.equipe}</span>
+          <span style="display:flex; gap:14px; flex-wrap:wrap;">
+            <span>Meta: <span class="val">${campFormatBRL(eq.meta)}</span></span>
+            <span>Realizado: <span class="val">${campFormatBRL(eq.realizado)}</span></span>
+            ${campPctPillHtml(eq.meta, eq.realizado)}
+          </span>
+        </div>
+        <div class="camp-table-scroll">
+          <table class="camp-table">
+            <thead>
+              <tr>
+                <th>Vendedor</th>
+                <th class="camp-num">Meta</th>
+                <th class="camp-num">Realizado</th>
+                <th class="camp-num">Cobertura</th>
+                <th class="camp-num">Gap</th>
+                <th class="camp-num">Média Necessária/Dia</th>
+              </tr>
+            </thead>
+            <tbody>${linhasHtml}</tbody>
+          </table>
+        </div>`;
+    }).join('');
+
+    wrap.innerHTML = totalBarHtml + equipesHtml;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    campCarregarFornecedores();
+  });
+</script>
+</body>
+</html>
