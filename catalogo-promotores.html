@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="api.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <style>
     :root {
       --laranja: #ff6b00;
@@ -346,84 +346,12 @@
       flex-direction: column;
       box-shadow: var(--sombra);
       transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-      cursor: pointer;
     }
 
     .card:hover {
       transform: translateY(-3px);
       border-color: #f3c799;
       box-shadow: var(--sombra-elevada);
-    }
-
-    .card:active {
-      transform: scale(0.97);
-      border-color: #f3c799;
-    }
-
-    .card.expandido {
-      position: relative;
-      grid-column: 1 / -1;
-      border-color: var(--laranja);
-      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.18), var(--sombra-elevada);
-      animation: expandirCard 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .card.expandido:hover { transform: none; }
-    .card.expandido:active { transform: none; }
-
-    @keyframes expandirCard {
-      from { opacity: 0; transform: scale(0.97); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    .expandido-dica {
-      position: absolute;
-      top: 8px;
-      right: 10px;
-      color: var(--muted);
-      font-size: 9.5px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .expandido-corpo {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      padding: 14px;
-    }
-
-    .expandido-foto-wrap {
-      position: relative;
-      aspect-ratio: 4 / 3;
-      background: linear-gradient(160deg, #fdf7f0, #f2e9dc);
-      border-radius: var(--raio-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8%;
-      flex: 0 0 auto;
-    }
-
-    .expandido-foto {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      mix-blend-mode: multiply;
-    }
-
-    .expandido-info {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    @media (min-width: 640px) {
-      .expandido-corpo { flex-direction: row; align-items: flex-start; }
-      .expandido-foto-wrap { width: 240px; flex: 0 0 240px; }
     }
 
     .foto-wrap {
@@ -620,7 +548,6 @@
     }
 
     .barra-levantamento {
-
       position: fixed;
       left: 14px;
       right: 14px;
@@ -628,12 +555,11 @@
       z-index: 20;
       max-width: 760px;
       margin: 0 auto;
-      background: #0f172a;
+      background: var(--tinta);
       color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.32);
-      padding: 10px;
+      border-radius: 999px;
+      box-shadow: var(--sombra-elevada);
+      padding: 8px 8px 8px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -643,27 +569,31 @@
     .barra-levantamento strong {
       display: block;
       font-size: 13px;
-      font-weight: 900;
+      font-weight: 800;
     }
 
     .barra-levantamento span {
       display: block;
-      margin-top: 2px;
-      color: #cbd5e1;
+      margin-top: 1px;
+      color: rgba(255, 255, 255, 0.6);
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .btn-primario, .btn-secundario, .btn-perigo {
-      min-height: 38px;
+      min-height: 40px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 999px;
       cursor: pointer;
-      padding: 0 13px;
-      font-size: 12px;
-      font-weight: 900;
+      padding: 0 16px;
+      font-size: 12.5px;
+      font-weight: 800;
       white-space: nowrap;
+      transition: filter 0.15s ease, transform 0.1s ease;
     }
+
+    .btn-primario:hover, .btn-secundario:hover, .btn-perigo:hover { filter: brightness(1.06); }
+    .btn-primario:active, .btn-secundario:active, .btn-perigo:active { transform: scale(0.97); }
 
     .btn-primario {
       background: var(--laranja);
@@ -671,37 +601,37 @@
     }
 
     .btn-whatsapp {
-      background: #16a34a;
+      background: var(--sucesso);
       color: #fff;
     }
 
-    .btn-whatsapp:hover { background: #15803d; }
+    .btn-whatsapp:hover { background: #128a3e; filter: none; }
 
     .btn-whatsapp.pronto-compartilhar {
-      background: #16a34a;
-      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.28);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.24);
     }
 
     .btn-primario:disabled, .btn-whatsapp:disabled {
-      opacity: 0.65;
+      opacity: 0.6;
       cursor: not-allowed;
     }
 
     .btn-secundario {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: var(--borda);
+      color: var(--tinta);
     }
 
     .btn-perigo {
-      background: #fee2e2;
-      color: #991b1b;
+      background: var(--perigo-suave);
+      color: var(--perigo);
     }
 
     .overlay {
       position: fixed;
       inset: 0;
       z-index: 30;
-      background: rgba(15, 23, 42, 0.58);
+      background: rgba(36, 28, 21, 0.5);
+      backdrop-filter: blur(2px);
       display: none;
     }
 
@@ -712,12 +642,12 @@
       top: 0;
       right: 0;
       z-index: 31;
-      width: min(460px, 100vw);
+      width: min(440px, 100vw);
       height: 100vh;
-      background: #fff;
-      box-shadow: -18px 0 42px rgba(15, 23, 42, 0.24);
+      background: var(--fundo);
+      box-shadow: -18px 0 42px rgba(36, 28, 21, 0.2);
       transform: translateX(100%);
-      transition: transform 0.22s ease;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       display: flex;
       flex-direction: column;
     }
@@ -725,8 +655,9 @@
     .painel.aberto { transform: translateX(0); }
 
     .painel-topo {
-      padding: 18px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 18px;
+      background: var(--card);
+      border-bottom: 1px solid var(--borda);
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -735,79 +666,88 @@
 
     .painel-topo h2 {
       margin: 0;
-      color: #0f172a;
-      font-size: 18px;
-      font-weight: 900;
+      color: var(--tinta);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
     }
 
     .painel-topo p {
-      margin: 4px 0 0;
-      color: #64748b;
+      margin: 3px 0 0;
+      color: var(--muted);
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .btn-fechar {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      background: #fff;
-      color: #0f172a;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--borda);
+      border-radius: 50%;
+      background: var(--fundo);
+      color: var(--tinta);
       cursor: pointer;
-      font-size: 20px;
+      font-size: 17px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 700;
+      flex: 0 0 auto;
     }
 
     .resumo-lista {
       flex: 1;
       overflow: auto;
-      padding: 12px 14px;
+      padding: 14px;
       display: grid;
       align-content: start;
-      gap: 10px;
+      gap: 8px;
     }
 
     .resumo-item {
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--borda);
+      border-radius: var(--raio-sm);
+      padding: 11px 12px;
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 8px;
+      align-items: center;
+      gap: 10px;
     }
 
     .resumo-item h3 {
       margin: 0;
-      color: #0f172a;
+      color: var(--tinta);
       font-size: 12px;
       line-height: 1.35;
-      font-weight: 900;
+      font-weight: 800;
     }
 
     .resumo-item p {
-      margin: 4px 0 0;
-      color: #64748b;
+      margin: 3px 0 0;
+      color: var(--muted);
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
+      font-family: var(--fonte-codigo);
     }
 
+    .resumo-item p:last-child { font-family: inherit; color: var(--tinta-suave); }
+
     .resumo-qtd {
-      min-width: 46px;
-      height: 34px;
-      border-radius: 8px;
-      background: #fff7ed;
+      min-width: 40px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--laranja-suave);
       color: var(--laranja-escuro);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: 900;
+      font-size: 13px;
+      font-weight: 800;
+      flex: 0 0 auto;
     }
 
     .painel-rodape {
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid var(--borda);
+      background: var(--card);
       padding: 12px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -820,157 +760,45 @@
       justify-content: space-between;
       gap: 10px;
       flex-wrap: wrap;
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      border-radius: 8px;
+      background: var(--alerta-suave);
+      border: 1px solid #f3d9a8;
+      color: var(--alerta);
+      border-radius: var(--raio-sm);
       padding: 10px 12px;
       margin-bottom: 14px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .aviso-compat.mostrar { display: flex; }
 
     .aviso-compat a {
-      background: #ff6b00;
+      background: var(--laranja);
       color: #fff;
       text-decoration: none;
-      border-radius: 8px;
-      padding: 8px 12px;
+      border-radius: 999px;
+      padding: 8px 14px;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 800;
       white-space: nowrap;
     }
 
     .vazio, .erro {
       grid-column: 1 / -1;
-      border: 1px dashed #cbd5e1;
-      border-radius: 8px;
-      background: #fff;
-      color: #64748b;
-      padding: 40px 20px;
+      border: 1.5px dashed var(--borda);
+      border-radius: var(--raio);
+      background: var(--card);
+      color: var(--muted);
+      padding: 44px 20px;
       text-align: center;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 13.5px;
+      font-weight: 700;
     }
 
     .erro {
-      border-color: #fecaca;
-      color: #b91c1c;
-      background: #fff7f7;
-    }
-
-    /* ===== Detalhe do produto expandido em linha (dentro da propria grade) ===== */
-    .detalhe-descricao {
-      margin: 0;
-      color: var(--tinta);
-      font-size: 17px;
-      line-height: 1.35;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-    }
-
-    .detalhe-meta-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px 12px;
-      padding: 12px;
-      background: var(--fundo);
-      border: 1px solid var(--borda);
-      border-radius: var(--raio-sm);
-    }
-
-    .detalhe-meta-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .detalhe-meta-item span {
-      color: var(--muted);
-      font-size: 9.5px;
-      font-weight: 800;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-
-    .detalhe-meta-item strong {
-      color: var(--tinta);
-      font-size: 12.5px;
-      font-weight: 700;
-      overflow-wrap: anywhere;
-      font-family: var(--fonte-codigo);
-    }
-
-    .detalhe-preco-box {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      padding-top: 10px;
-      border-top: 1.5px dashed var(--borda);
-    }
-
-    .detalhe-preco {
-      color: var(--tinta);
-      font-size: 24px;
-      font-weight: 900;
-      letter-spacing: -0.01em;
-    }
-
-    .detalhe-levantamento {
-      display: grid;
-      grid-template-columns: 48px 1fr 48px;
-      gap: 8px;
-      align-items: center;
-      margin-top: 4px;
-    }
-
-    .btn-qtd-detalhe {
-      height: 48px;
-      border: 1px solid var(--laranja-suave);
-      border-radius: 12px;
-      background: var(--laranja-suave);
-      color: var(--laranja-escuro);
-      cursor: pointer;
-      font-size: 20px;
-      line-height: 1;
-      font-weight: 800;
-      transition: background 0.15s ease, transform 0.1s ease;
-    }
-
-    .btn-qtd-detalhe:hover { background: #ffe3c2; }
-    .btn-qtd-detalhe:active { transform: scale(0.92); }
-
-    .input-qtd-detalhe {
-      width: 100%;
-      height: 48px;
-      border: 1px solid var(--borda);
-      border-radius: 12px;
-      background: #fff;
-      color: var(--tinta);
-      text-align: center;
-      font-size: 17px;
-      font-weight: 800;
-      outline: none;
-      padding: 0;
-    }
-
-    .input-qtd-detalhe:focus {
-      border-color: var(--laranja);
-      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.14);
-    }
-
-    @media (max-width: 560px) {
-      main { padding-bottom: 90px; }
-      .barra-levantamento {
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-      }
-      .barra-levantamento .btn-primario { padding: 0 10px; }
-      .painel-rodape { grid-template-columns: 1fr; }
+      border-color: #f1c3bd;
+      color: var(--perigo);
+      background: var(--perigo-suave);
     }
 
     @media (min-width: 760px) {
@@ -978,6 +806,16 @@
         grid-template-columns: auto minmax(460px, 1fr);
         align-items: center;
       }
+    }
+
+    @media (max-width: 560px) {
+      main { padding-bottom: 92px; }
+      .barra-levantamento {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+      }
+      .painel-rodape { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -1097,7 +935,6 @@
     let LEVANTAMENTO = {};
     let CLIENTE_SELECIONADO = null;
     let ULTIMO_ARQUIVO_GERADO = null; // { blob, nomeArquivo, assinatura }
-    let PRODUTO_EXPANDIDO = null;
 
     const elGrid = document.getElementById("grid");
     const elBusca = document.getElementById("busca");
@@ -1360,7 +1197,7 @@
     }
 
     function atualizarInputCard(id) {
-      const input = document.getElementById("qtd-" + idParaElemento(id));
+      const input = document.getElementById("qtd-" + String(id).replace(/[^a-zA-Z0-9_-]/g, "_"));
       if (input) input.value = LEVANTAMENTO[id] || 0;
     }
 
@@ -1402,41 +1239,6 @@
     function fecharResumo() {
       elOverlayResumo.classList.remove("aberto");
       elPainelResumo.classList.remove("aberto");
-    }
-
-    // ===== Card do produto expandido no proprio lugar da grade =====
-
-    function classeEstoque(estoque) {
-      if (estoque <= 0) return "pill esgotado";
-      if (estoque <= 10) return "pill baixo";
-      return "pill";
-    }
-
-    function rotuloEstoque(estoque) {
-      if (estoque <= 0) return "Esgotado";
-      return estoque + " un";
-    }
-
-    function idParaElemento(id) {
-      return String(id).replace(/[^a-zA-Z0-9_-]/g, "_");
-    }
-
-    // Expande o produto clicado direto no lugar dele na grade (sem abrir
-    // painel separado). Como so um produto fica expandido por vez, ao
-    // trocar de produto o anterior volta sozinho ao tamanho normal.
-    function expandirProduto(id) {
-      PRODUTO_EXPANDIDO = id;
-      renderizarProdutos();
-      requestAnimationFrame(() => {
-        const el = document.getElementById("card-" + idParaElemento(id));
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      });
-    }
-
-    function recolherProduto(id) {
-      if (PRODUTO_EXPANDIDO === null || String(PRODUTO_EXPANDIDO) !== String(id)) return;
-      PRODUTO_EXPANDIDO = null;
-      renderizarProdutos();
     }
 
     function limparLevantamento() {
@@ -1929,25 +1731,33 @@
         ].some(campo => String(campo || "").toLowerCase().includes(busca));
       });
 
-      // Se o produto expandido saiu da lista filtrada, recolhe automaticamente
-      // para nao deixar estado "fantasma" preso.
-      if (PRODUTO_EXPANDIDO !== null && !PRODUTOS_FILTRADOS.some(p => String(p.id) === String(PRODUTO_EXPANDIDO))) {
-        PRODUTO_EXPANDIDO = null;
-      }
-
       renderizarProdutos();
     }
 
-    function criarCardCompacto(p, elId, idJs) {
+    function classeEstoque(estoque) {
+      if (estoque <= 0) return "pill esgotado";
+      if (estoque <= 10) return "pill baixo";
+      return "pill";
+    }
+
+    function rotuloEstoque(estoque) {
+      if (estoque <= 0) return "Esgotado";
+      return estoque + " un";
+    }
+
+    function criarCardProduto(p) {
       const estoque = Number(p.estoque || 0);
       const precoFabrica = converterPrecoValido(p.preco);
       const imagem = String(p.imagens || "").trim();
       const tag = String(p.tag || "").trim();
       const qtdLevantamento = Number(LEVANTAMENTO[p.id] || 0);
-      const inputId = "qtd-" + idParaElemento(p.id);
+      const inputId = "qtd-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const idJs = escaparJs(p.id);
+      const embalagem = texto(p.embalagem, "");
+      const legendaPreco = embalagem ? `Fabrica &middot; cx ${escaparHtml(embalagem)}` : "Preco fabrica";
 
       return `
-        <article class="card" id="${elId}" onclick="expandirProduto('${idJs}')">
+        <article class="card">
           <div class="foto-wrap">
             ${tag ? `<span class="tag">${escaparHtml(tag)}</span>` : ""}
             ${imagem
@@ -1960,85 +1770,21 @@
             <p class="descricao">${escaparHtml(texto(p.descricao, "Produto sem descricao"))}</p>
 
             <div class="meta">
-              <div class="linha-meta"><span>ID</span><strong>${escaparHtml(texto(p.id))}</strong></div>
-              <div class="linha-meta"><span>EAN</span><strong>${escaparHtml(texto(p.ean))}</strong></div>
-              <div class="linha-meta"><span>Marca</span><strong>${escaparHtml(texto(p.marca))}</strong></div>
-              <div class="linha-meta"><span>Franquia</span><strong>${escaparHtml(texto(p.franquia))}</strong></div>
-              <div class="linha-meta"><span>Embalagem</span><strong>${escaparHtml(texto(p.embalagem))}</strong></div>
+              <div class="meta-codigos">ID ${escaparHtml(texto(p.id))} <span class="meta-sep">&middot;</span> EAN ${escaparHtml(texto(p.ean))}</div>
+              <div class="meta-info">${escaparHtml(texto(p.marca))}</div>
             </div>
 
             <div class="preco-box">
-              <div>
-                <div class="preco-label">Preco fabrica</div>
-                <div class="preco">${precoFabrica > 0 ? formatarParaReal(precoFabrica) : "-"}</div>
-              </div>
+              <div class="preco-label">${legendaPreco}</div>
+              <div class="preco">${precoFabrica > 0 ? formatarParaReal(precoFabrica) : "-"}</div>
             </div>
-            <div class="levantamento-card" onclick="event.stopPropagation()">
+            <div class="levantamento-card">
               <button class="btn-qtd" type="button" onclick="alterarQtdLevantamento('${idJs}', -1)" aria-label="Diminuir quantidade">-</button>
               <input id="${escaparHtml(inputId)}" class="input-qtd" type="number" min="0" step="1" value="${qtdLevantamento}" onchange="definirQtdLevantamento('${idJs}', this.value)" onkeydown="if(event.key==='Enter') this.blur();" aria-label="Quantidade para levantamento">
               <button class="btn-qtd" type="button" onclick="alterarQtdLevantamento('${idJs}', 1)" aria-label="Aumentar quantidade">+</button>
             </div>
           </div>
         </article>`;
-    }
-
-    // Card "com zoom": cresce direto no lugar dele na grade (ocupa a linha
-    // inteira) e mostra todos os dados do produto + o mesmo controle de
-    // quantidade. Tocar em qualquer parte fora do stepper recolhe de volta.
-    function criarCardExpandido(p, elId, idJs) {
-      const estoque = Number(p.estoque || 0);
-      const precoFabrica = converterPrecoValido(p.preco);
-      const imagem = String(p.imagens || "").trim();
-      const tag = String(p.tag || "").trim();
-      const qtdLevantamento = Number(LEVANTAMENTO[p.id] || 0);
-      const inputId = "qtd-" + idParaElemento(p.id);
-
-      return `
-        <article class="card expandido" id="${elId}" onclick="recolherProduto('${idJs}')">
-          <span class="expandido-dica">Toque para recolher</span>
-          <div class="expandido-corpo">
-            <div class="expandido-foto-wrap">
-              ${tag ? `<span class="tag">${escaparHtml(tag)}</span>` : ""}
-              ${imagem
-                ? `<img class="expandido-foto" src="${escaparHtml(imagem)}" alt="${escaparHtml(p.descricao || "Produto")}" onerror="this.outerHTML='<span class=&quot;sem-foto&quot;>sem imagem</span>'">`
-                : '<span class="sem-foto">sem imagem</span>'}
-              <span class="${classeEstoque(estoque)}">${rotuloEstoque(estoque)}</span>
-            </div>
-            <div class="expandido-info">
-              <div class="fornecedor">${escaparHtml(texto(p.fornecedor, "Geral"))}</div>
-              <h3 class="detalhe-descricao">${escaparHtml(texto(p.descricao, "Produto sem descricao"))}</h3>
-
-              <div class="detalhe-meta-grid">
-                <div class="detalhe-meta-item"><span>ID</span><strong>${escaparHtml(texto(p.id))}</strong></div>
-                <div class="detalhe-meta-item"><span>EAN</span><strong>${escaparHtml(texto(p.ean))}</strong></div>
-                <div class="detalhe-meta-item"><span>Marca</span><strong>${escaparHtml(texto(p.marca))}</strong></div>
-                <div class="detalhe-meta-item"><span>Franquia</span><strong>${escaparHtml(texto(p.franquia))}</strong></div>
-                <div class="detalhe-meta-item"><span>Divisao</span><strong>${escaparHtml(texto(p.divisao))}</strong></div>
-                <div class="detalhe-meta-item"><span>Embalagem</span><strong>${escaparHtml(texto(p.embalagem))}</strong></div>
-              </div>
-
-              <div class="detalhe-preco-box">
-                <div>
-                  <div class="preco-label">Preco fabrica</div>
-                  <div class="detalhe-preco">${precoFabrica > 0 ? formatarParaReal(precoFabrica) : "-"}</div>
-                </div>
-              </div>
-
-              <div class="detalhe-levantamento" onclick="event.stopPropagation()">
-                <button class="btn-qtd-detalhe" type="button" onclick="alterarQtdLevantamento('${idJs}', -1)" aria-label="Diminuir quantidade">-</button>
-                <input id="${escaparHtml(inputId)}" class="input-qtd-detalhe" type="number" min="0" step="1" value="${qtdLevantamento}" onchange="definirQtdLevantamento('${idJs}', this.value)" onkeydown="if(event.key==='Enter') this.blur();" aria-label="Quantidade para levantamento">
-                <button class="btn-qtd-detalhe" type="button" onclick="alterarQtdLevantamento('${idJs}', 1)" aria-label="Aumentar quantidade">+</button>
-              </div>
-            </div>
-          </div>
-        </article>`;
-    }
-
-    function criarCardProduto(p) {
-      const elId = "card-" + idParaElemento(p.id);
-      const idJs = escaparJs(p.id);
-      const expandido = PRODUTO_EXPANDIDO !== null && String(PRODUTO_EXPANDIDO) === String(p.id);
-      return expandido ? criarCardExpandido(p, elId, idJs) : criarCardCompacto(p, elId, idJs);
     }
 
     function renderizarProdutos() {
@@ -2122,9 +1868,6 @@
     document.getElementById("btnLimparLevantamento").addEventListener("click", limparLevantamento);
     document.getElementById("btnCompartilharWhatsApp").addEventListener("click", compartilharWhatsApp);
     document.getElementById("btnBaixarLevantamento").addEventListener("click", baixarLevantamento);
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && PRODUTO_EXPANDIDO !== null) recolherProduto(PRODUTO_EXPANDIDO);
-    });
     window.addEventListener("resize", ajustarLarguraPainel);
     window.addEventListener("orientationchange", ajustarLarguraPainel);
 
