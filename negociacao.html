@@ -1753,11 +1753,12 @@ async function negExportExcel() {
     linhaAtual++;
   };
 
-  if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
+ if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
     mesclarEEstilizar(linhaAtual, 'DADOS DO CLIENTE', { corFundo: LARANJA });
     linhaAtual++;
     adicionarLinhaInfo('Nome', NEG_CLIENTE.razao ? NEG_CLIENTE.razao.toUpperCase() : '');
     adicionarLinhaInfo('CNPJ', NEG_CLIENTE.cnpj || '');
+    adicionarLinhaInfo('UF', NEG_CLIENTE.uf || UF_USUARIO);
     if (NEG_OL_DANONE > 0) adicionarLinhaInfo('OL Danone Ativo', `${NEG_OL_DANONE} caixas`);
     if (NEG_OL_OMRON > 0) adicionarLinhaInfo('OL Omron Ativo', `${NEG_OL_OMRON} caixas`);
     linhaAtual++;
@@ -1862,13 +1863,15 @@ async function negExportExcel() {
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
   const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-  let nomeArquivo;
+ let nomeArquivo;
   if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
     const razaoLimpa = String(NEG_CLIENTE.razao || '').toUpperCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
     const cnpjLimpo = String(NEG_CLIENTE.cnpj || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
-    nomeArquivo = `Negociacao - ${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataHoje}.xlsx`;
+    const ufLimpa = String(NEG_CLIENTE.uf || UF_USUARIO || '').toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\/\\:*?"<>|]/g, '').trim();
+    nomeArquivo = `Negociacao - ${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''}${ufLimpa ? ' - ' + ufLimpa : ''} - ${dataHoje}.xlsx`;
   } else {
     nomeArquivo = `negociacao-investimento-${dataHoje}.xlsx`;
   }
