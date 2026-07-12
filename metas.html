@@ -27,32 +27,41 @@
   .camp-panel { background:var(--surface-card); border:1px solid var(--border-subtle); border-radius:14px; padding:16px; }
   .camp-panel-title { font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); margin-bottom:10px; font-weight:700; }
 
-  .camp-select { width:100%; max-width:420px; background:var(--surface-secondary); border:1px solid var(--border-default); color:var(--text-primary); border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit; font-weight:600; }
-  .camp-select:focus { border-color:var(--accent); outline:none; }
+ .camp-fornecedor-pills { display:flex; flex-wrap:wrap; gap:8px; }
+  .camp-fornecedor-pill {
+    font-family:inherit; font-size:13px; font-weight:700; border-radius:999px; padding:8px 16px;
+    border:1.5px solid var(--border-default); background:var(--surface-secondary); color:var(--text-secondary);
+    cursor:pointer; transition:all .15s;
+  }
+  .camp-fornecedor-pill:hover { border-color:var(--accent); }
+  .camp-fornecedor-pill-ativa { background:var(--accent); color:#fff; border-color:var(--accent); }
 
   .camp-empty { text-align:center; padding:56px 20px; color:var(--text-secondary); }
   .camp-empty .disp { font-size:17px; color:var(--text-primary); margin-bottom:6px; }
   .camp-loading { text-align:center; padding:40px 20px; color:var(--text-secondary); font-size:13px; font-weight:600; }
 
-  /* Barra de total geral (estilo "CD NAZARIA") */
+ /* Barra de total geral (estilo "CD NAZARIA") */
   .camp-total-bar { display:grid; grid-template-columns: 1.6fr 1fr 1fr 0.7fr 1fr; gap:0; border-radius:12px; overflow:hidden; border:1px solid var(--border-subtle); }
-  .camp-total-bar > div { padding:12px 14px; background:var(--surface-header); color:#fff; }
+  .camp-total-bar > div { padding:12px 14px; background:var(--surface-header); color:#fff; text-align:center; }
+  .camp-total-bar > div:first-child { text-align:left; }
   .camp-total-bar .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; opacity:.65; margin-bottom:2px; }
   .camp-total-bar .val { font-size:14px; font-weight:800; }
-
   /* Cabeçalho de cada equipe (barra azul) */
-  .camp-equipe-header { background:var(--surface-header); color:#fff; padding:9px 14px; border-radius:10px 10px 0 0; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:12.5px; font-weight:800; }
+.camp-equipe-header { background:var(--surface-header); color:#fff; padding:9px 14px; border-radius:10px 10px 0 0; display:flex; align-items:center; justify-content:center; gap:22px; flex-wrap:wrap; font-size:12.5px; font-weight:800; text-align:center; }
   .camp-equipe-header .val { font-family:'IBM Plex Mono', monospace; font-weight:700; }
 
-  .camp-table-scroll { overflow-x:auto; border:1px solid var(--border-subtle); border-top:none; border-radius:0 0 10px 10px; margin-bottom:16px; }
-  .camp-table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:760px; }
+ .camp-table-scroll { overflow-x:auto; border:1px solid var(--border-subtle); border-top:none; border-radius:0 0 10px 10px; margin-bottom:16px; }
+  .camp-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; min-width:760px; }
+  .camp-table th:nth-child(1), .camp-table td:nth-child(1) { width:24%; }
+  .camp-table th:nth-child(n+2), .camp-table td:nth-child(n+2) { width:15.2%; }
   .camp-table thead th {
     background:var(--surface-secondary); color:var(--text-secondary); text-transform:uppercase; letter-spacing:.04em;
-    font-size:10px; font-weight:700; text-align:left; padding:8px 12px; border-bottom:1px solid var(--border-subtle); white-space:nowrap;
+    font-size:10px; font-weight:700; text-align:center; padding:8px 12px; border-bottom:1px solid var(--border-subtle); white-space:nowrap;
   }
-  .camp-table tbody td { padding:8px 12px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; }
+  .camp-table thead th:first-child { text-align:left; }
+  .camp-table tbody td { padding:8px 12px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; text-align:center; }
   .camp-table tbody tr:last-child td { border-bottom:none; }
-  .camp-num { text-align:right; }
+  .camp-num { text-align:center; }
 
   .camp-pct-pill { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; display:inline-block; min-width:56px; text-align:center; }
   .camp-pct-verde  { background: var(--success-soft); color: var(--success); border:1px solid var(--success-border); }
@@ -80,11 +89,11 @@
 
   <div class="camp-body">
 
-    <div class="camp-panel" style="position:relative;">
+   <div class="camp-panel">
       <div class="camp-panel-title">Selecione o fornecedor da campanha</div>
-      <select id="campSelectFornecedor" class="camp-select" onchange="campCarregarCampanha()">
-        <option value="">Carregando fornecedores...</option>
-      </select>
+      <div id="campFornecedorPills" class="camp-fornecedor-pills">
+        <span style="font-size:12.5px; color:var(--text-secondary);">Carregando fornecedores...</span>
+      </div>
     </div>
 
     <div id="campConteudo"></div>
@@ -131,24 +140,35 @@
     return `<span class="camp-pct-pill ${campClassePct(pct)}">${pctExibir}</span>`;
   }
 
+ let CAMP_FORNECEDOR_ATUAL = null;
+
   function campCarregarFornecedores() {
     chamarApi('fornecedoresCampanha', { uf: UF_USUARIO })
       .then(lista => {
-        const select = document.getElementById('campSelectFornecedor');
+        const wrap = document.getElementById('campFornecedorPills');
         if (!lista || lista.length === 0) {
-          select.innerHTML = '<option value="">Nenhum fornecedor com dados este mês</option>';
+          wrap.innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Nenhum fornecedor com dados este mês</span>';
           return;
         }
-        select.innerHTML = '<option value="">Selecione...</option>' +
-          lista.map(f => `<option value="${f}">${f}</option>`).join('');
+        wrap.innerHTML = lista.map(f => `
+          <button type="button" class="camp-fornecedor-pill" data-fornecedor="${f}" onclick="campSelecionarFornecedor('${f.replace(/'/g, "\\'")}')">${f}</button>
+        `).join('');
       })
       .catch(() => {
-        document.getElementById('campSelectFornecedor').innerHTML = '<option value="">Erro ao carregar</option>';
+        document.getElementById('campFornecedorPills').innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Erro ao carregar fornecedores</span>';
       });
   }
 
+  function campSelecionarFornecedor(fornecedor) {
+    CAMP_FORNECEDOR_ATUAL = fornecedor;
+    document.querySelectorAll('.camp-fornecedor-pill').forEach(btn => {
+      btn.classList.toggle('camp-fornecedor-pill-ativa', btn.dataset.fornecedor === fornecedor);
+    });
+    campCarregarCampanha();
+  }
+
   function campCarregarCampanha() {
-    const fornecedor = document.getElementById('campSelectFornecedor').value;
+    const fornecedor = CAMP_FORNECEDOR_ATUAL;
     const wrap = document.getElementById('campConteudo');
     if (!fornecedor) {
       wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Selecione um fornecedor</div><div>Escolha acima qual campanha do mês você quer ver.</div></div></div>';
@@ -211,7 +231,7 @@
       return `
         <div class="camp-equipe-header">
           <span>${eq.equipe}</span>
-          <span style="display:flex; gap:14px; flex-wrap:wrap;">
+          <span style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center;">
             <span>Meta: <span class="val">${campFormatBRL(eq.meta)}</span></span>
             <span>Realizado: <span class="val">${campFormatBRL(eq.realizado)}</span></span>
             ${campPctPillHtml(eq.meta, eq.realizado)}
@@ -237,8 +257,22 @@
     wrap.innerHTML = totalBarHtml + equipesHtml;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    campCarregarFornecedores();
+ document.addEventListener('DOMContentLoaded', () => {
+    chamarApi('fornecedoresCampanha', { uf: UF_USUARIO })
+      .then(lista => {
+        const wrap = document.getElementById('campFornecedorPills');
+        if (!lista || lista.length === 0) {
+          wrap.innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Nenhum fornecedor com dados este mês</span>';
+          return;
+        }
+        wrap.innerHTML = lista.map(f => `
+          <button type="button" class="camp-fornecedor-pill" data-fornecedor="${f}" onclick="campSelecionarFornecedor('${f.replace(/'/g, "\\'")}')">${f}</button>
+        `).join('');
+        campSelecionarFornecedor(lista[0]);
+      })
+      .catch(() => {
+        document.getElementById('campFornecedorPills').innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Erro ao carregar fornecedores</span>';
+      });
   });
 </script>
 </body>
