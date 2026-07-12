@@ -410,29 +410,15 @@ p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID' &&
 const logoHtml = cfg.logo
 ? `<img src="${cfg.logo}" alt="${forn}" class="h-12 max-w-[150px] object-contain" onerror="this.style.display='none'">`
 : `<span class="text-slate-800 font-black text-lg">${forn}</span>`;
-const logoHtmlBack = cfg.logo
-? `<img src="${cfg.logo}" alt="${forn}" class="h-10 max-w-[130px] object-contain opacity-90" onerror="this.style.display='none'">`
-: `<span class="text-slate-800 font-black text-base">${forn}</span>`;
-const atrasoFlip = ((i % 6) * 0.9).toFixed(1);
 return `
          <button onclick="entrarFornecedor('${forn}')" data-portal-card
-           class="opacity-0 translate-y-3 scale-95 transition-all duration-500 ease-out group relative overflow-hidden rounded-3xl shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.03] cursor-pointer border border-white/10 portal-flip-perspective"
-           style="min-height: 188px;">
-           <div class="portal-flip-inner" style="animation-delay:${atrasoFlip}s">
-             <div class="portal-flip-face portal-flip-front p-6 flex flex-col items-center justify-center gap-3" style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
-               <div class="relative bg-white/95 rounded-2xl px-5 py-3.5 flex items-center justify-center w-full max-w-[180px] min-h-[64px]">
-                 ${logoHtml}
-                 <span class="absolute -top-2.5 -right-2.5 bg-white text-[10px] font-black px-2 py-1 rounded-full shadow-md border-2 border-white" style="color:${cfg.cor2}">${qtd}</span>
-               </div>
-               <span class="text-white/85 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''} disponíve${qtd !== 1 ? 'is' : 'l'}</span>
-             </div>
-             <div class="portal-flip-face portal-flip-back p-6 flex flex-col items-center justify-center gap-3" style="background: linear-gradient(135deg, ${cfg.cor2} 0%, ${cfg.cor1} 100%);">
-               <div class="bg-white/80 rounded-2xl px-5 py-3 flex items-center justify-center w-full max-w-[160px] min-h-[56px]">
-                 ${logoHtmlBack}
-               </div>
-               <span class="text-white/70 text-[9px] font-bold uppercase tracking-widest">Toque para entrar</span>
-             </div>
+           class="opacity-0 translate-y-3 scale-95 transition-all duration-500 ease-out group relative overflow-hidden rounded-3xl p-6 flex flex-col items-center justify-center gap-3 shadow-md hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.03] cursor-pointer border border-white/10"
+           style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%); min-height: 188px;">
+           <div class="relative bg-white/95 rounded-2xl px-5 py-3.5 flex items-center justify-center w-full max-w-[180px] min-h-[64px]">
+             ${logoHtml}
+             <span class="absolute -top-2.5 -right-2.5 bg-white text-[10px] font-black px-2 py-1 rounded-full shadow-md border-2 border-white" style="color:${cfg.cor2}">${qtd}</span>
            </div>
+           <span class="text-white/85 text-[10px] font-bold uppercase tracking-wider">${qtd} produto${qtd !== 1 ? 's' : ''} disponíve${qtd !== 1 ? 'is' : 'l'}</span>
            <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-3xl pointer-events-none"></div>
            <div class="absolute bottom-3 right-3 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:bg-white/20 translate-x-1 group-hover:translate-x-0 transition-all duration-200">
              <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
