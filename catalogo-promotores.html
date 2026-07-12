@@ -14,22 +14,35 @@
   <link rel="icon" href="./icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="api.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
   <style>
     :root {
       --laranja: #ff6b00;
       --laranja-escuro: #c94f00;
-      --grafite: #111827;
-      --borda: #e5e7eb;
-      --texto: #1f2937;
-      --muted: #64748b;
-      --fundo: #f8fafc;
+      --laranja-suave: #fff1e6;
+      --tinta: #241c15;
+      --tinta-suave: #8a7d6d;
+      --borda: #ece3d8;
+      --texto: #241c15;
+      --muted: #8a7d6d;
+      --fundo: #faf7f2;
       --card: #ffffff;
+      --sucesso: #16a34a;
+      --sucesso-suave: #e8f7ec;
+      --alerta: #b45309;
+      --alerta-suave: #fef3dc;
+      --perigo: #c0362c;
+      --perigo-suave: #fbe9e7;
+      --raio: 18px;
+      --raio-sm: 12px;
+      --sombra: 0 1px 2px rgba(36, 28, 21, 0.04), 0 8px 24px rgba(36, 28, 21, 0.06);
+      --sombra-elevada: 0 4px 10px rgba(36, 28, 21, 0.06), 0 20px 40px rgba(36, 28, 21, 0.12);
+      --fonte-codigo: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
       margin: 0;
@@ -37,32 +50,35 @@
       background: var(--fundo);
       color: var(--texto);
       font-family: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
     button, input, select { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
 
     .topo {
       position: sticky;
       top: 0;
       z-index: 10;
-      background: linear-gradient(135deg, var(--laranja), var(--laranja-escuro));
+      background: linear-gradient(155deg, var(--laranja) 0%, var(--laranja-escuro) 100%);
       color: #fff;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+      border-radius: 0 0 22px 22px;
+      box-shadow: var(--sombra-elevada);
     }
 
     .topo-inner {
       max-width: 1440px;
       margin: 0 auto;
-      padding: 18px 20px;
+      padding: 20px 18px 22px;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 14px;
+      gap: 18px;
     }
 
     .marca {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 13px;
       min-width: 0;
     }
 
@@ -72,56 +88,64 @@
     }
 
     .btn-sair {
-      width: 42px;
-      height: 42px;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 8px;
-      background: rgba(17, 24, 39, 0.28);
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: var(--raio-sm);
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       flex: 0 0 auto;
+      transition: background 0.15s ease;
     }
 
-    .btn-sair:hover { background: rgba(17, 24, 39, 0.42); }
+    .btn-sair:hover { background: rgba(255, 255, 255, 0.2); }
 
     .btn-sair svg {
-      width: 20px;
-      height: 20px;
-      stroke-width: 2.4;
+      width: 19px;
+      height: 19px;
+      stroke-width: 2.2;
     }
 
     .logo {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border-radius: 12px;
       background: #fff;
       padding: 6px;
       object-fit: contain;
       flex: 0 0 auto;
+      box-shadow: 0 2px 6px rgba(36, 28, 21, 0.14);
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(20px, 4vw, 30px);
-      line-height: 1;
-      letter-spacing: 0;
-      font-weight: 900;
+      font-size: clamp(19px, 4vw, 27px);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      font-weight: 800;
+    }
+
+    h1 span {
+      font-weight: 600;
+      opacity: 0.75;
     }
 
     .subtitulo {
-      margin: 5px 0 0;
-      color: #ffedd5;
-      font-size: 12px;
-      font-weight: 700;
+      margin: 4px 0 0;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
     }
 
     .controles {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 10px;
+      gap: 9px;
       align-items: start;
     }
 
@@ -133,12 +157,12 @@
     }
 
     .cliente-chip {
-      min-height: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 8px;
+      min-height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
       background: rgba(255, 255, 255, 0.14);
       color: #fff;
-      padding: 8px 12px;
+      padding: 7px 8px 7px 16px;
       display: none;
       align-items: center;
       justify-content: space-between;
@@ -154,27 +178,27 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 800;
     }
 
     .cliente-chip span {
       display: block;
-      color: #ffedd5;
+      color: rgba(255, 255, 255, 0.7);
       font-size: 10px;
-      font-weight: 700;
-      margin-top: 2px;
+      font-weight: 600;
+      margin-top: 1px;
     }
 
     .btn-cliente-limpar {
-      width: 30px;
-      height: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.25);
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.2);
       color: #fff;
       cursor: pointer;
-      font-size: 16px;
-      font-weight: 900;
+      font-size: 15px;
+      font-weight: 700;
       line-height: 1;
       flex: 0 0 auto;
     }
@@ -183,16 +207,17 @@
       position: absolute;
       left: 0;
       right: 0;
-      top: calc(100% + 6px);
+      top: calc(100% + 8px);
       z-index: 40;
       max-height: 270px;
       overflow: auto;
       display: none;
       background: #fff;
-      color: #0f172a;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      box-shadow: 0 20px 42px rgba(15, 23, 42, 0.22);
+      color: var(--texto);
+      border: 1px solid var(--borda);
+      border-radius: var(--raio-sm);
+      box-shadow: var(--sombra-elevada);
+      padding: 6px;
     }
 
     .dropdown-clientes.aberto { display: block; }
@@ -200,67 +225,76 @@
     .cliente-opcao {
       width: 100%;
       border: 0;
-      border-bottom: 1px solid #f1f5f9;
+      border-radius: 10px;
       background: #fff;
-      color: #0f172a;
+      color: var(--texto);
       cursor: pointer;
       text-align: left;
-      padding: 10px 12px;
+      padding: 9px 10px;
     }
 
-    .cliente-opcao:hover { background: #fff7ed; }
+    .cliente-opcao:hover { background: var(--laranja-suave); }
 
     .cliente-opcao strong {
       display: block;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 800;
     }
 
     .cliente-opcao span {
       display: block;
-      color: #64748b;
+      color: var(--muted);
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
       margin-top: 3px;
+      font-family: var(--fonte-codigo);
     }
 
     .campo, .select {
       width: 100%;
-      height: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 8px;
-      background: rgba(17, 24, 39, 0.32);
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.14);
       color: #fff;
       outline: none;
-      padding: 0 14px;
+      padding: 0 16px;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
 
-    .campo::placeholder { color: #fed7aa; }
-    .select option { color: #111827; }
+    .campo:focus, .select:focus {
+      background: rgba(0, 0, 0, 0.22);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .campo::placeholder { color: rgba(255, 255, 255, 0.6); }
+    .select option { color: var(--texto); }
 
     .toggle {
-      min-height: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.12);
+      min-height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
       cursor: pointer;
       font-size: 12px;
-      font-weight: 900;
-      padding: 0 14px;
+      font-weight: 700;
+      padding: 0 16px;
+      transition: background 0.15s ease, color 0.15s ease;
     }
 
     .toggle.ativo {
       background: #fff;
       color: var(--laranja-escuro);
+      border-color: #fff;
     }
 
     main {
       max-width: 1440px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 18px 12px;
     }
 
     .barra-info {
@@ -269,214 +303,248 @@
       justify-content: space-between;
       gap: 12px;
       flex-wrap: wrap;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      padding: 0 2px;
     }
 
     .contador {
-      color: var(--muted);
+      color: var(--tinta);
       font-size: 13px;
       font-weight: 800;
     }
 
     .atualizacao {
       color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 600;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    @media (min-width: 460px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px; }
+    }
+
+    @media (min-width: 860px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(182px, 1fr)); gap: 16px; }
+    }
+
+    @media (min-width: 1200px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(206px, 1fr)); gap: 18px; }
     }
 
     .card {
       background: var(--card);
       border: 1px solid var(--borda);
-      border-radius: 8px;
+      border-radius: var(--raio-sm);
       overflow: hidden;
-      min-height: 360px;
       display: flex;
       flex-direction: column;
+      box-shadow: var(--sombra);
       transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      border-color: #fdba74;
-      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+      transform: translateY(-3px);
+      border-color: #f3c799;
+      box-shadow: var(--sombra-elevada);
     }
 
     .foto-wrap {
       position: relative;
-      height: 158px;
-      background: #f1f5f9;
+      aspect-ratio: 1 / 1;
+      background: linear-gradient(160deg, #fdf7f0, #f2e9dc);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 11%;
     }
 
     .foto {
-      max-width: 132px;
-      max-height: 132px;
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
       mix-blend-mode: multiply;
     }
 
     .sem-foto {
-      color: #94a3b8;
-      font-size: 12px;
-      font-weight: 800;
+      color: #bcae99;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-align: center;
     }
 
     .pill {
       position: absolute;
-      right: 10px;
-      bottom: 10px;
+      right: 6px;
+      bottom: 6px;
       border-radius: 999px;
-      padding: 5px 8px;
-      font-size: 10px;
-      font-weight: 900;
-      background: #dcfce7;
-      color: #15803d;
+      padding: 3px 7px;
+      font-size: 8.5px;
+      font-weight: 800;
+      background: var(--sucesso-suave);
+      color: var(--sucesso);
+      letter-spacing: 0.01em;
     }
 
-    .pill.baixo { background: #fef3c7; color: #a16207; }
-    .pill.esgotado { background: #fee2e2; color: #b91c1c; }
+    .pill.baixo { background: var(--alerta-suave); color: var(--alerta); }
+    .pill.esgotado { background: var(--perigo-suave); color: var(--perigo); }
 
     .tag {
       position: absolute;
-      left: 10px;
-      top: 10px;
-      max-width: calc(100% - 20px);
+      left: 6px;
+      top: 6px;
+      max-width: calc(100% - 12px);
       border-radius: 999px;
-      background: var(--laranja);
+      background: var(--tinta);
       color: #fff;
-      padding: 5px 8px;
-      font-size: 9px;
-      font-weight: 900;
+      padding: 3px 7px;
+      font-size: 8px;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.02em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .corpo {
-      padding: 13px;
+      padding: 9px 9px 10px;
       display: flex;
       flex: 1;
       flex-direction: column;
-      gap: 9px;
+      gap: 6px;
     }
 
     .fornecedor {
-      color: var(--laranja);
-      font-size: 10px;
-      line-height: 1.2;
-      font-weight: 900;
+      display: inline-block;
+      align-self: flex-start;
+      max-width: 100%;
+      color: var(--laranja-escuro);
+      background: var(--laranja-suave);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-family: var(--fonte-codigo);
+      font-size: 8px;
+      line-height: 1.5;
+      font-weight: 700;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .descricao {
-      min-height: 42px;
+      min-height: 30px;
       margin: 0;
-      color: #0f172a;
-      font-size: 13px;
-      line-height: 1.35;
-      font-weight: 800;
+      color: var(--tinta);
+      font-size: 11.5px;
+      line-height: 1.32;
+      font-weight: 700;
+      letter-spacing: -0.005em;
       overflow: hidden;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
     }
 
     .meta {
-      display: grid;
-      gap: 5px;
-      color: #64748b;
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .linha-meta {
       display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      border-bottom: 1px dashed #e2e8f0;
-      padding-bottom: 5px;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 9px;
     }
 
-    .linha-meta strong {
-      color: #334155;
-      font-weight: 900;
-      text-align: right;
+    .meta-codigos {
+      font-family: var(--fonte-codigo);
+      color: var(--muted);
+      font-size: 8.5px;
+      font-weight: 600;
+      line-height: 1.4;
       overflow-wrap: anywhere;
     }
 
+    .meta-info {
+      color: var(--tinta-suave);
+      font-weight: 600;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .meta-sep { color: var(--borda); margin: 0 3px; }
+
     .preco-box {
       margin-top: auto;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 11px;
+      padding-top: 8px;
+      border-top: 1.5px dashed var(--borda);
       display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 10px;
+      flex-direction: column;
+      gap: 1px;
     }
 
     .preco-label {
-      color: #64748b;
-      font-size: 10px;
-      font-weight: 900;
+      color: var(--muted);
+      font-size: 7.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
     }
 
     .preco {
-      color: #0f172a;
-      font-size: 22px;
-      line-height: 1;
-      font-weight: 900;
+      color: var(--tinta);
+      font-size: 15.5px;
+      line-height: 1.25;
+      font-weight: 800;
+      letter-spacing: -0.01em;
       white-space: nowrap;
     }
 
     .levantamento-card {
-      margin-top: 10px;
+      margin-top: 8px;
       display: grid;
-      grid-template-columns: 38px 1fr 38px;
-      gap: 6px;
+      grid-template-columns: 27px 1fr 27px;
+      gap: 4px;
       align-items: center;
     }
 
     .btn-qtd {
-      height: 38px;
-      border: 1px solid #fed7aa;
-      border-radius: 8px;
-      background: #fff7ed;
+      height: 30px;
+      border: 1px solid var(--laranja-suave);
+      border-radius: 9px;
+      background: var(--laranja-suave);
       color: var(--laranja-escuro);
       cursor: pointer;
-      font-size: 18px;
+      font-size: 15px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 800;
+      transition: background 0.15s ease, transform 0.1s ease;
     }
 
-    .btn-qtd:hover { background: #ffedd5; }
+    .btn-qtd:hover { background: #ffe3c2; }
+    .btn-qtd:active { transform: scale(0.92); }
 
     .input-qtd {
       width: 100%;
-      height: 38px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      height: 30px;
+      border: 1px solid var(--borda);
+      border-radius: 9px;
       background: #fff;
-      color: #0f172a;
+      color: var(--tinta);
       text-align: center;
-      font-size: 14px;
-      font-weight: 900;
+      font-size: 12.5px;
+      font-weight: 800;
       outline: none;
+      padding: 0;
     }
 
     .input-qtd:focus {
       border-color: var(--laranja);
-      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.12);
+      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.14);
     }
 
     .barra-levantamento {
@@ -487,12 +555,11 @@
       z-index: 20;
       max-width: 760px;
       margin: 0 auto;
-      background: #0f172a;
+      background: var(--tinta);
       color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      box-shadow: 0 22px 50px rgba(15, 23, 42, 0.32);
-      padding: 10px;
+      border-radius: 999px;
+      box-shadow: var(--sombra-elevada);
+      padding: 8px 8px 8px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -502,27 +569,31 @@
     .barra-levantamento strong {
       display: block;
       font-size: 13px;
-      font-weight: 900;
+      font-weight: 800;
     }
 
     .barra-levantamento span {
       display: block;
-      margin-top: 2px;
-      color: #cbd5e1;
+      margin-top: 1px;
+      color: rgba(255, 255, 255, 0.6);
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .btn-primario, .btn-secundario, .btn-perigo {
-      min-height: 38px;
+      min-height: 40px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 999px;
       cursor: pointer;
-      padding: 0 13px;
-      font-size: 12px;
-      font-weight: 900;
+      padding: 0 16px;
+      font-size: 12.5px;
+      font-weight: 800;
       white-space: nowrap;
+      transition: filter 0.15s ease, transform 0.1s ease;
     }
+
+    .btn-primario:hover, .btn-secundario:hover, .btn-perigo:hover { filter: brightness(1.06); }
+    .btn-primario:active, .btn-secundario:active, .btn-perigo:active { transform: scale(0.97); }
 
     .btn-primario {
       background: var(--laranja);
@@ -530,37 +601,37 @@
     }
 
     .btn-whatsapp {
-      background: #16a34a;
+      background: var(--sucesso);
       color: #fff;
     }
 
-    .btn-whatsapp:hover { background: #15803d; }
+    .btn-whatsapp:hover { background: #128a3e; filter: none; }
 
     .btn-whatsapp.pronto-compartilhar {
-      background: #16a34a;
-      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.28);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.24);
     }
 
     .btn-primario:disabled, .btn-whatsapp:disabled {
-      opacity: 0.65;
+      opacity: 0.6;
       cursor: not-allowed;
     }
 
     .btn-secundario {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: var(--borda);
+      color: var(--tinta);
     }
 
     .btn-perigo {
-      background: #fee2e2;
-      color: #991b1b;
+      background: var(--perigo-suave);
+      color: var(--perigo);
     }
 
     .overlay {
       position: fixed;
       inset: 0;
       z-index: 30;
-      background: rgba(15, 23, 42, 0.58);
+      background: rgba(36, 28, 21, 0.5);
+      backdrop-filter: blur(2px);
       display: none;
     }
 
@@ -571,12 +642,12 @@
       top: 0;
       right: 0;
       z-index: 31;
-      width: min(460px, 100vw);
+      width: min(440px, 100vw);
       height: 100vh;
-      background: #fff;
-      box-shadow: -18px 0 42px rgba(15, 23, 42, 0.24);
+      background: var(--fundo);
+      box-shadow: -18px 0 42px rgba(36, 28, 21, 0.2);
       transform: translateX(100%);
-      transition: transform 0.22s ease;
+      transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       display: flex;
       flex-direction: column;
     }
@@ -584,8 +655,9 @@
     .painel.aberto { transform: translateX(0); }
 
     .painel-topo {
-      padding: 18px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 20px 18px;
+      background: var(--card);
+      border-bottom: 1px solid var(--borda);
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -594,79 +666,88 @@
 
     .painel-topo h2 {
       margin: 0;
-      color: #0f172a;
-      font-size: 18px;
-      font-weight: 900;
+      color: var(--tinta);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
     }
 
     .painel-topo p {
-      margin: 4px 0 0;
-      color: #64748b;
+      margin: 3px 0 0;
+      color: var(--muted);
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .btn-fechar {
-      width: 36px;
-      height: 36px;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      background: #fff;
-      color: #0f172a;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--borda);
+      border-radius: 50%;
+      background: var(--fundo);
+      color: var(--tinta);
       cursor: pointer;
-      font-size: 20px;
+      font-size: 17px;
       line-height: 1;
-      font-weight: 900;
+      font-weight: 700;
+      flex: 0 0 auto;
     }
 
     .resumo-lista {
       flex: 1;
       overflow: auto;
-      padding: 12px 14px;
+      padding: 14px;
       display: grid;
       align-content: start;
-      gap: 10px;
+      gap: 8px;
     }
 
     .resumo-item {
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--borda);
+      border-radius: var(--raio-sm);
+      padding: 11px 12px;
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 8px;
+      align-items: center;
+      gap: 10px;
     }
 
     .resumo-item h3 {
       margin: 0;
-      color: #0f172a;
+      color: var(--tinta);
       font-size: 12px;
       line-height: 1.35;
-      font-weight: 900;
+      font-weight: 800;
     }
 
     .resumo-item p {
-      margin: 4px 0 0;
-      color: #64748b;
+      margin: 3px 0 0;
+      color: var(--muted);
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 600;
+      font-family: var(--fonte-codigo);
     }
 
+    .resumo-item p:last-child { font-family: inherit; color: var(--tinta-suave); }
+
     .resumo-qtd {
-      min-width: 46px;
-      height: 34px;
-      border-radius: 8px;
-      background: #fff7ed;
+      min-width: 40px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--laranja-suave);
       color: var(--laranja-escuro);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      font-weight: 900;
+      font-size: 13px;
+      font-weight: 800;
+      flex: 0 0 auto;
     }
 
     .painel-rodape {
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid var(--borda);
+      background: var(--card);
       padding: 12px;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -679,45 +760,45 @@
       justify-content: space-between;
       gap: 10px;
       flex-wrap: wrap;
-      background: #fff7ed;
-      border: 1px solid #fed7aa;
-      color: #9a3412;
-      border-radius: 8px;
+      background: var(--alerta-suave);
+      border: 1px solid #f3d9a8;
+      color: var(--alerta);
+      border-radius: var(--raio-sm);
       padding: 10px 12px;
       margin-bottom: 14px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .aviso-compat.mostrar { display: flex; }
 
     .aviso-compat a {
-      background: #ff6b00;
+      background: var(--laranja);
       color: #fff;
       text-decoration: none;
-      border-radius: 8px;
-      padding: 8px 12px;
+      border-radius: 999px;
+      padding: 8px 14px;
       font-size: 12px;
-      font-weight: 900;
+      font-weight: 800;
       white-space: nowrap;
     }
 
     .vazio, .erro {
       grid-column: 1 / -1;
-      border: 1px dashed #cbd5e1;
-      border-radius: 8px;
-      background: #fff;
-      color: #64748b;
-      padding: 40px 20px;
+      border: 1.5px dashed var(--borda);
+      border-radius: var(--raio);
+      background: var(--card);
+      color: var(--muted);
+      padding: 44px 20px;
       text-align: center;
-      font-size: 14px;
-      font-weight: 800;
+      font-size: 13.5px;
+      font-weight: 700;
     }
 
     .erro {
-      border-color: #fecaca;
-      color: #b91c1c;
-      background: #fff7f7;
+      border-color: #f1c3bd;
+      color: var(--perigo);
+      background: var(--perigo-suave);
     }
 
     @media (min-width: 760px) {
@@ -728,13 +809,12 @@
     }
 
     @media (max-width: 560px) {
-      main { padding-bottom: 90px; }
+      main { padding-bottom: 92px; }
       .barra-levantamento {
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
       }
-      .barra-levantamento .btn-primario { padding: 0 10px; }
       .painel-rodape { grid-template-columns: 1fr; }
     }
   </style>
@@ -1219,6 +1299,15 @@
       return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     }
 
+    // No Android os plugins Filesystem + Share sempre existem. Ja na versao
+    // Electron (desktop) do Capacitor, "Share" pode nao estar implementado.
+    // Checamos os plugins de verdade em vez de so a plataforma, pra cair no
+    // fallback normal (download) sem mostrar um erro confuso no desktop.
+    function capacitorTemCompartilhamentoDeArquivo() {
+      return !!(window.Capacitor && window.Capacitor.Plugins &&
+        window.Capacitor.Plugins.Filesystem && window.Capacitor.Plugins.Share);
+    }
+
     function blobParaBase64(blob) {
       return new Promise((resolve, reject) => {
         const leitor = new FileReader();
@@ -1229,14 +1318,17 @@
     }
 
     async function compartilharViaCapacitor(blob, nomeArquivo, mensagem) {
-      const { Filesystem, Directory } = window.Capacitor.Plugins;
-      const { Share } = window.Capacitor.Plugins;
+      const { Filesystem, Share } = window.Capacitor.Plugins;
 
+      // Sem empacotador (Vite/webpack), a enum "Directory" do pacote
+      // @capacitor/filesystem nao existe em window.Capacitor.Plugins — ela e
+      // so um atalho de texto no JS do pacote. Usamos o valor de texto puro
+      // diretamente: 'CACHE' equivale a Directory.Cache.
       const base64 = await blobParaBase64(blob);
       const salvo = await Filesystem.writeFile({
         path: nomeArquivo,
         data: base64,
-        directory: Directory.Cache
+        directory: "CACHE"
       });
 
       await Share.share({
@@ -1258,13 +1350,13 @@
 
       // Se estiver empacotado como app (Capacitor), usa a folha de
       // compartilhamento nativa do sistema — nao depende do navigator.share.
-      if (rodandoComoAppNativo()) {
+      if (rodandoComoAppNativo() && capacitorTemCompartilhamentoDeArquivo()) {
         try {
           await compartilharViaCapacitor(blob, nomeArquivo, mensagem);
           return;
         } catch (e) {
           console.warn("Falha ao compartilhar via Capacitor:", e);
-          alert("Nao foi possivel abrir o menu de compartilhamento nativo. Tente novamente ou anexe manualmente o arquivo salvo.");
+          alert("Nao foi possivel abrir o menu de compartilhamento nativo.\n\nDetalhe tecnico: " + (e && e.message ? e.message : e) + "\n\nTente novamente ou anexe manualmente o arquivo salvo.");
           return;
         }
       }
@@ -1342,7 +1434,7 @@
         // 1) Empacotado como app (Capacitor): usa a folha de compartilhamento
         // NATIVA do sistema, que nao depende do navegador ter implementado
         // compartilhamento de arquivos.
-        if (rodandoComoAppNativo()) {
+        if (rodandoComoAppNativo() && capacitorTemCompartilhamentoDeArquivo()) {
           try {
             await compartilharViaCapacitor(arquivoExcel.blob, arquivoExcel.nomeArquivo, mensagem);
             return;
@@ -1661,6 +1753,8 @@
       const qtdLevantamento = Number(LEVANTAMENTO[p.id] || 0);
       const inputId = "qtd-" + String(p.id).replace(/[^a-zA-Z0-9_-]/g, "_");
       const idJs = escaparJs(p.id);
+      const embalagem = texto(p.embalagem, "");
+      const legendaPreco = embalagem ? `Fabrica &middot; cx ${escaparHtml(embalagem)}` : "Preco fabrica";
 
       return `
         <article class="card">
@@ -1676,18 +1770,13 @@
             <p class="descricao">${escaparHtml(texto(p.descricao, "Produto sem descricao"))}</p>
 
             <div class="meta">
-              <div class="linha-meta"><span>ID</span><strong>${escaparHtml(texto(p.id))}</strong></div>
-              <div class="linha-meta"><span>EAN</span><strong>${escaparHtml(texto(p.ean))}</strong></div>
-              <div class="linha-meta"><span>Marca</span><strong>${escaparHtml(texto(p.marca))}</strong></div>
-              <div class="linha-meta"><span>Franquia</span><strong>${escaparHtml(texto(p.franquia))}</strong></div>
-              <div class="linha-meta"><span>Embalagem</span><strong>${escaparHtml(texto(p.embalagem))}</strong></div>
+              <div class="meta-codigos">ID ${escaparHtml(texto(p.id))} <span class="meta-sep">&middot;</span> EAN ${escaparHtml(texto(p.ean))}</div>
+              <div class="meta-info">${escaparHtml(texto(p.marca))}</div>
             </div>
 
             <div class="preco-box">
-              <div>
-                <div class="preco-label">Preco fabrica</div>
-                <div class="preco">${precoFabrica > 0 ? formatarParaReal(precoFabrica) : "-"}</div>
-              </div>
+              <div class="preco-label">${legendaPreco}</div>
+              <div class="preco">${precoFabrica > 0 ? formatarParaReal(precoFabrica) : "-"}</div>
             </div>
             <div class="levantamento-card">
               <button class="btn-qtd" type="button" onclick="alterarQtdLevantamento('${idJs}', -1)" aria-label="Diminuir quantidade">-</button>
