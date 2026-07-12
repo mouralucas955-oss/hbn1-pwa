@@ -2626,7 +2626,8 @@ let nomeArquivo;
 if (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.razao) {
 const razaoLimpa = limparNomeArquivo(CLIENTE_SELECIONADO.razao.toUpperCase());
 const cnpjLimpo  = limparNomeArquivo(CLIENTE_SELECIONADO.cnpj);
-nomeArquivo = `${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''} - ${dataHoje}.xlsx`;
+const ufLimpa    = limparNomeArquivo((CLIENTE_SELECIONADO.uf || UF_USUARIO || '').toUpperCase());
+nomeArquivo = `${razaoLimpa}${cnpjLimpo ? ' - ' + cnpjLimpo : ''}${ufLimpa ? ' - ' + ufLimpa : ''} - ${dataHoje}.xlsx`;
 } else {
 nomeArquivo = `Pedido_HBN1_${dataHoje}.xlsx`;
 }
@@ -3430,7 +3431,7 @@ const qtd = CARRINHO[idProd];
 const { precoOriginal, percentual } = calcularPrecos(p);
 return { produto: p.descricao || p.id, cod: p.id, ean: p.ean, preco: precoOriginal, qtd, descontoAtual: percentual };
 }).filter(Boolean);
-const clienteInfo = CLIENTE_SELECIONADO ? { razao: CLIENTE_SELECIONADO.razao, cnpj: CLIENTE_SELECIONADO.cnpj } : null;
+const clienteInfo = CLIENTE_SELECIONADO ? { razao: CLIENTE_SELECIONADO.razao, cnpj: CLIENTE_SELECIONADO.cnpj, uf: CLIENTE_SELECIONADO.uf } : null;
 enviarParaCentralInvestimento(itens, clienteInfo);
 }
 
@@ -3442,7 +3443,7 @@ const itens = pedido.itens.map(item => ({
 produto: item.descricao || item.id, cod: item.id, ean: item.ean,
 preco: item.precoOriginal, qtd: item.qtd, descontoAtual: item.percentual
 }));
-const clienteInfo = pedido.cliente ? { razao: pedido.cliente.razao, cnpj: pedido.cliente.cnpj } : null;
+const clienteInfo = pedido.cliente ? { razao: pedido.cliente.razao, cnpj: pedido.cliente.cnpj, uf: pedido.cliente.uf } : null;
 enviarParaCentralInvestimento(itens, clienteInfo);
 }
 
