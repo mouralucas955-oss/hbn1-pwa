@@ -55,36 +55,6 @@
       from { opacity: 1; visibility: visible; }
       to   { opacity: 0; visibility: hidden; }
     }
-
-    /* ── Flip 3D automático nos cards de fornecedores (tela de portais) ── */
-    .portal-flip-perspective { perspective: 1400px; }
-    .portal-flip-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      min-height: 188px;
-      transform-style: preserve-3d;
-      animation-name: portalAutoFlip;
-      animation-duration: 8s;
-      animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
-      animation-iteration-count: infinite;
-    }
-    .group:hover .portal-flip-inner { animation-play-state: paused; }
-    .portal-flip-face {
-      position: absolute;
-      inset: 0;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-      border-radius: inherit;
-    }
-    .portal-flip-back { transform: rotateY(180deg); }
-    @keyframes portalAutoFlip {
-      0%   { transform: rotateY(0deg); }
-      6%   { transform: rotateY(180deg); }
-      50%  { transform: rotateY(180deg); }
-      56%  { transform: rotateY(360deg); }
-      100% { transform: rotateY(360deg); }
-    }
   </style>
   </style>
 </head>
