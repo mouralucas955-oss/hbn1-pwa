@@ -3278,16 +3278,30 @@ window.addEventListener('DOMContentLoaded', () => {
 const icon = document.getElementById('iconDarkMode');
 if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
 
-// Farma não vê o HIT — Alavancas no menu
-if (TIPO_USUARIO === 'VENDEDOR_FARMA') {
-const linkHit = document.getElementById('linkHitAlavancas');
-if (linkHit) linkHit.remove();
-}
+// Cliente (Independente ou Rede) só vê o próprio pedido — nada de gestão/vendas
+if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE' || TIPO_USUARIO === 'CLIENTE_REDE') {
+  ['itemMenuVerValorPedido', 'itemMenuCentralInvestimento', 'itemMenuCarteira',
+   'linkHitAlavancas', 'linkCampanhasMetas', 'linkAdminAcessos'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+} else {
+  // Farma não vê o HIT — Alavancas no menu
+  if (TIPO_USUARIO === 'VENDEDOR_FARMA') {
+    const linkHit = document.getElementById('linkHitAlavancas');
+    if (linkHit) linkHit.remove();
+  }
 
-// Campanhas Mensais é exclusivo do Dedicado (e Admin)
-if (TIPO_USUARIO !== 'VENDEDOR_DEDICADO' && TIPO_USUARIO !== 'ADMIN') {
-const linkMetas = document.getElementById('linkCampanhasMetas');
-if (linkMetas) linkMetas.remove();
+  // Campanhas Mensais é exclusivo do Dedicado (e Admin)
+  if (TIPO_USUARIO !== 'VENDEDOR_DEDICADO' && TIPO_USUARIO !== 'ADMIN') {
+    const linkMetas = document.getElementById('linkCampanhasMetas');
+    if (linkMetas) linkMetas.remove();
+  }
+
+  if (TIPO_USUARIO !== 'ADMIN') {
+    const linkAdmin = document.getElementById('linkAdminAcessos');
+    if (linkAdmin) linkAdmin.remove();
+  }
 }
 
 if (TIPO_USUARIO !== 'ADMIN') {
