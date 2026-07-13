@@ -481,14 +481,18 @@ BD_PRODUTOS
 
 container.innerHTML = fornecedoresValidos.map(forn => {
 const cfg = getConfigFornecedor(forn);
+const inicial = forn.trim().charAt(0);
 const logoHtml = cfg.logo
-? `<img src="${cfg.logo}" alt="${forn}" class="h-5 max-w-[60px] object-contain" onerror="this.parentElement.innerText='${forn}'">`
-: forn;
+? `<img src="${cfg.logo}" alt="${forn}" class="h-5 max-w-[80px] object-contain" onerror="this.parentElement.innerText='${forn}'">`
+: `<span class="text-slate-800 font-black text-[10px]">${forn}</span>`;
 return `
-         <button onclick="entrarFornecedor('${forn}')"
-           class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/40 transition-all border border-white/20"
-           title="${forn}">
-           <div class="bg-white rounded-md px-1.5 py-0.5 flex items-center">${logoHtml}</div>
+         <button onclick="entrarFornecedor('${forn}')" title="${forn}"
+           class="switcher-forn-btn relative flex items-center h-9 rounded-full overflow-hidden shrink-0 shadow-sm border border-white/20"
+           style="width:36px; background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
+           <span class="switcher-forn-inicial absolute inset-0 flex items-center justify-center text-white font-black text-[11px]">${inicial}</span>
+           <div class="switcher-forn-logo absolute inset-0 bg-white flex items-center justify-center px-3">
+             ${logoHtml}
+           </div>
          </button>`;
 }).join('');
 }
