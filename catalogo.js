@@ -828,10 +828,12 @@ const dropdown = document.getElementById('dropdownClientes');
 const termo    = input.value.trim().toLowerCase();
 if (!termo) { dropdown.innerHTML = ''; dropdown.classList.add('hidden'); return; }
 
+const termoSoDigitos = termo.replace(/\D/g, '');
+
 const filtrados = BD_CLIENTES.filter(c =>
 String(c.id).toLowerCase().includes(termo) ||
-String(c.cnpj).replace(/\D/g, '').includes(termo) ||
-String(c.razao).toLowerCase().includes(termo)
+String(c.razao).toLowerCase().includes(termo) ||
+(termoSoDigitos !== '' && String(c.cnpj).replace(/\D/g, '').includes(termoSoDigitos))
 );
 
 if (filtrados.length === 0) {
