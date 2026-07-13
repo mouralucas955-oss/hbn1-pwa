@@ -3411,7 +3411,30 @@ renderizarGridPortais();
 setInterval(atualizarMuralInvisivel,     60000);   // 1 min
 setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
 setInterval(atualizarClientesInvisivel, 300000);  // 5 min
+
+// Heartbeat — avisa o backend que a sessão ainda está ativa e detecta
+// bloqueio no meio de uma sessão já aberta.
+enviarHeartbeat();
+setInterval(enviarHeartbeat, 120000); // 2 min
 });
+
+function enviarHeartbeat() {
+  chamarApi('heartbeat', {})
+    .then(resp => {
+      if (resp && resp.bloqueado) {
+        mostrarToast('error', 'Seu acesso foi bloqueado pelo administrador.', 6000);
+        setTimeout(() => {
+          localStorage.removeItem('hbn1_usuario');
+          localStorage.removeItem('hbn1_uf');
+          localStorage.removeItem('hbn1_nome');
+          localStorage.removeItem('hbn1_login_ts');
+          localStorage.removeItem('hbn1_session');
+          window.location.href = 'index.html';
+        }, 2500);
+      }
+    })
+    .catch(() => {}); // silencioso — heartbeat não deve incomodar o usuário
+}
 // =========================================================================
 // ENVIO PARA A CENTRAL DE INVESTIMENTO (negociacao.html)
 // =========================================================================
