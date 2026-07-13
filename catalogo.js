@@ -469,7 +469,29 @@ document.getElementById('qtdProdutosFornecedor').innerText = qtd + ' produto' + 
 
 window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+// Gera uma imagem circular com a inicial do fornecedor, 100% offline (via canvas)
+function gerarAvatarInicialDataURL(letra, corFundo) {
+const tam = 64;
+const canvas = document.createElement('canvas');
+canvas.width = tam;
+canvas.height = tam;
+const ctx = canvas.getContext('2d');
 
+// círculo de fundo
+ctx.fillStyle = corFundo;
+ctx.beginPath();
+ctx.arc(tam / 2, tam / 2, tam / 2, 0, Math.PI * 2);
+ctx.fill();
+
+// letra centralizada
+ctx.fillStyle = '#FFFFFF';
+ctx.font = "bold 30px 'Plus Jakarta Sans', Arial, sans-serif";
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText(String(letra || '').toUpperCase(), tam / 2, tam / 2 + 2);
+
+return canvas.toDataURL('image/png');
+}
 function renderizarMiniSwitcher(fornAtual) {
 const container = document.getElementById('miniSwitcherFornecedores');
 const fornecedoresValidos = [...new Set(
@@ -482,6 +504,7 @@ BD_PRODUTOS
 container.innerHTML = fornecedoresValidos.map(forn => {
 const cfg = getConfigFornecedor(forn);
 const inicial = forn.trim().charAt(0);
+const urlAvatarInicial = gerarAvatarInicialDataURL(inicial, cfg.cor1);
 const logoHtml = cfg.logo
 ? `<img src="${cfg.logo}" alt="${forn}" class="h-5 max-w-[80px] object-contain" onerror="this.parentElement.innerText='${forn}'">`
 : `<span class="text-slate-800 font-black text-[10px]">${forn}</span>`;
@@ -489,7 +512,7 @@ return `
          <button onclick="entrarFornecedor('${forn}')" title="${forn}"
            class="switcher-forn-btn relative flex items-center h-9 rounded-full overflow-hidden shrink-0 shadow-sm border border-white/20"
            style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
-           <span class="switcher-forn-inicial absolute inset-0 flex items-center justify-center text-white font-black text-[11px]">${inicial}</span>
+           <img src="${urlAvatarInicial}" alt="${inicial}" class="switcher-forn-inicial absolute inset-0 w-full h-full object-cover">
            <div class="switcher-forn-logo absolute inset-0 bg-white flex items-center justify-center px-3">
              ${logoHtml}
            </div>
