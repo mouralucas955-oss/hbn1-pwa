@@ -255,6 +255,7 @@
         const uf = resposta.uf || 'PI';
         localStorage.setItem('hbn1_usuario',  usuario);
         localStorage.setItem('hbn1_uf',       uf);
+        localStorage.setItem('hbn1_ufs', JSON.stringify(resposta.ufs || [uf]));
         localStorage.setItem('hbn1_nome',     resposta.nome || usuario);
         localStorage.setItem('hbn1_login_ts', Date.now().toString()); // ← timestamp da sessão
         var tipo = resposta.tipo || 'VENDEDOR';
