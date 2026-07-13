@@ -193,8 +193,10 @@ mostrarConfirm(
 () => {
 localStorage.removeItem('hbn1_usuario');
 localStorage.removeItem('hbn1_uf');
+localStorage.removeItem('hbn1_ufs');
 localStorage.removeItem('hbn1_nome');
 localStorage.removeItem('hbn1_login_ts');
+localStorage.removeItem('hbn1_session');
 window.location.href = 'index.html';
 }
 );
@@ -214,7 +216,54 @@ const UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI')
 if (!localStorage.getItem('hbn1_usuario')) {
 window.location.href = 'index.html';
 }
-document.getElementById('ufBadgeTitulo').innerText = '(' + UF_USUARIO + ')';
+let UFS_PERMITIDAS_USUARIO = [];
+try { UFS_PERMITIDAS_USUARIO = JSON.parse(localStorage.getItem('hbn1_ufs') || '[]'); } catch(e) {}
+if (UFS_PERMITIDAS_USUARIO.length === 0) UFS_PERMITIDAS_USUARIO = [UF_USUARIO];
+
+function renderizarSeletorUF() {
+  const badge = document.getElementById('ufBadgeTitulo');
+  if (!badge) return;
+  if (UFS_PERMITIDAS_USUARIO.length <= 1) {
+    badge.innerText = '(' + UF_USUARIO + ')';
+    return;
+  }
+  badge.innerHTML = `
+    <span class="relative inline-block">
+      <button onclick="toggleSeletorUF()" class="flex items-center gap-1 cursor-pointer hover:opacity-80">
+        (${UF_USUARIO})
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      <div id="dropdownSeletorUF" class="hidden absolute mt-2 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 min-w-[80px]">
+        ${UFS_PERMITIDAS_USUARIO.map(uf => `
+          <button onclick="trocarUfAtiva('${uf}')" class="block w-full text-left px-4 py-2 text-xs font-bold ${uf === UF_USUARIO ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${uf}</button>
+        `).join('')}
+      </div>
+    </span>`;
+}
+
+function toggleSeletorUF() {
+  const dd = document.getElementById('dropdownSeletorUF');
+  if (dd) dd.classList.toggle('hidden');
+}
+
+function trocarUfAtiva(novaUf) {
+  if (novaUf === UF_USUARIO) return;
+  const trocar = () => {
+    chamarApi('trocarUf', { uf: novaUf }).then(resp => {
+      if (resp && resp.sucesso) {
+        localStorage.setItem('hbn1_uf', novaUf);
+        window.location.href = 'catalogo.html?uf=' + novaUf;
+      } else {
+        mostrarToast('error', (resp && resp.mensagem) || 'Não foi possível trocar de UF.');
+      }
+    }).catch(() => mostrarToast('error', 'Erro ao trocar de UF.'));
+  };
+  if (Object.keys(CARRINHO).length > 0) {
+    mostrarConfirm('Trocar de UF?', 'Você tem itens no pedido atual. Ao trocar de UF o carrinho será limpo. Deseja continuar?', trocar);
+  } else {
+    trocar();
+  }
+}
 
 // Tipo do usuário logado (PROMOTOR / VENDEDOR_FARMA / VENDEDOR_DEDICADO / ADMIN).
 // Compatibilidade: cadastros antigos com "VENDEDOR" puro contam como Farma.
@@ -905,6 +954,10 @@ atualizarResumoValoresMinimos();
 
 document.addEventListener('click', function(e) {
 // Fecha dropdown de busca de cliente
+ const ddUf = document.getElementById('dropdownSeletorUF');
+if (ddUf && !ddUf.classList.contains('hidden') && !ddUf.parentElement.contains(e.target)) {
+  ddUf.classList.add('hidden');
+}
 const dropdown = document.getElementById('dropdownClientes');
 const input    = document.getElementById('buscaClienteInput');
 if (dropdown && input && !dropdown.contains(e.target) && e.target !== input) {
@@ -3276,6 +3329,7 @@ return e.returnValue;
 window.addEventListener('DOMContentLoaded', () => {
 // Sincroniza ícone do dark mode
 const icon = document.getElementById('iconDarkMode');
+renderizarSeletorUF();
 if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
 
 // Cliente (Independente ou Rede) só vê o próprio pedido — nada de gestão/vendas
