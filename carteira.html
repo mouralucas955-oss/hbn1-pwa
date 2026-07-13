@@ -291,6 +291,108 @@
   let CART_REDE_UFS_TODAS  = []; // todas as UFs onde a rede selecionada tem clientes
   let CART_REDE_UFS_ATIVAS = new Set(); // UFs atualmente marcadas (pills) — afetam a busca
 
+  // ── Kimberly (INFANTIL/ADULTO/FEMININO) — tela "Ver por categoria" ────
+  let CART_KIMBERLY_MODO_CATEGORIA  = false; // true = está na tela de categorias
+  let CART_KIMBERLY_CATEGORIA_ATUAL = null;  // ex: 'KIMBERLY INFANTIL', quando uma categoria específica está aberta
+
+  // ── AGRUPAMENTO KIMBERLY — consolida INFANTIL/ADULTO/FEMININO num único
+  // card "KIMBERLY" no resumo, mantendo as categorias originais disponíveis
+  // pra tela "Ver por categoria" (cartRenderKimberlyCategorias).
+  function cartAgruparKimberly(dados) {
+    if (!dados || !Array.isArray(dados.fornecedores)) return dados;
+    const categorias = dados.fornecedores.filter(f => String(f.fornecedor || '').toUpperCase().indexOf('KIMBERLY ') === 0);
+    if (categorias.length === 0) return dados;
+
+    let somaAno = 0, somaTri = 0, somaMes = 0;
+    categorias.forEach(c => {
+      somaAno += c.faturadoAnoAnterior || 0;
+      somaTri += c.faturadoTri || 0;
+      somaMes += c.faturadoMesAtual || 0;
+    });
+
+    const mapaClientesMesclado = {};
+    categorias.forEach(cat => {
+      const lista = (dados.clientesPorFornecedor && dados.clientesPorFornecedor[cat.fornecedor]) || [];
+      lista.forEach(c => {
+        const chave = c.codCliente;
+        if (!mapaClientesMesclado[chave]) {
+          mapaClientesMesclado[chave] = {
+            codCliente: c.codCliente, cnpj: c.cnpj, razao: c.razao, uf: c.uf,
+            faturadoAnoAnterior: 0, faturadoTri: 0, faturadoMesAtual: 0, positivado: false
+          };
+        }
+        const acc = mapaClientesMesclado[chave];
+        acc.faturadoAnoAnterior += c.faturadoAnoAnterior || 0;
+        acc.faturadoTri += c.faturadoTri || 0;
+        acc.faturadoMesAtual += c.faturadoMesAtual || 0;
+        acc.positivado = acc.positivado || c.positivado;
+      });
+    });
+
+    const listaClientesMesclada = Object.values(mapaClientesMesclado).sort((x, y) =>
+      (y.faturadoMesAtual - x.faturadoMesAtual) || (y.faturadoTri - x.faturadoTri)
+    );
+
+    const totalClientesCarteira = categorias[0].totalClientesCarteira || dados.totalClientesCarteira || 0;
+    const clientesPositivados = listaClientesMesclada.filter(c => c.positivado).length;
+    const percentualPositivacao = totalClientesCarteira > 0
+      ? Number(((clientesPositivados / totalClientesCarteira) * 100).toFixed(1))
+      : 0;
+
+    const cardConsolidado = {
+      fornecedor: 'KIMBERLY',
+      faturadoAnoAnterior: Number(somaAno.toFixed(2)),
+      faturadoTri: Number(somaTri.toFixed(2)),
+      faturadoMesAtual: Number(somaMes.toFixed(2)),
+      clientesPositivados: clientesPositivados,
+      totalClientesCarteira: totalClientesCarteira,
+      percentualPositivacao: percentualPositivacao,
+      _kimberlyConsolidado: true
+    };
+
+    const fornecedoresSemKimberly = dados.fornecedores.filter(f => categorias.indexOf(f) === -1);
+    fornecedoresSemKimberly.push(cardConsolidado);
+    fornecedoresSemKimberly.sort((a, b) => b.faturadoMesAtual - a.faturadoMesAtual);
+
+    dados.fornecedores = fornecedoresSemKimberly;
+    dados.clientesPorFornecedor = dados.clientesPorFornecedor || {};
+    dados.clientesPorFornecedor['KIMBERLY'] = listaClientesMesclada;
+    dados._kimberlyCategorias = categorias;
+
+    return dados;
+  }
+
+  // Versão simplificada usada no modo "cliente direto" (resumoCliente), onde
+  // não existe clientesPorFornecedor — é sempre 1 cliente só.
+  function cartAgruparKimberlyClienteDireto(resp) {
+    if (!resp || !Array.isArray(resp.fornecedores)) return resp;
+    const categorias = resp.fornecedores.filter(f => String(f.fornecedor || '').toUpperCase().indexOf('KIMBERLY ') === 0);
+    if (categorias.length === 0) return resp;
+
+    let somaAno = 0, somaTri = 0, somaMes = 0;
+    let positivadoConsolidado = false;
+    categorias.forEach(c => {
+      somaAno += c.faturadoAnoAnterior || 0;
+      somaTri += c.faturadoTri || 0;
+      somaMes += c.faturadoMesAtual || 0;
+      positivadoConsolidado = positivadoConsolidado || c.positivado;
+    });
+
+    const cardConsolidado = {
+      fornecedor: 'KIMBERLY',
+      faturadoAnoAnterior: Number(somaAno.toFixed(2)),
+      faturadoTri: Number(somaTri.toFixed(2)),
+      faturadoMesAtual: Number(somaMes.toFixed(2)),
+      positivado: positivadoConsolidado
+    };
+
+    resp.fornecedores = resp.fornecedores.filter(f => categorias.indexOf(f) === -1);
+    resp.fornecedores.push(cardConsolidado);
+    resp.fornecedores.sort((a, b) => b.faturadoMesAtual - a.faturadoMesAtual);
+
+    return resp;
+  }
+
   function cartCarregarClientesBusca() {
     chamarApi('clientes', { uf: UF_USUARIO })
       .then(lista => { CART_CLIENTES = lista || []; })
@@ -332,6 +434,8 @@
     CART_REDE_ATUAL = null;
     CART_DADOS = null;
     CART_FORNECEDOR_ATUAL = null;
+    CART_KIMBERLY_MODO_CATEGORIA = false;
+    CART_KIMBERLY_CATEGORIA_ATUAL = null;
     CART_REDE_UFS_TODAS = [];
     CART_REDE_UFS_ATIVAS = new Set();
     document.getElementById('cartBuscaVendedor').value = '';
@@ -350,9 +454,9 @@
     document.getElementById('cartConteudo').innerHTML =
       '<div class="cart-panel"><div class="cart-loading">Buscando faturamento de ' + (cliente.razao || cliente.id) + '...</div></div>';
 
-    chamarApi('resumoCliente', { uf: UF_USUARIO, codCliente: cliente.id })
+   chamarApi('resumoCliente', { uf: UF_USUARIO, codCliente: cliente.id })
       .then(resp => {
-        CART_CLIENTE_RESUMO = resp;
+        CART_CLIENTE_RESUMO = cartAgruparKimberlyClienteDireto(resp);
         cartRenderConteudo();
       })
       .catch(() => {
@@ -427,10 +531,12 @@
     cartOnSelecionarVendedor(nome);
   }
 
-  function cartOnSelecionarVendedor(nome) {
+ function cartOnSelecionarVendedor(nome) {
     CART_FORNECEDOR_ATUAL = null;
     CART_CLIENTE_ATUAL = null;
     CART_CLIENTE_RESUMO = null;
+    CART_KIMBERLY_MODO_CATEGORIA = false;
+    CART_KIMBERLY_CATEGORIA_ATUAL = null;
     document.getElementById('cartBuscaClienteTopo').value = '';
     document.getElementById('cartDropdownClientesTopo').style.display = 'none';
 
@@ -460,7 +566,7 @@
             (resp && resp.mensagem ? resp.mensagem : 'Tente novamente em instantes.') + '</div></div></div>';
           return;
         }
-        CART_DADOS = resp;
+       CART_DADOS = cartAgruparKimberly(resp);
         document.getElementById('cartResumoTopo').style.display = 'block';
         document.getElementById('cartTopoVendedor').innerText = resp.vendedor;
         document.getElementById('cartTopoTotalClientes').innerText =
@@ -502,6 +608,8 @@
     CART_FORNECEDOR_ATUAL = null;
     CART_CLIENTE_ATUAL = null;
     CART_CLIENTE_RESUMO = null;
+    CART_KIMBERLY_MODO_CATEGORIA = false;
+    CART_KIMBERLY_CATEGORIA_ATUAL = null;
     document.getElementById('cartBuscaClienteTopo').value = '';
     document.getElementById('cartDropdownClientesTopo').style.display = 'none';
 
@@ -611,7 +719,7 @@
             (resp && resp.mensagem ? resp.mensagem : 'Tente novamente em instantes.') + '</div></div></div>';
           return;
         }
-        CART_DADOS = resp;
+        CART_DADOS = cartAgruparKimberly(resp);
         document.getElementById('cartResumoTopo').style.display = 'block';
         document.getElementById('cartTopoVendedor').innerText = 'Rede: ' + resp.rede;
         document.getElementById('cartTopoTotalClientes').innerText = resp.totalClientesCarteira + ' cliente' + (resp.totalClientesCarteira !== 1 ? 's' : '') + ' na rede';
@@ -623,7 +731,7 @@
       });
   }
 
-  function cartRenderConteudo() {
+ function cartRenderConteudo() {
     if (CART_CLIENTE_ATUAL) {
       cartRenderClienteDireto();
       return;
@@ -631,6 +739,10 @@
     if ((!CART_VENDEDOR_ATUAL && !CART_REDE_ATUAL) || !CART_DADOS) {
       document.getElementById('cartConteudo').innerHTML =
         '<div class="cart-panel"><div class="cart-empty"><div class="disp">Nenhum filtro selecionado</div><div>Busque um cliente diretamente, ou escolha um vendedor acima para ver o resumo da carteira por fornecedor.</div></div></div>';
+      return;
+    }
+    if (CART_KIMBERLY_MODO_CATEGORIA) {
+      cartRenderKimberlyCategorias();
       return;
     }
     if (CART_FORNECEDOR_ATUAL) {
@@ -767,10 +879,14 @@
               </div>
             </div>
           </div>
-          <div class="cart-card-footer">
+          <div class="cart-card-footer" style="display:flex; flex-direction:column; gap:6px;">
             <button type="button" class="cart-btn cart-btn-gold" onclick="cartVerDetalheFornecedor('${f.fornecedor.replace(/'/g, "\\'")}')">
               Ver carteira de clientes →
             </button>
+            ${f._kimberlyConsolidado ? `
+            <button type="button" class="cart-btn" onclick="cartVerCategoriasKimberly()">
+              Ver por categoria (Infantil / Adulto / Feminino)
+            </button>` : ''}
           </div>
         </div>`;
     }).join('');
@@ -869,6 +985,129 @@
           <tbody>${linhas}</tbody>
         </table>
       </div>`;
+  }
+
+  // ── KIMBERLY — TELA "VER POR CATEGORIA" ──────────────────────────────
+  function cartVerCategoriasKimberly() {
+    CART_KIMBERLY_MODO_CATEGORIA = true;
+    CART_KIMBERLY_CATEGORIA_ATUAL = null;
+    cartRenderConteudo();
+  }
+
+  function cartVoltarResumoDeKimberly() {
+    CART_KIMBERLY_MODO_CATEGORIA = false;
+    CART_KIMBERLY_CATEGORIA_ATUAL = null;
+    cartRenderConteudo();
+  }
+
+  function cartSelecionarCategoriaKimberly(fornecedorCategoria) {
+    CART_KIMBERLY_CATEGORIA_ATUAL = fornecedorCategoria;
+    cartRenderConteudo();
+  }
+
+  function cartRenderKimberlyCategorias() {
+    const wrap = document.getElementById('cartConteudo');
+    const categorias = (CART_DADOS && CART_DADOS._kimberlyCategorias) || [];
+
+    if (categorias.length === 0) {
+      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem categorias Kimberly</div><div>Não há dados quebrados por categoria para esta seleção.</div></div></div>';
+      return;
+    }
+
+    const cfgKimberly = cartGetConfigFornecedor('KIMBERLY');
+
+    if (!CART_KIMBERLY_CATEGORIA_ATUAL) {
+      const cardsHtml = categorias.map(c => {
+        const rotulo = c.fornecedor.replace('KIMBERLY ', '');
+        const pct = c.percentualPositivacao || 0;
+        const corBarra = pct >= 70 ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
+        return `
+          <div class="cart-card">
+            <div class="cart-card-header" style="background: linear-gradient(135deg, ${cfgKimberly.cor1} 0%, ${cfgKimberly.cor2} 100%);">
+              <span class="cart-card-header-nome">KIMBERLY — ${rotulo}</span>
+            </div>
+            <div class="cart-card-body">
+              <div class="cart-metric-row">
+                <span class="cart-metric-label">Fat. Ano Anterior</span>
+                <span class="cart-metric-value mono">${cartFormatBRL(c.faturadoAnoAnterior)}</span>
+              </div>
+              <div class="cart-metric-row">
+                <span class="cart-metric-label">Fat. Mês Atual</span>
+                <span class="cart-metric-value mono" style="color:var(--accent)">${cartFormatBRL(c.faturadoMesAtual)}</span>
+              </div>
+              <div class="cart-progress-wrap">
+                <div class="cart-progress-track">
+                  <div class="cart-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
+                </div>
+                <div class="cart-progress-label">
+                  <span>${c.clientesPositivados} de ${c.totalClientesCarteira} positivados</span>
+                  <span style="font-weight:800; color:${corBarra};">${pct.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="cart-card-footer">
+              <button type="button" class="cart-btn cart-btn-gold" onclick="cartSelecionarCategoriaKimberly('${c.fornecedor.replace(/'/g, "\\'")}')">
+                Ver carteira de clientes →
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+
+      wrap.innerHTML = `
+        <div class="cart-panel" style="margin-bottom:14px;">
+          <div class="cart-detail-header" style="margin-bottom:0;">
+            <div class="cart-detail-title-wrap">
+              <button type="button" class="cart-btn" onclick="cartVoltarResumoDeKimberly()">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                Voltar ao resumo
+              </button>
+              <span class="disp" style="font-size:15px; font-weight:700;">Kimberly — por categoria</span>
+            </div>
+          </div>
+        </div>
+        <div class="cart-grid">${cardsHtml}</div>`;
+      return;
+    }
+
+    const categoriaAtual = CART_KIMBERLY_CATEGORIA_ATUAL;
+    const clientes = (CART_DADOS.clientesPorFornecedor && CART_DADOS.clientesPorFornecedor[categoriaAtual]) || [];
+    const rotuloAtual = categoriaAtual.replace('KIMBERLY ', '');
+
+    const pillsHtml = categorias.map(c => {
+      const rotulo = c.fornecedor.replace('KIMBERLY ', '');
+      const ativa = c.fornecedor === categoriaAtual;
+      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartSelecionarCategoriaKimberly('${c.fornecedor.replace(/'/g, "\\'")}')">${ativa ? '✓ ' : ''}${rotulo}</button>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="cart-panel">
+        <div class="cart-detail-header">
+          <div class="cart-detail-title-wrap">
+            <button type="button" class="cart-btn" onclick="cartVerCategoriasKimberly()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+              Voltar às categorias
+            </button>
+            <span class="disp" style="font-size:15px; font-weight:700;">Kimberly — ${rotuloAtual}</span>
+          </div>
+          <input id="cartBuscaClienteDetalheKimberly" class="cart-input" placeholder="Buscar cliente ou CNPJ..." oninput="cartFiltrarTabelaKimberly()">
+        </div>
+        <div class="cart-uf-pills" style="margin-bottom:12px;">${pillsHtml}</div>
+        <div id="cartTabelaDetalheWrap"></div>
+      </div>`;
+
+    cartRenderizarTabelaClientes(clientes);
+  }
+
+  function cartFiltrarTabelaKimberly() {
+    const termo = (document.getElementById('cartBuscaClienteDetalheKimberly').value || '').toLowerCase().trim();
+    const todos = (CART_DADOS.clientesPorFornecedor && CART_DADOS.clientesPorFornecedor[CART_KIMBERLY_CATEGORIA_ATUAL]) || [];
+    if (!termo) { cartRenderizarTabelaClientes(todos); return; }
+    const filtrados = todos.filter(c =>
+      String(c.razao).toLowerCase().includes(termo) ||
+      String(c.cnpj).replace(/\D/g, '').includes(termo) ||
+      String(c.codCliente).toLowerCase().includes(termo)
+    );
+    cartRenderizarTabelaClientes(filtrados);
   }
 
   // ── INIT ──────────────────────────────────────────────────────────────
