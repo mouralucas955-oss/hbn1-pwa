@@ -1026,10 +1026,14 @@
             <div class="cart-card-header" style="background: linear-gradient(135deg, ${cfgKimberly.cor1} 0%, ${cfgKimberly.cor2} 100%);">
               <span class="cart-card-header-nome">KIMBERLY — ${rotulo}</span>
             </div>
-            <div class="cart-card-body">
+           <div class="cart-card-body">
               <div class="cart-metric-row">
                 <span class="cart-metric-label">Fat. Ano Anterior</span>
                 <span class="cart-metric-value mono">${cartFormatBRL(c.faturadoAnoAnterior)}</span>
+              </div>
+              <div class="cart-metric-row">
+                <span class="cart-metric-label">Média Mensal (3 meses ant.)</span>
+                <span class="cart-metric-value mono">${cartFormatBRL(cartMediaMensal(c.faturadoTri))}</span>
               </div>
               <div class="cart-metric-row">
                 <span class="cart-metric-label">Fat. Mês Atual</span>
