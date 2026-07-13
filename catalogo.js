@@ -9,7 +9,7 @@ let FILTRO_APENAS_COM_ESTOQUE = false;
 // =========================================================================
 // SUGESTÃO HIT — itens pendentes de positivação do cliente Dedicado selecionado
 // =========================================================================
-let HIT_DADOS_CLIENTE   = null; // resposta de carteiraHit para o cliente atual
+let HIT_DADOS_CLIENTE   = null; // resposta de carteiraHit para o cliente atual 
 let HIT_ITENS_PENDENTES = [];   // [{ alavanca, grupo, item, produto }]
 
 function carregarSugestaoHit() {
