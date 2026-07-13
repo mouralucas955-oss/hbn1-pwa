@@ -55,6 +55,23 @@
       from { opacity: 1; visibility: visible; }
       to   { opacity: 0; visibility: hidden; }
     }
+     /* ── Botões redondos de troca de fornecedor (mini switcher) — expandem no hover ── */
+    .switcher-forn-btn {
+      transition: width 0.32s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+    .switcher-forn-btn:hover {
+      width: 112px;
+    }
+    .switcher-forn-inicial {
+      transition: opacity 0.15s ease;
+      opacity: 1;
+    }
+    .switcher-forn-logo {
+      transition: opacity 0.22s ease 0.05s;
+      opacity: 0;
+    }
+    .switcher-forn-btn:hover .switcher-forn-inicial { opacity: 0; transition: opacity 0.1s ease; }
+    .switcher-forn-btn:hover .switcher-forn-logo   { opacity: 1; }
   </style>
   </style>
 </head>
