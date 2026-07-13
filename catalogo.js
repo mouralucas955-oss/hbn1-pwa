@@ -3409,8 +3409,30 @@ function atualizarClientesInvisivel() {
 chamarApi('clientes', { uf: UF_USUARIO })
 .then(lista => {
 BD_CLIENTES = lista;
+aplicarRestricoesClienteLogado();
 })
 .catch(e => console.error("Erro nos clientes:", e));
+}
+
+// Ajusta a barra de cliente do topo conforme o tipo de sessão logada.
+// CLIENTE_INDEPENDENTE: já entra com o próprio cliente selecionado, sem
+// poder buscar/trocar (BD_CLIENTES sempre tem só ele mesmo, pelo backend).
+// CLIENTE_REDE: mantém a busca, mas BD_CLIENTES já vem restrita à rede dele.
+function aplicarRestricoesClienteLogado() {
+  if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE') {
+    if (BD_CLIENTES.length > 0 && !CLIENTE_SELECIONADO) {
+      selecionarCliente(BD_CLIENTES[0].id);
+    }
+    const buscaWrap = document.getElementById('estadoSemCliente');
+    if (buscaWrap) buscaWrap.classList.add('hidden');
+    // Remove o botão "✖" do popover — cliente independente não pode "limpar"
+    // a si mesmo e ficar sem cliente selecionado.
+    const botaoLimparCliente = document.querySelector('#popoverCliente button[onclick="limparClienteSelecionado()"]');
+    if (botaoLimparCliente) botaoLimparCliente.remove();
+  } else if (TIPO_USUARIO === 'CLIENTE_REDE') {
+    const inputBusca = document.getElementById('buscaClienteInput');
+    if (inputBusca) inputBusca.placeholder = '🔍 Buscar CNPJ da sua rede...';
+  }
 }
 
 atualizarMuralInvisivel();
