@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HBN1 – Controle de Acessos</title>
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .dot-online { animation: pulse-dot 1.6s ease-in-out infinite; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 antialiased">
+
+  <!-- TOPO -->
+  <div class="bg-[#FF6B00] px-6 py-5 shadow-md">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div>
+        <h1 class="text-white font-black text-xl tracking-tight">Controle de Acessos</h1>
+        <p class="text-orange-100 text-xs font-medium mt-0.5">HBN1 — Nazária Distribuidora Farmacêutica</p>
+      </div>
+      <a href="catalogo.html" class="text-white/90 hover:text-white text-xs font-bold flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-xl transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Voltar ao catálogo
+      </a>
+    </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-6 py-8">
+
+    <!-- ESTADO DE CARREGAMENTO / BLOQUEIO -->
+    <div id="estadoBloqueado" class="hidden bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+      <p class="text-red-700 font-bold text-sm">Este painel é restrito a administradores.</p>
+    </div>
+
+    <div id="conteudoPrincipal" class="hidden flex flex-col gap-8">
+
+      <!-- CARD: ONLINE AGORA -->
+      <div class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 dot-online"></span>
+            <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide">Online agora</h2>
+          </div>
+          <span id="badgeTotalOnline" class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">0 conectado(s)</span>
+        </div>
+        <div id="listaOnline" class="p-5 flex flex-col gap-2">
+          <p class="text-slate-400 text-xs font-medium text-center py-4">Carregando...</p>
+        </div>
+      </div>
+
+      <!-- CARD: TODOS OS USUÁRIOS -->
+      <div class="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide">Todos os usuários</h2>
+          <input id="buscaUsuario" type="text" placeholder="Buscar por nome ou usuário..."
+            class="text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 w-56 focus:outline-none focus:ring-2 focus:ring-[#FF6B00] focus:border-transparent"
+            oninput="filtrarListaUsuarios()">
+        </div>
+        <div id="listaUsuarios" class="divide-y divide-slate-100">
+          <p class="text-slate-400 text-xs font-medium text-center py-8">Carregando...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOAST simples -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script src="api.js"></script>
+  <script>
+    let USUARIOS_TODOS = [];
+
+    function mostrarToast(tipo, mensagem) {
+      const container = document.getElementById('toastContainer');
+      const cores = tipo === 'success'
+        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+        : 'bg-red-50 border-red-200 text-red-700';
+      const el = document.createElement('div');
+      el.className = `${cores} border rounded-xl shadow-md px-4 py-2.5 text-xs font-bold pointer-events-auto`;
+      el.innerText = mensagem;
+      container.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function formatarTempoRelativo(isoStr) {
+      if (!isoStr) return 'nunca';
+      const diffMs = Date.now() - new Date(isoStr).getTime();
+      const min = Math.floor(diffMs / 60000);
+      if (min < 1) return 'agora mesmo';
+      if (min < 60) return `há ${min} min`;
+      const h = Math.floor(min / 60);
+      if (h < 24) return `há ${h}h`;
+      const d = Math.floor(h / 24);
+      return `há ${d}d`;
+    }
+
+    async function carregarPainel() {
+      try {
+        const tipo = localStorage.getItem('hbn1_tipo');
+        if (String(tipo).toUpperCase() !== 'ADMIN') {
+          document.getElementById('estadoBloqueado').classList.remove('hidden');
+          return;
+        }
+
+        document.getElementById('conteudoPrincipal').classList.remove('hidden');
+
+        const [respOnline, respTodos] = await Promise.all([
+          chamarApi('usuariosOnline', {}),
+          chamarApi('listarUsuarios', {})
+        ]);
+
+        renderizarOnline(respOnline);
+        USUARIOS_TODOS = (respTodos && respTodos.usuarios) ? respTodos.usuarios : [];
+        renderizarListaUsuarios(USUARIOS_TODOS);
+      } catch (erro) {
+        console.error('Erro ao carregar painel:', erro);
+        mostrarToast('error', 'Erro ao carregar dados do painel.');
+      }
+    }
+
+    function renderizarOnline(resp) {
+      const badge = document.getElementById('badgeTotalOnline');
+      const lista = document.getElementById('listaOnline');
+      const usuarios = (resp && resp.usuarios) ? resp.usuarios : [];
+
+      badge.innerText = `${usuarios.length} conectado${usuarios.length !== 1 ? 's' : ''}`;
+
+      if (usuarios.length === 0) {
+        lista.innerHTML = `<p class="text-slate-400 text-xs font-medium text-center py-4">Nenhum usuário conectado no momento.</p>`;
+        return;
+      }
+
+      lista.innerHTML = usuarios.map(u => `
+        <div class="flex items-center justify-between gap-3 bg-emerald-50/50 border border-emerald-100 rounded-xl px-4 py-2.5">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 dot-online shrink-0"></span>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-slate-800 truncate">${u.nome}</p>
+              <p class="text-[10px] text-slate-400 font-mono">${u.usuario} • UF ${u.uf || '-'}</p>
+            </div>
+          </div>
+          <span class="text-[10px] text-emerald-600 font-semibold shrink-0">${formatarTempoRelativo(u.ultimoAcesso)}</span>
+        </div>`).join('');
+    }
+
+    function renderizarListaUsuarios(lista) {
+      const container = document.getElementById('listaUsuarios');
+
+      if (lista.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 text-xs font-medium text-center py-8">Nenhum usuário encontrado.</p>`;
+        return;
+      }
+
+      container.innerHTML = lista.map(u => {
+        const bloqueado = u.status === 'BLOQUEADO';
+        return `
+        <div class="flex items-center justify-between gap-3 px-5 py-3 flex-wrap">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-2 h-2 rounded-full shrink-0 ${u.online ? 'bg-emerald-500 dot-online' : 'bg-slate-300'}"></span>
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-slate-800 truncate">${u.nome}</p>
+              <p class="text-[10px] text-slate-400 font-mono">${u.usuario} • UF ${u.uf || '-'} • ${u.tipo}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="text-[10px] text-slate-400 font-medium hidden sm:inline">Último acesso: ${formatarTempoRelativo(u.ultimoAcesso)}</span>
+            <span class="text-[9px] font-black px-2 py-1 rounded-full ${bloqueado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
+              ${bloqueado ? 'BLOQUEADO' : 'ATIVO'}
+            </span>
+            <button onclick="alternarStatus('${u.usuario}', '${bloqueado ? 'ATIVO' : 'BLOQUEADO'}', this)"
+              class="text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${bloqueado ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'}">
+              ${bloqueado ? 'Liberar' : 'Bloquear'}
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function filtrarListaUsuarios() {
+      const termo = document.getElementById('buscaUsuario').value.toLowerCase().trim();
+      if (!termo) { renderizarListaUsuarios(USUARIOS_TODOS); return; }
+      const filtrados = USUARIOS_TODOS.filter(u =>
+        u.nome.toLowerCase().includes(termo) || u.usuario.toLowerCase().includes(termo)
+      );
+      renderizarListaUsuarios(filtrados);
+    }
+
+    async function alternarStatus(usuarioAlvo, novoStatus, btnEl) {
+      const acaoTexto = novoStatus === 'BLOQUEADO' ? 'bloquear' : 'liberar';
+      if (!confirm(`Confirma ${acaoTexto} o acesso de "${usuarioAlvo}"?`)) return;
+
+      btnEl.disabled = true;
+      btnEl.style.opacity = '0.5';
+
+      try {
+        const resp = await chamarApi('alterarStatusUsuario', { usuarioAlvo, novoStatus });
+        if (resp && resp.sucesso) {
+          mostrarToast('success', `Usuário ${novoStatus === 'BLOQUEADO' ? 'bloqueado' : 'liberado'} com sucesso.`);
+          const u = USUARIOS_TODOS.find(x => x.usuario === usuarioAlvo);
+          if (u) u.status = novoStatus;
+          filtrarListaUsuarios();
+        } else {
+          mostrarToast('error', (resp && resp.mensagem) || 'Erro ao alterar status.');
+        }
+      } catch (erro) {
+        mostrarToast('error', 'Erro ao comunicar com o servidor.');
+      } finally {
+        btnEl.disabled = false;
+        btnEl.style.opacity = '';
+      }
+    }
+
+    carregarPainel();
+    setInterval(carregarPainel, 30000); // atualiza a cada 30s
+  </script>
+</body>
+</html>
