@@ -3290,6 +3290,11 @@ const linkMetas = document.getElementById('linkCampanhasMetas');
 if (linkMetas) linkMetas.remove();
 }
 
+if (TIPO_USUARIO !== 'ADMIN') {
+const linkAdmin = document.getElementById('linkAdminAcessos');
+if (linkAdmin) linkAdmin.remove();
+}
+
 iniciarSplashAbertura();
 
 // ── MURAL COM FADE ──────────────────────────────────────────────────
