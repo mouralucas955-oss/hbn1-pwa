@@ -3736,16 +3736,16 @@ function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
 
   const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id])).join('');
 
-  div.innerHTML = `
-    <div style="background:#FF6B00;padding:14px 34px;position:relative;display:flex;align-items:center;gap:14px;">
-      <img src="${LOGO_HBN_PDF_BASE64}" style="height:44px;width:auto;object-fit:contain;flex-shrink:0;">
-      <div style="flex:1;min-width:0;">
-        <h1 style="color:#fff;font-size:19px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS - ${info.fornecedor}</h1>
-        <p style="color:#ffe8d6;font-size:11px;margin:4px 0 0;">${subLinha}</p>
-      </div>
-      <span style="color:#ffe8d6;font-size:10px;flex-shrink:0;">Página ${info.numPagina}/${info.totalPaginas}</span>
+ div.innerHTML = `
+    <div style="background:#FF6B00;padding:16px 34px;position:relative;">
+      <h1 style="color:#fff;font-size:20px;font-weight:900;margin:0;letter-spacing:-0.5px;">CATÁLOGO DE PRODUTOS - ${info.fornecedor}</h1>
+      <p style="color:#ffe8d6;font-size:11px;margin:6px 0 0;">${subLinha}</p>
+      <span style="position:absolute;top:16px;right:34px;color:#ffe8d6;font-size:10px;">Página ${info.numPagina}/${info.totalPaginas}</span>
     </div>
-    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(2, 1fr);gap:14px;">
+    <div style="position:absolute;top:280px;left:50%;transform:translateX(-50%);width:480px;opacity:0.05;z-index:0;pointer-events:none;">
+      <img src="${LOGO_HBN_PDF_BASE64}" style="width:100%;">
+    </div>
+    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(2, 1fr);gap:14px;position:relative;z-index:1;">
       ${cardsHtml}
     </div>`;
   return div;
