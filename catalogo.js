@@ -488,7 +488,7 @@ const logoHtml = cfg.logo
 return `
          <button onclick="entrarFornecedor('${forn}')" title="${forn}"
            class="switcher-forn-btn relative flex items-center h-9 rounded-full overflow-hidden shrink-0 shadow-sm border border-white/20"
-           style="width:36px; background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
+           style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
            <span class="switcher-forn-inicial absolute inset-0 flex items-center justify-center text-white font-black text-[11px]">${inicial}</span>
            <div class="switcher-forn-logo absolute inset-0 bg-white flex items-center justify-center px-3">
              ${logoHtml}
