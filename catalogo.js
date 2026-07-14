@@ -3783,7 +3783,7 @@ function _formatarPercentualBadge(percentual) {
   return `-${texto}%`;
 }
 
-function _gerarHtmlCardPdf(p, imgBase64) {
+function _gerarHtmlCardPdf(p, imgBase64, incluirPreco = true) {
   const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
   const temDesconto = percentual > 0 && precoOriginal > 0;
   const economia = temDesconto ? (precoOriginal - precoFinal) : 0;
@@ -3795,7 +3795,7 @@ function _gerarHtmlCardPdf(p, imgBase64) {
 
       <!-- LATERAL ESQUERDA: imagem -->
       <div style="width:130px;flex-shrink:0;position:relative;background:#fafafa;display:flex;align-items:center;justify-content:center;">
-       ${badgePct ? `<span style="position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;height:20px;min-width:38px;padding:0 7px;border-radius:6px;z-index:2;display:inline-flex;align-items:center;justify-content:center;line-height:20px;box-sizing:border-box;">
+       ${(incluirPreco && badgePct) ? `<span style="position:absolute;top:6px;left:6px;background:#e74c3c;color:#fff;font-size:9px;font-weight:800;height:20px;min-width:38px;padding:0 7px;border-radius:6px;z-index:2;display:inline-flex;align-items:center;justify-content:center;line-height:20px;box-sizing:border-box;">
   <span style="display:block;transform:translateY(-2px);">${badgePct}</span>
 </span>` : ''}
         ${imgBase64
@@ -3821,7 +3821,8 @@ function _gerarHtmlCardPdf(p, imgBase64) {
 </span>
         </div>
 
-        <div style="margin-top:auto;flex-shrink:0;">
+     <div style="margin-top:auto;flex-shrink:0;">
+  ${incluirPreco ? `
   ${temDesconto ? `<div style="font-size:8px;color:#94a3b8;text-decoration:line-through;">De: ${formatarParaReal(precoOriginal)}</div>` : ''}
 
   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
@@ -3833,6 +3834,7 @@ function _gerarHtmlCardPdf(p, imgBase64) {
   <span style="display:block;transform:translateY(-2px);">ECON. ${formatarParaReal(economia)}</span>
 </span>` : ''}
   </div>
+  ` : ''}
 
   <div style="text-align:right;margin-top:3px;">
     <span style="font-size:7.5px;color:#94a3b8;">Est: ${estoque}</span>
@@ -3842,7 +3844,7 @@ function _gerarHtmlCardPdf(p, imgBase64) {
     </div>`;
 }
 
-function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
+function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info, incluirPreco = true) {
   const div = document.createElement('div');
   div.style.width = '850px';
   div.style.height = '1200px';
@@ -3854,7 +3856,7 @@ function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
   // Nome do cliente NÃO aparece mais no conteúdo do PDF — só no nome do arquivo.
   const subLinha = info.data;
 
-  const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id])).join('');
+ const cardsHtml = produtosDaPagina.map(p => _gerarHtmlCardPdf(p, mapaImagens[p.id], incluirPreco)).join('');
 
  div.innerHTML = `
     <div style="background:#FF6B00;padding:16px 34px;position:relative;">
@@ -3870,11 +3872,40 @@ function _montarDivPaginaPdf(produtosDaPagina, mapaImagens, info) {
     </div>`;
   return div;
 }
+// Modal para perguntar se o PDF deve sair com ou sem preços — criado via JS,
+// não depende de HTML pré-existente na página. Retorna Promise<true|false|null>
+// (null = cancelado)
+function _perguntarComPrecoPdf() {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.id = 'overlayPerguntaPrecoPdf';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.25);font-family:'Plus Jakarta Sans', Arial, sans-serif;">
+        <h3 style="font-size:15px;font-weight:800;color:#1e293b;margin:0 0 6px;">Exportar catálogo em PDF</h3>
+        <p style="font-size:12px;color:#64748b;margin:0 0 18px;">Deseja incluir os preços dos produtos no PDF?</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button id="btnPdfComPreco" style="background:#FF6B00;color:#fff;font-weight:700;font-size:13px;padding:10px 14px;border:none;border-radius:10px;cursor:pointer;">Com preço</button>
+          <button id="btnPdfSemPreco" style="background:#f1f5f9;color:#334155;font-weight:700;font-size:13px;padding:10px 14px;border:none;border-radius:10px;cursor:pointer;">Sem preço</button>
+          <button id="btnPdfCancelar" style="background:transparent;color:#94a3b8;font-weight:600;font-size:12px;padding:6px;border:none;cursor:pointer;">Cancelar</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
 
+    const fechar = (resultado) => { overlay.remove(); resolve(resultado); };
+    overlay.querySelector('#btnPdfComPreco').addEventListener('click', () => fechar(true));
+    overlay.querySelector('#btnPdfSemPreco').addEventListener('click', () => fechar(false));
+    overlay.querySelector('#btnPdfCancelar').addEventListener('click', () => fechar(null));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) fechar(null); });
+  });
+}
 async function baixarCatalogoPdf() {
   if (_PDF_GERANDO) return;
   const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + fornecedor + filtro de estoque atuais
-  if (lista.length === 0) { mostrarToast('warning', 'Nenhum produto para exportar com os filtros atuais.'); return; }
+ if (lista.length === 0) { mostrarToast('warning', 'Nenhum produto para exportar com os filtros atuais.'); return; }
+
+  const incluirPreco = await _perguntarComPrecoPdf();
+  if (incluirPreco === null) return; // usuário cancelou
 
   _PDF_GERANDO = true;
   const btn = document.getElementById('btnBaixarCatalogoPdf');
@@ -3921,14 +3952,14 @@ if (idsSemImagem.length > 0) {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
 
     for (let pg = 0; pg < paginas.length; pg++) {
-      const divPagina = _montarDivPaginaPdf(paginas[pg], mapaImagens, {
+     const divPagina = _montarDivPaginaPdf(paginas[pg], mapaImagens, {
         fornecedor: nomeFornecedorTitulo,
         cliente: CLIENTE_SELECIONADO,
         vendedor: nomeVendedor,
         data: dataHoje,
         numPagina: pg + 1,
         totalPaginas: paginas.length
-      });
+      }, incluirPreco);
       containerOffscreen.innerHTML = '';
       containerOffscreen.appendChild(divPagina);
 
@@ -3943,7 +3974,7 @@ if (idsSemImagem.length > 0) {
    const sufixoCliente = (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.razao)
       ? '_' + limparNomeArquivo(CLIENTE_SELECIONADO.razao.toUpperCase())
       : '';
-    const nomeArquivo = `Catalogo_${limparNomeArquivo(nomeFornecedorTitulo)}${sufixoCliente}_${dataHoje.replace(/\//g, '-')}.pdf`;
+    const nomeArquivo = `Catalogo_${limparNomeArquivo(nomeFornecedorTitulo)}${sufixoCliente}${incluirPreco ? '' : '_SemPreco'}_${dataHoje.replace(/\//g, '-')}.pdf`;
     pdf.save(nomeArquivo);
     mostrarToast('success', 'Catálogo em PDF gerado com sucesso.');
   } catch (erro) {
