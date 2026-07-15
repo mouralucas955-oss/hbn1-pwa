@@ -187,26 +187,36 @@
     return `<div class="camp-progress-track ${classeExtra || ''}"><div class="camp-progress-fill ${campFillClasse(pct)}" data-w="${larguraFinal}"></div></div>`;
   }
 
-  const CAMP_GRUPOS_AGREGADOS = [
-    { prefixo: 'UNILEVER', membros: ['UNILEVER PC', 'UNILEVER BW', 'UNILEVER OUTROS'] },
-    { prefixo: 'KIMBERLY', membros: ['KIMBERLY INFANTIL', 'KIMBERLY FEMININO', 'KIMBERLY ADULTO', 'KIMBERLY OUTROS'] }
-  ];
+  // Prefixos que devem ser agrupados visualmente na tabela (membros + linha TOTAL).
+  // Qualquer campanha cujo fornecedor comece com "PREFIXO " é tratada como membro do grupo,
+  // e a linha "PREFIXO" ou "PREFIXO TOTAL" é tratada como o total do grupo.
+  const CAMP_GRUPOS_AGREGADOS = ['UNILEVER', 'KIMBERLY'];
 
   function campOrganizarGrupos(campanhas) {
     const usados = new Set();
     const agrupadas = [];
 
-    CAMP_GRUPOS_AGREGADOS.forEach(grupo => {
-      const membros = grupo.membros
-        .map(nome => campanhas.find(c => c.fornecedor.toUpperCase() === nome))
-        .filter(Boolean);
-      const total = campanhas.find(c => c.fornecedor.toUpperCase() === grupo.prefixo);
+    CAMP_GRUPOS_AGREGADOS.forEach(prefixo => {
+      const prefixoUpper = prefixo.toUpperCase();
+
+      // Linha "total" do grupo: fornecedor chamado exatamente "PREFIXO" ou "PREFIXO TOTAL"
+      const total = campanhas.find(c => {
+        const nome = c.fornecedor.toUpperCase();
+        return nome === prefixoUpper || nome === prefixoUpper + ' TOTAL';
+      });
+
+      // Membros: qualquer campanha que comece com "PREFIXO " (independente do sufixo:
+      // FEMININOS, ADULTOS, INFANTIL, PC, BW, OUTROS, etc.), exceto a própria linha total.
+      const membros = campanhas.filter(c => {
+        const nome = c.fornecedor.toUpperCase();
+        return nome.startsWith(prefixoUpper + ' ') && (!total || nome !== total.fornecedor.toUpperCase());
+      });
 
       if (membros.length === 0 && !total) return; // esse vendedor não tem esse grupo
 
       membros.forEach(m => { agrupadas.push({ ...m, _membro: true }); usados.add(m.fornecedor); });
       if (total) {
-        agrupadas.push({ ...total, _total: true, _labelExibir: grupo.prefixo + ' TOTAL' });
+        agrupadas.push({ ...total, _total: true, _labelExibir: prefixo + ' TOTAL' });
         usados.add(total.fornecedor);
       }
     });
