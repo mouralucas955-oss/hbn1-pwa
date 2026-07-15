@@ -1974,13 +1974,23 @@ return MARCADORES_METADADO_PEDIDO.some(m => up.includes(m));
 // sempre verdade matematicamente (total = preço × qtd, e qtd ≥ 1), então
 // funciona independente da ordem em que o PDF entregou os tokens.
 function extrairQuantidadeConfiavel(tokens, candidatosQtd) {
-// Coleta todos os valores decimais da linha (formato brasileiro: 9,40 / 13,523500 / 162,28).
-// O valor "0,00" (desconto percentual nos pedidos Kenvue/A7) é excluído pois nunca é
-// preço nem total — assim não "envenena" o cálculo min/max que determina a quantidade.
+// Identifica os índices de tokens que são percentual de desconto — ou seja,
+// o valor decimal que aparece IMEDIATAMENTE ANTES de um token "%" (ex: "10,00 %").
+// Isso nunca pode ser preço nem total, e é excluído independente do valor
+// (antes só excluía "0,00", o que deixava passar descontos como "10,00%", "5,00%" etc.
+// e contaminava o cálculo min/max, gerando quantidades erradas).
+const indicesPercentual = new Set();
+tokens.forEach((t, i) => {
+  if (t === '%' && i > 0) indicesPercentual.add(i - 1);
+});
+
+// Coleta todos os valores decimais da linha (formato brasileiro: 9,40 / 13,523500 / 162,28),
+// exceto os que forem percentual de desconto (identificados acima).
 const decimais = tokens
-.filter(t => /^\d{1,3}(\.\d{3})*,\d+$/.test(t))
-.map(t => parseFloat(t.replace(/\./g, '').replace(',', '.')))
-.filter(n => !isNaN(n) && n > 0.009); // exclui 0,00 (desconto) mas mantém valores reais
+  .map((t, i) => ({ t, i }))
+  .filter(({ t, i }) => /^\d{1,3}(\.\d{3})*,\d+$/.test(t) && !indicesPercentual.has(i))
+  .map(({ t }) => parseFloat(t.replace(/\./g, '').replace(',', '.')))
+  .filter(n => !isNaN(n) && n > 0.009);
 
 if (decimais.length >= 2) {
 const preco = Math.min(...decimais);
@@ -2002,8 +2012,6 @@ return Math.round(qtdCalculada);
 const idxPrimeiroDecimal = tokens.findIndex(t => /^\d{1,3}(\.\d{3})*,\d+$/.test(t));
 const candidatosFiltrados = idxPrimeiroDecimal > 0
 ? candidatosQtd.filter((_, i) => {
-// Remove candidatos que aparecem nos tokens ANTES do primeiro decimal —
-// esses são tipicamente código interno ou giro de estoque, não quantidade pedida
 const idxNoTokens = tokens.indexOf(candidatosQtd[i]);
 return idxNoTokens < 0 || idxNoTokens >= idxPrimeiroDecimal;
 })
