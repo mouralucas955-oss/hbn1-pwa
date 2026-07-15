@@ -345,17 +345,11 @@
     const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
     const pctGeral = campCalcPct(resp.totalGeral.meta, resp.totalGeral.realizado);
     const qtdCampanhas = resp.campanhas.length;
-    
-const diasRestantes = resp.diasRestantesMes || 1;
-    const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
-    const pctGeral = campCalcPct(resp.totalGeral.meta, resp.totalGeral.realizado);
-    const qtdCampanhas = resp.campanhas.length;
 
-    // NOVO — aproveitamento (quantidade de campanhas batidas, não R$)
+    // aproveitamento (quantidade de campanhas batidas, não R$)
     const campanhasBatidas = resp.campanhas.filter(c => c.meta > 0 && c.realizado >= c.meta).length;
     const pctAproveitamento = qtdCampanhas > 0 ? (campanhasBatidas / qtdCampanhas * 100) : 0;
     const faltamCampanhas = qtdCampanhas - campanhasBatidas;
-    
     const heroHtml = `
       <div class="camp-hero-meta" style="margin-bottom:16px;">
         <div class="camp-hero-left">
@@ -430,7 +424,6 @@ const aproveitamentoHtml = `
         </table>
       </div>`;
 
-    wrap.innerHTML = heroHtml + tabelaHtml;
     wrap.innerHTML = heroHtml + aproveitamentoHtml + tabelaHtml;
     campAnimarIndicadores();
   }
