@@ -2314,6 +2314,7 @@ const clientesEncontrados = await Promise.all(cnpjsUnicos.map(buscarClientePorCN
 
 const pedidos = [];
 const naoEncontrados = [];
+const pedidosSemProdutoNoCatalogo = [];
 const codigosNaoEncontradosSet = new Set();
 
 for (let i = 0; i < cnpjsUnicos.length; i++) {
@@ -2351,7 +2352,15 @@ itensCasados.push({ p, qtd: it.qtd });
 if (String(p.fornecedor || '').toUpperCase().includes('DANONE')) totalDanoneQtd += it.qtd;
 });
 
-if (itensCasados.length === 0) continue;
+if (itensCasados.length === 0) {
+  pedidosSemProdutoNoCatalogo.push({
+    cliente,
+    cnpjFormatado: formatarCNPJ(cnpjDigits),
+    totalItensDoArquivo: itensDoGrupo.length,
+    unidades: itensDoGrupo.reduce((s, it) => s + it.qtd, 0)
+  });
+  continue;
+}
 
 let olDetectado = 0;
 if (totalDanoneQtd >= 1000) olDetectado = 1000;
@@ -2396,6 +2405,7 @@ totalVariedades: itensCasados.length
 IMPORT_RESULTADO = {
 pedidos,
 naoEncontrados,
+pedidosSemProdutoNoCatalogo,
 codigosNaoEncontrados: Array.from(codigosNaoEncontradosSet)
 };
 
@@ -2522,11 +2532,25 @@ blocoCnpjNaoEnc.classList.add('hidden');
 }
 
 const blocoCodNaoEnc = document.getElementById('importBlocoCodigoNaoEncontrados');
-if (codigosNaoEncontrados.length > 0) {
-document.getElementById('importTextoCodigoNaoEncontrados').innerText = codigosNaoEncontrados.join(', ');
-blocoCodNaoEnc.classList.remove('hidden');
+const { pedidosSemProdutoNoCatalogo } = IMPORT_RESULTADO;
+const temPedidosDescartados = pedidosSemProdutoNoCatalogo && pedidosSemProdutoNoCatalogo.length > 0;
+
+if (codigosNaoEncontrados.length > 0 || temPedidosDescartados) {
+  let textoFinal = '';
+  if (temPedidosDescartados) {
+    textoFinal += `⚠ ${pedidosSemProdutoNoCatalogo.length} pedido(s) descartado(s) — nenhum item pertence ao seu catálogo:\n`;
+    textoFinal += pedidosSemProdutoNoCatalogo.map(p =>
+      `  • ${(p.cliente.razao || '').toUpperCase()} (${p.cnpjFormatado}) — ${p.totalItensDoArquivo} item(ns), ${p.unidades} un`
+    ).join('\n');
+    textoFinal += codigosNaoEncontrados.length > 0 ? '\n\n' : '';
+  }
+  if (codigosNaoEncontrados.length > 0) {
+    textoFinal += 'Códigos/EANs não localizados: ' + codigosNaoEncontrados.join(', ');
+  }
+  document.getElementById('importTextoCodigoNaoEncontrados').innerText = textoFinal;
+  blocoCodNaoEnc.classList.remove('hidden');
 } else {
-blocoCodNaoEnc.classList.add('hidden');
+  blocoCodNaoEnc.classList.add('hidden');
 }
 
 mostrarEstadoImportacao('resultado');
