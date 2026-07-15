@@ -86,6 +86,11 @@
   .camp-table tbody tr:last-child td { border-bottom:none; }
   .camp-num { text-align:center; }
 
+  .camp-table tbody tr.camp-row-membro td:first-child { padding-left:32px; color:var(--text-secondary); }
+  .camp-table tbody tr.camp-row-membro td:first-child span { font-weight:600 !important; }
+  .camp-table tbody tr.camp-row-total td { font-weight:800; background:var(--surface-secondary); }
+  .camp-table tbody tr.camp-row-total td:first-child::before { content:'∑ '; opacity:.5; }
+
   .camp-pct-pill { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; display:inline-block; min-width:56px; text-align:center; }
   .camp-pct-verde  { background: var(--success-soft); color: var(--success); border:1px solid var(--success-border); }
   .camp-pct-amber  { background: rgba(245,158,11,0.12); color:#b45309; border:1px solid rgba(245,158,11,0.35); }
@@ -180,6 +185,34 @@
     const pct = campCalcPct(meta, realizado);
     const larguraFinal = Math.max(0, Math.min(pct, 100));
     return `<div class="camp-progress-track ${classeExtra || ''}"><div class="camp-progress-fill ${campFillClasse(pct)}" data-w="${larguraFinal}"></div></div>`;
+  }
+
+  const CAMP_GRUPOS_AGREGADOS = [
+    { prefixo: 'UNILEVER', membros: ['UNILEVER PC', 'UNILEVER BW', 'UNILEVER OUTROS'] },
+    { prefixo: 'KIMBERLY', membros: ['KIMBERLY INFANTIL', 'KIMBERLY FEMININO', 'KIMBERLY ADULTO', 'KIMBERLY OUTROS'] }
+  ];
+
+  function campOrganizarGrupos(campanhas) {
+    const usados = new Set();
+    const agrupadas = [];
+
+    CAMP_GRUPOS_AGREGADOS.forEach(grupo => {
+      const membros = grupo.membros
+        .map(nome => campanhas.find(c => c.fornecedor.toUpperCase() === nome))
+        .filter(Boolean);
+      const total = campanhas.find(c => c.fornecedor.toUpperCase() === grupo.prefixo);
+
+      if (membros.length === 0 && !total) return; // esse vendedor não tem esse grupo
+
+      membros.forEach(m => { agrupadas.push({ ...m, _membro: true }); usados.add(m.fornecedor); });
+      if (total) {
+        agrupadas.push({ ...total, _total: true, _labelExibir: grupo.prefixo + ' TOTAL' });
+        usados.add(total.fornecedor);
+      }
+    });
+
+    const restante = campanhas.filter(c => !usados.has(c.fornecedor)).sort((a, b) => b.meta - a.meta);
+    return [...restante, ...agrupadas];
   }
 
   // Avatar circular com a letra inicial do fornecedor (mesmo padrão do catálogo)
@@ -312,7 +345,17 @@
     const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
     const pctGeral = campCalcPct(resp.totalGeral.meta, resp.totalGeral.realizado);
     const qtdCampanhas = resp.campanhas.length;
+    
+const diasRestantes = resp.diasRestantesMes || 1;
+    const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
+    const pctGeral = campCalcPct(resp.totalGeral.meta, resp.totalGeral.realizado);
+    const qtdCampanhas = resp.campanhas.length;
 
+    // NOVO — aproveitamento (quantidade de campanhas batidas, não R$)
+    const campanhasBatidas = resp.campanhas.filter(c => c.meta > 0 && c.realizado >= c.meta).length;
+    const pctAproveitamento = qtdCampanhas > 0 ? (campanhasBatidas / qtdCampanhas * 100) : 0;
+    const faltamCampanhas = qtdCampanhas - campanhasBatidas;
+    
     const heroHtml = `
       <div class="camp-hero-meta" style="margin-bottom:16px;">
         <div class="camp-hero-left">
@@ -329,16 +372,32 @@
           <div><div class="lbl">Gap</div><div class="val mono">${gapGeral > 0 ? campFormatBRL(gapGeral) : campFormatBRL(0)}</div></div>
         </div>
       </div>`;
+    
+const aproveitamentoHtml = `
+      <div class="camp-hero-meta" style="margin-bottom:16px;">
+        <div class="camp-hero-left">
+          ${campAnelSvg(pctAproveitamento, 84)}
+          <div>
+            <div class="camp-hero-eyebrow">Aproveitamento</div>
+            <div class="camp-hero-title">${campanhasBatidas} de ${qtdCampanhas} campanhas batidas</div>
+            <div class="camp-hero-sub">${faltamCampanhas > 0 ? `Faltam ${faltamCampanhas} campanha${faltamCampanhas === 1 ? '' : 's'} para bater 100%` : 'Todas as campanhas batidas! 🎉'}</div>
+          </div>
+        </div>
+      </div>`;
+    
+   const campanhasOrdenadas = campOrganizarGrupos(resp.campanhas);
 
-    const linhasHtml = resp.campanhas.map(c => {
+    const linhasHtml = campanhasOrdenadas.map(c => {
       const gap = c.meta - c.realizado;
       const mediaNecessaria = gap > 0 ? gap / diasRestantes : 0;
+      const nomeExibir = c._labelExibir || c.fornecedor;
+      const classesLinha = [c._membro ? 'camp-row-membro' : '', c._total ? 'camp-row-total' : ''].filter(Boolean).join(' ');
       return `
-        <tr>
+        <tr class="${classesLinha}">
           <td>
             <div style="display:flex; align-items:center; gap:8px;">
-              <img src="${campGerarAvatarLetra(c.fornecedor)}" class="camp-pill-avatar" style="width:26px; height:26px;" alt="">
-              <span style="font-weight:700;">${c.fornecedor}</span>
+              <img src="${campGerarAvatarLetra(nomeExibir)}" class="camp-pill-avatar" style="width:26px; height:26px;" alt="">
+              <span style="font-weight:${c._total ? 800 : 700};">${nomeExibir}</span>
             </div>
           </td>
           <td class="camp-num mono">${campFormatBRL(c.meta)}</td>
@@ -372,6 +431,7 @@
       </div>`;
 
     wrap.innerHTML = heroHtml + tabelaHtml;
+    wrap.innerHTML = heroHtml + aproveitamentoHtml + tabelaHtml;
     campAnimarIndicadores();
   }
 
