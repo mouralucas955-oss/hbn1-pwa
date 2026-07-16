@@ -1882,7 +1882,9 @@ if (ehPedidoUnilever) {
 } else {
   itensBrutos = extrairItensDeLinhas(linhas);
 }
+}
 
+           
 } else if (['jpg', 'jpeg', 'png'].includes(ext)) {
   if (TIPO_USUARIO !== 'ADMIN') {
     throw new Error('Envio de imagem disponível apenas para administradores.');
