@@ -780,8 +780,17 @@
 
       <div class="overflow-y-auto no-scrollbar flex-grow p-6 space-y-5">
 
-        <!-- ESTADO 1: ÁREA DE UPLOAD -->
+       <!-- ESTADO 1: ÁREA DE UPLOAD -->
         <div id="importEstadoUpload">
+          <div id="blocoOpcaoIA" class="hidden flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-xl px-3 py-2 mb-3 text-xs">
+            <input type="checkbox" id="checkboxUsarIA"
+              onchange="PDF_EXTRACAO_MODO = this.checked ? 'ia' : 'heuristica'"
+              class="w-4 h-4 accent-purple-600 cursor-pointer">
+            <label for="checkboxUsarIA" class="font-bold text-purple-700 cursor-pointer select-none">
+              ✨ Extrair PDF com IA (beta — recomendado para layouts não reconhecidos)
+            </label>
+            <span class="ml-auto text-[9px] font-black text-purple-400 uppercase tracking-wider bg-purple-100 px-2 py-0.5 rounded-full">Admin</span>
+          </div>
           <label for="inputArquivoImportado"
             class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-2xl p-10 cursor-pointer hover:border-[#FF6B00] hover:bg-orange-50/30 transition-all text-center">
             <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
