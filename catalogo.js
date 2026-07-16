@@ -1857,28 +1857,20 @@ async function aoSelecionarArquivoImportado(event) {
       atualizarTextoProcessando('Identificando CNPJs e itens...');
       itensBrutos = extrairItensDeLinhas(linhas);
 
-   } else if (ext === 'pdf') {
-  const usarIA = PDF_EXTRACAO_MODO === 'ia' && TIPO_USUARIO === 'ADMIN'; // dupla checagem no front
-  if (usarIA) {
-    atualizarTextoProcessando('Extraindo pedido com IA...');
-    itensBrutos = await extrairItensArquivoViaIA(file, 'application/pdf');
-  } else {
-    const linhas = await extrairLinhasDePdf(file);
-    atualizarTextoProcessando('Identificando CNPJs e itens...');
-    itensBrutos = extrairItensDeLinhas(linhas);
-  }
+    } else if (ext === 'pdf') {
+      const usarIA = PDF_EXTRACAO_MODO === 'ia' && TIPO_USUARIO === 'ADMIN'; // dupla checagem no front
+      if (usarIA) {
+        atualizarTextoProcessando('Extraindo pedido com IA...');
+        itensBrutos = await extrairItensPdfViaIA(file);
+      } else {
+        const linhas = await extrairLinhasDePdf(file);
+        atualizarTextoProcessando('Identificando CNPJs e itens...');
+        itensBrutos = extrairItensDeLinhas(linhas);
+      }
 
-} else if (['jpg', 'jpeg', 'png'].includes(ext)) {
-  if (TIPO_USUARIO !== 'ADMIN') {
-    throw new Error('Envio de foto/imagem disponível apenas para administradores.');
-  }
-  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-  atualizarTextoProcessando('Extraindo pedido da imagem com IA...');
-  itensBrutos = await extrairItensArquivoViaIA(file, mimeType);
-
-} else {
-  throw new Error('Formato de arquivo não suportado. Envie um .xlsx, .xls, .pdf, .jpg ou .png.');
-}
+    } else {
+      throw new Error('Formato de arquivo não suportado. Envie um .xlsx, .xls ou .pdf.');
+    }
 
     if (itensBrutos.length === 0) {
       throw new Error('Não foi possível identificar produtos no arquivo. Verifique se o arquivo contém os códigos EAN e as quantidades dos produtos.');
@@ -1947,13 +1939,13 @@ function arquivoParaBase64(file) {
   });
 }
 
-async function extrairItensArquivoViaIA(file, mimeType) {
+async function extrairItensPdfViaIA(file) {
   if (TIPO_USUARIO !== 'ADMIN') {
     throw new Error('Extração por IA disponível apenas para administradores.');
   }
 
-  const base64Arquivo = await arquivoParaBase64(file);
-  const resposta = await chamarApi('extrairPedidoPdfComIA', { base64: base64Arquivo, mimeType });
+  const base64Pdf = await arquivoParaBase64(file);
+  const resposta = await chamarApi('extrairPedidoPdfComIA', { base64: base64Pdf });
 
   if (!resposta || resposta.erro) {
     throw new Error((resposta && resposta.mensagem) || 'A IA não conseguiu processar este PDF.');
