@@ -2286,56 +2286,96 @@ return itens;
 }
 function extrairItensPedidoUnilever(linhas) {
   const itens = [];
-  let ultimoCnpjValido = '';
+  let cnpjCliente = '';
+
+  // Localiza o CNPJ do cliente no cabeçalho.
+  linhas.forEach(linha => {
+    (linha || []).forEach(token => {
+      const texto = String(token).trim();
+
+      if (
+        !cnpjCliente &&
+        isCNPJ(texto)
+      ) {
+        const cnpj = normalizarCNPJ(normalizarSoDigitos(texto));
+
+        if (!CNPJS_IGNORAR_COMO_CLIENTE.includes(cnpj)) {
+          cnpjCliente = cnpj;
+        }
+      }
+    });
+  });
+
+  // Neste PDF, cada produto aparece visualmente como:
+  // EAN | Código de fábrica
+  const produtos = [];
 
   linhas.forEach(linha => {
     const tokens = (linha || [])
       .map(t => String(t).trim())
       .filter(Boolean);
 
-    if (!tokens.length) return;
-
-    // Atualiza o cliente encontrado no cabeçalho.
-    const tokenCnpj = tokens.find(token =>
-      isCNPJ(token) &&
-      !CNPJS_IGNORAR_COMO_CLIENTE.includes(
-        normalizarCNPJ(normalizarSoDigitos(token))
-      )
-    );
-
-    if (tokenCnpj) {
-      ultimoCnpjValido = normalizarCNPJ(
-        normalizarSoDigitos(tokenCnpj)
-      );
-    }
-
-    // Linhas de produto deste layout começam pelo código de fábrica.
-    if (!/^\d{4,7}$/.test(tokens[0])) return;
-
-    // O EAN vem após a descrição e a quantidade é o próximo número.
-    const indiceEan = tokens.findIndex((token, indice) => {
-      if (indice === 0) return false;
+    const indiceEan = tokens.findIndex(token => {
       const digitos = normalizarSoDigitos(token);
       return /^\d{8,13}$/.test(digitos);
     });
 
     if (indiceEan === -1) return;
 
-    const ean = normalizarEAN(tokens[indiceEan]);
-    const proximoToken = normalizarSoDigitos(tokens[indiceEan + 1]);
+    // Procura o código de fábrica próximo ao EAN.
+    const codigo = tokens
+      .slice(indiceEan + 1)
+      .find(token => /^\d{4,7}$/.test(normalizarSoDigitos(token)));
 
-    if (!/^\d{1,5}$/.test(proximoToken)) return;
+    if (!codigo) return;
 
-    const qtd = parseInt(proximoToken, 10);
-    if (qtd <= 0) return;
-
-    itens.push({
-      cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO,
-      codigo: tokens[0], // Cód. Fáb.
-      ean: ean,
-      qtd: qtd
+    produtos.push({
+      codigo: normalizarSoDigitos(codigo),
+      ean: normalizarEAN(tokens[indiceEan])
     });
   });
+
+  // As quantidades aparecem antes do preço unitário:
+  // Ex.: 24 | 20,740000
+  const todosTokens = linhas
+    .flat()
+    .map(t => String(t).trim())
+    .filter(Boolean);
+
+  const quantidades = [];
+
+  for (let i = 0; i < todosTokens.length - 1; i++) {
+    const quantidade = normalizarSoDigitos(todosTokens[i]);
+    const proximo = String(todosTokens[i + 1]).trim();
+
+    const ehQuantidade = /^\d{1,4}$/.test(quantidade);
+    const proximoEhPreco = /^\d+,\d{6}$/.test(proximo);
+
+    if (ehQuantidade && proximoEhPreco) {
+      quantidades.push(parseInt(quantidade, 10));
+    }
+  }
+
+  // Junta os EANs/códigos às quantidades pela posição no pedido.
+  const total = Math.min(produtos.length, quantidades.length);
+
+  for (let i = 0; i < total; i++) {
+    if (quantidades[i] <= 0) continue;
+
+    itens.push({
+      cnpjDigits: cnpjCliente || CNPJ_SEM_CADASTRO,
+      codigo: produtos[i].codigo,
+      ean: produtos[i].ean,
+      qtd: quantidades[i]
+    });
+  }
+
+  console.log(
+    'Pedido Unilever:',
+    produtos.length + ' produtos,',
+    quantidades.length + ' quantidades,',
+    itens.length + ' itens montados.'
+  );
 
   return itens;
 }
