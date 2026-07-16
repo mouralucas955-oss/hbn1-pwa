@@ -1865,9 +1865,23 @@ async function aoSelecionarArquivoImportado(event) {
     itensBrutos = await extrairItensArquivoViaIA(file, 'application/pdf');
   } else {
     const linhas = await extrairLinhasDePdf(file);
-    atualizarTextoProcessando('Identificando CNPJs e itens...');
-    itensBrutos = extrairItensDeLinhas(linhas);
-  }
+
+const textoPdf = linhas
+  .flat()
+  .map(v => String(v).toUpperCase())
+  .join(' ');
+
+const ehPedidoUnilever =
+  textoPdf.includes('EMITIR PEDIDO DE COMPRA') &&
+  textoPdf.includes('CODBARRAS');
+
+atualizarTextoProcessando('Identificando CNPJs e itens...');
+
+if (ehPedidoUnilever) {
+  itensBrutos = await extrairItensPedidoUnileverPorPagina(file);
+} else {
+  itensBrutos = extrairItensDeLinhas(linhas);
+}
 
 } else if (['jpg', 'jpeg', 'png'].includes(ext)) {
   if (TIPO_USUARIO !== 'ADMIN') {
@@ -2286,116 +2300,71 @@ itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo, qtd });
 
 return itens;
 }
-function extrairItensPedidoUnilever(linhas) {
+async function extrairItensPedidoUnileverPorPagina(file) {
+  const buffer = await file.arrayBuffer();
+  const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
   const itens = [];
-  const paginas = [];
-  let paginaAtual = [];
 
-  // Separa as linhas por página, usando o marcador inserido na leitura do PDF.
-  linhas.forEach(linha => {
-    if (linha && linha[0] === '__PAGINA__') {
-      if (paginaAtual.length > 0) paginas.push(paginaAtual);
-      paginaAtual = [];
-      return;
-    }
+  for (let pagina = 1; pagina <= doc.numPages; pagina++) {
+    const page = await doc.getPage(pagina);
+    const conteudo = await page.getTextContent();
 
-    paginaAtual.push(linha);
-  });
+    // Mantém a ordem natural em que o PDF gravou os textos.
+    const texto = conteudo.items
+      .map(item => String(item.str || ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-  if (paginaAtual.length > 0) paginas.push(paginaAtual);
+    // Captura o CNPJ que aparece no bloco "Empresa ... CNPJ".
+    const matchCnpj = texto.match(
+      /Empresa[\s\S]{0,260}?CNPJ\s*:?\s*([0-9.\-/]{14,18})/i
+    );
 
-  let ultimoCnpjValido = '';
+    let cnpjDigits = CNPJ_SEM_CADASTRO;
 
-  paginas.forEach((linhasPagina, indicePagina) => {
-    let cnpjPagina = '';
+    if (matchCnpj) {
+      const cnpj = normalizarCNPJ(normalizarSoDigitos(matchCnpj[1]));
 
-    // Localiza o CNPJ do cliente apenas nesta página.
-    linhasPagina.forEach(linha => {
-      (linha || []).forEach(token => {
-        const texto = String(token).trim();
-
-        if (!isCNPJ(texto)) return;
-
-        const cnpj = normalizarCNPJ(normalizarSoDigitos(texto));
-
-        if (
-          !cnpjPagina &&
-          !CNPJS_IGNORAR_COMO_CLIENTE.includes(cnpj)
-        ) {
-          cnpjPagina = cnpj;
-        }
-      });
-    });
-
-    // Mantém o CNPJ da página anterior se esta for continuação do pedido.
-    if (cnpjPagina) ultimoCnpjValido = cnpjPagina;
-    const cnpjDoPedido = cnpjPagina || ultimoCnpjValido || CNPJ_SEM_CADASTRO;
-
-    const produtos = [];
-
-    linhasPagina.forEach(linha => {
-      const tokens = (linha || [])
-        .map(t => String(t).trim())
-        .filter(Boolean);
-
-      const indiceEan = tokens.findIndex(token => {
-        const digitos = normalizarSoDigitos(token);
-        return /^\d{8,13}$/.test(digitos);
-      });
-
-      if (indiceEan === -1) return;
-
-      const codigo = tokens
-        .slice(indiceEan + 1)
-        .find(token => /^\d{4,7}$/.test(normalizarSoDigitos(token)));
-
-      if (!codigo) return;
-
-      produtos.push({
-        codigo: normalizarSoDigitos(codigo),
-        ean: normalizarEAN(tokens[indiceEan])
-      });
-    });
-
-    const tokensPagina = linhasPagina
-      .flat()
-      .map(t => String(t).trim())
-      .filter(Boolean);
-
-    const quantidades = [];
-
-    for (let i = 0; i < tokensPagina.length - 1; i++) {
-      const quantidade = normalizarSoDigitos(tokensPagina[i]);
-      const proximo = tokensPagina[i + 1];
-
-      if (
-        /^\d{1,4}$/.test(quantidade) &&
-        /^\d+,\d{6}$/.test(proximo)
-      ) {
-        quantidades.push(parseInt(quantidade, 10));
+      if (!CNPJS_IGNORAR_COMO_CLIENTE.includes(cnpj)) {
+        cnpjDigits = cnpj;
       }
     }
 
-    const total = Math.min(produtos.length, quantidades.length);
+    // Padrão do pedido:
+    // ... descrição + EAN + quantidade pedida + preço unitário
+    //
+    // Exemplos:
+    // 7896007550043 8 37,520000
+    // 7896007550036 4 71,460000
+    const regexItem =
+      /(\d{8,13})\s+(\d{1,4})\s+\d+(?:\.\d{3})*,\d{6}/g;
 
-    for (let i = 0; i < total; i++) {
-      if (quantidades[i] <= 0) continue;
+    let match;
+    let itensDaPagina = 0;
+
+    while ((match = regexItem.exec(texto)) !== null) {
+      const ean = normalizarEAN(match[1]);
+      const qtd = parseInt(match[2], 10);
+
+      if (!ean || !qtd || qtd <= 0) continue;
 
       itens.push({
-        cnpjDigits: cnpjDoPedido,
-        codigo: produtos[i].codigo,
-        ean: produtos[i].ean,
-        qtd: quantidades[i]
+        cnpjDigits: cnpjDigits,
+        codigo: '',
+        ean: ean,
+        qtd: qtd
       });
+
+      itensDaPagina++;
     }
 
     console.log(
-      `Unilever página ${indicePagina + 1}:`,
-      'CNPJ:', cnpjDoPedido,
-      'Produtos:', produtos.length,
-      'Quantidades:', quantidades.length
+      `Unilever — página ${pagina}:`,
+      `CNPJ ${cnpjDigits},`,
+      `${itensDaPagina} item(ns)`
     );
-  });
+  }
 
   return itens;
 }
@@ -2409,10 +2378,6 @@ function extrairItensDeLinhas(linhas) {
   const ehPedidoUnilever =
     textoCompleto.includes('EMITIR PEDIDO DE COMPRA') &&
     textoCompleto.includes('CODBARRAS');
-
-  if (ehPedidoUnilever) {
-    return extrairItensPedidoUnilever(linhas);
-  }
 
   const cabecalho = detectarCabecalho(linhas);
 
