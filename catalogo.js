@@ -2284,16 +2284,83 @@ itens.push({ cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO, codigo, qtd });
 
 return itens;
 }
-// Ponto de entrada: decide automaticamente Tipo 1 ou Tipo 2
-function extrairItensDeLinhas(linhas) {
-const cabecalho = detectarCabecalho(linhas);
-if (cabecalho) {
-// PDF Tipo 1 — cabeçalho de tabela identificado
-return extrairItensTipo1(linhas, cabecalho);
-} else {
-// PDF Tipo 2 — texto concatenado, usa token marcador
-return extrairItensTipo2(linhas);
+function extrairItensPedidoUnilever(linhas) {
+  const itens = [];
+  let ultimoCnpjValido = '';
+
+  linhas.forEach(linha => {
+    const tokens = (linha || [])
+      .map(t => String(t).trim())
+      .filter(Boolean);
+
+    if (!tokens.length) return;
+
+    // Atualiza o cliente encontrado no cabeçalho.
+    const tokenCnpj = tokens.find(token =>
+      isCNPJ(token) &&
+      !CNPJS_IGNORAR_COMO_CLIENTE.includes(
+        normalizarCNPJ(normalizarSoDigitos(token))
+      )
+    );
+
+    if (tokenCnpj) {
+      ultimoCnpjValido = normalizarCNPJ(
+        normalizarSoDigitos(tokenCnpj)
+      );
+    }
+
+    // Linhas de produto deste layout começam pelo código de fábrica.
+    if (!/^\d{4,7}$/.test(tokens[0])) return;
+
+    // O EAN vem após a descrição e a quantidade é o próximo número.
+    const indiceEan = tokens.findIndex((token, indice) => {
+      if (indice === 0) return false;
+      const digitos = normalizarSoDigitos(token);
+      return /^\d{8,13}$/.test(digitos);
+    });
+
+    if (indiceEan === -1) return;
+
+    const ean = normalizarEAN(tokens[indiceEan]);
+    const proximoToken = normalizarSoDigitos(tokens[indiceEan + 1]);
+
+    if (!/^\d{1,5}$/.test(proximoToken)) return;
+
+    const qtd = parseInt(proximoToken, 10);
+    if (qtd <= 0) return;
+
+    itens.push({
+      cnpjDigits: ultimoCnpjValido || CNPJ_SEM_CADASTRO,
+      codigo: tokens[0], // Cód. Fáb.
+      ean: ean,
+      qtd: qtd
+    });
+  });
+
+  return itens;
 }
+
+function extrairItensDeLinhas(linhas) {
+  const textoCompleto = linhas
+    .flat()
+    .map(v => String(v).toUpperCase())
+    .join(' ');
+
+  const ehPedidoUnilever =
+    textoCompleto.includes('EMITIR PEDIDO DE COMPRA') &&
+    textoCompleto.includes('CODBARRAS');
+
+  if (ehPedidoUnilever) {
+    return extrairItensPedidoUnilever(linhas);
+  }
+
+  const cabecalho = detectarCabecalho(linhas);
+
+  if (cabecalho) {
+    return extrairItensTipo1(linhas, cabecalho);
+  }
+
+  return extrairItensTipo2(linhas);
 }
 // 5) PROCESSAMENTO: identifica clientes por CNPJ (cross-UF), busca produtos
 //    da UF de cada cliente, casa itens e calcula preços
