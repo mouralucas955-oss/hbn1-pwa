@@ -1857,20 +1857,37 @@ async function aoSelecionarArquivoImportado(event) {
       atualizarTextoProcessando('Identificando CNPJs e itens...');
       itensBrutos = extrairItensDeLinhas(linhas);
 
-    } else if (ext === 'pdf') {
-      const usarIA = PDF_EXTRACAO_MODO === 'ia' && TIPO_USUARIO === 'ADMIN'; // dupla checagem no front
-      if (usarIA) {
-        atualizarTextoProcessando('Extraindo pedido com IA...');
-        itensBrutos = await extrairItensPdfViaIA(file);
-      } else {
-        const linhas = await extrairLinhasDePdf(file);
-        atualizarTextoProcessando('Identificando CNPJs e itens...');
-        itensBrutos = extrairItensDeLinhas(linhas);
-      }
+   } else if (ext === 'pdf') {
+  const usarIA = PDF_EXTRACAO_MODO === 'ia' && TIPO_USUARIO === 'ADMIN';
 
-    } else {
-      throw new Error('Formato de arquivo não suportado. Envie um .xlsx, .xls ou .pdf.');
-    }
+  if (usarIA) {
+    atualizarTextoProcessando('Extraindo pedido com IA...');
+    itensBrutos = await extrairItensArquivoViaIA(file, 'application/pdf');
+  } else {
+    const linhas = await extrairLinhasDePdf(file);
+    atualizarTextoProcessando('Identificando CNPJs e itens...');
+    itensBrutos = extrairItensDeLinhas(linhas);
+  }
+
+} else if (['jpg', 'jpeg', 'png'].includes(ext)) {
+  if (TIPO_USUARIO !== 'ADMIN') {
+    throw new Error('Envio de imagem disponível apenas para administradores.');
+  }
+
+  if (file.size > 8 * 1024 * 1024) {
+    throw new Error('A imagem deve ter no máximo 8 MB.');
+  }
+
+  const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+
+  atualizarTextoProcessando('Extraindo pedido da imagem com IA...');
+  itensBrutos = await extrairItensArquivoViaIA(file, mimeType);
+
+} else {
+  throw new Error(
+    'Formato não suportado. Envie .xlsx, .xls, .pdf, .jpg ou .png.'
+  );
+}
 
     if (itensBrutos.length === 0) {
       throw new Error('Não foi possível identificar produtos no arquivo. Verifique se o arquivo contém os códigos EAN e as quantidades dos produtos.');
@@ -1939,33 +1956,44 @@ function arquivoParaBase64(file) {
   });
 }
 
-async function extrairItensPdfViaIA(file) {
+async function extrairItensArquivoViaIA(file, mimeType) {
   if (TIPO_USUARIO !== 'ADMIN') {
     throw new Error('Extração por IA disponível apenas para administradores.');
   }
 
-  const base64Pdf = await arquivoParaBase64(file);
-  const resposta = await chamarApi('extrairPedidoPdfComIA', { base64: base64Pdf });
+  const base64Arquivo = await arquivoParaBase64(file);
+
+  const resposta = await chamarApi('extrairPedidoPdfComIA', {
+    base64: base64Arquivo,
+    mimeType: mimeType
+  });
 
   if (!resposta || resposta.erro) {
-    throw new Error((resposta && resposta.mensagem) || 'A IA não conseguiu processar este PDF.');
+    throw new Error(
+      (resposta && resposta.mensagem) ||
+      'A IA não conseguiu processar o arquivo.'
+    );
   }
 
-  // Achata { pedidos: [{ cnpj, itens: [...] }] } no formato que
-  // processarItensImportados já espera: [{ cnpjDigits, codigo, ean, qtd }]
   const itensBrutos = [];
+
   (resposta.pedidos || []).forEach(pedido => {
-    const cnpjDigits = pedido.cnpj ? normalizarCNPJ(normalizarSoDigitos(pedido.cnpj)) : CNPJ_SEM_CADASTRO;
-    (pedido.itens || []).forEach(it => {
-      if (!it.quantidade || it.quantidade <= 0) return;
+    const cnpjDigits = pedido.cnpj
+      ? normalizarCNPJ(normalizarSoDigitos(pedido.cnpj))
+      : CNPJ_SEM_CADASTRO;
+
+    (pedido.itens || []).forEach(item => {
+      if (!item.quantidade || item.quantidade <= 0) return;
+
       itensBrutos.push({
-        cnpjDigits,
-        codigo: it.codigo || '',
-        ean: it.ean ? normalizarEAN(it.ean) : '',
-        qtd: parseInt(it.quantidade, 10)
+        cnpjDigits: cnpjDigits,
+        codigo: item.codigo || '',
+        ean: item.ean ? normalizarEAN(item.ean) : '',
+        qtd: parseInt(item.quantidade, 10)
       });
     });
   });
+
   return itensBrutos;
 }
 
