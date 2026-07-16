@@ -1790,6 +1790,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 
 let IMPORT_RESULTADO = null; // { pedidos: [...], naoEncontrados: [...], codigosNaoEncontrados: [...] }
 const CACHE_PRODUTOS_POR_UF = {}; // evita buscar 2x a mesma UF
+let PDF_EXTRACAO_MODO = 'heuristica'; // 'heuristica' | 'ia' — só ADMIN pode trocar pra 'ia'
 
 function normalizarSoDigitos(v) {
 return String(v || '').replace(/[^0-9]/g, '');
@@ -1822,9 +1823,12 @@ document.getElementById('importRodapeAcoes').classList.toggle('hidden', estado !
 }
 
 function resetarModalImportacao() {
-IMPORT_RESULTADO = null;
-document.getElementById('inputArquivoImportado').value = '';
-mostrarEstadoImportacao('upload');
+  IMPORT_RESULTADO = null;
+  document.getElementById('inputArquivoImportado').value = '';
+  PDF_EXTRACAO_MODO = 'heuristica';
+  const checkbox = document.getElementById('checkboxUsarIA');
+  if (checkbox) checkbox.checked = false;
+  mostrarEstadoImportacao('upload');
 }
 
 function mostrarErroImportacao(msg) {
@@ -1838,36 +1842,45 @@ if (el) el.innerText = msg;
 }
 // 1) DISPARO AO SELECIONAR ARQUIVO
 async function aoSelecionarArquivoImportado(event) {
-const file = event.target.files[0];
-if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
 
-mostrarEstadoImportacao('processando');
-atualizarTextoProcessando('Lendo o arquivo...');
+  mostrarEstadoImportacao('processando');
+  atualizarTextoProcessando('Lendo o arquivo...');
 
-try {
-const ext = file.name.split('.').pop().toLowerCase();
-let linhas = [];
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+    let itensBrutos = [];
 
-if (ext === 'xlsx' || ext === 'xls') {
-linhas = await extrairLinhasDeExcel(file);
-} else if (ext === 'pdf') {
-linhas = await extrairLinhasDePdf(file);
-} else {
-throw new Error('Formato de arquivo não suportado. Envie um .xlsx, .xls ou .pdf.');
-}
+    if (ext === 'xlsx' || ext === 'xls') {
+      const linhas = await extrairLinhasDeExcel(file);
+      atualizarTextoProcessando('Identificando CNPJs e itens...');
+      itensBrutos = extrairItensDeLinhas(linhas);
 
-atualizarTextoProcessando('Identificando CNPJs e itens...');
-const itensBrutos = extrairItensDeLinhas(linhas);
+    } else if (ext === 'pdf') {
+      const usarIA = PDF_EXTRACAO_MODO === 'ia' && TIPO_USUARIO === 'ADMIN'; // dupla checagem no front
+      if (usarIA) {
+        atualizarTextoProcessando('Extraindo pedido com IA...');
+        itensBrutos = await extrairItensPdfViaIA(file);
+      } else {
+        const linhas = await extrairLinhasDePdf(file);
+        atualizarTextoProcessando('Identificando CNPJs e itens...');
+        itensBrutos = extrairItensDeLinhas(linhas);
+      }
 
-if (itensBrutos.length === 0) {
-throw new Error('Não foi possível identificar produtos no arquivo. Verifique se o arquivo contém os códigos EAN e as quantidades dos produtos.');
-}
+    } else {
+      throw new Error('Formato de arquivo não suportado. Envie um .xlsx, .xls ou .pdf.');
+    }
 
-await processarItensImportados(itensBrutos);
-} catch (erro) {
-console.error('Erro ao importar pedido:', erro);
-mostrarErroImportacao(erro.message || 'Ocorreu um erro ao ler o arquivo. Tente novamente.');
-}
+    if (itensBrutos.length === 0) {
+      throw new Error('Não foi possível identificar produtos no arquivo. Verifique se o arquivo contém os códigos EAN e as quantidades dos produtos.');
+    }
+
+    await processarItensImportados(itensBrutos);
+  } catch (erro) {
+    console.error('Erro ao importar pedido:', erro);
+    mostrarErroImportacao(erro.message || 'Ocorreu um erro ao ler o arquivo. Tente novamente.');
+  }
 }
 // 2) LEITURA DE EXCEL (.xlsx/.xls) → array de linhas (cada linha = array de células)
 function extrairLinhasDeExcel(file) {
@@ -1917,6 +1930,45 @@ if (linhaAtualTokens.length) todasLinhas.push(linhaAtualTokens);
 }
 return todasLinhas;
 }
+function arquivoParaBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]); // remove "data:...;base64,"
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function extrairItensPdfViaIA(file) {
+  if (TIPO_USUARIO !== 'ADMIN') {
+    throw new Error('Extração por IA disponível apenas para administradores.');
+  }
+
+  const base64Pdf = await arquivoParaBase64(file);
+  const resposta = await chamarApi('extrairPedidoPdfComIA', { base64: base64Pdf });
+
+  if (!resposta || resposta.erro) {
+    throw new Error((resposta && resposta.mensagem) || 'A IA não conseguiu processar este PDF.');
+  }
+
+  // Achata { pedidos: [{ cnpj, itens: [...] }] } no formato que
+  // processarItensImportados já espera: [{ cnpjDigits, codigo, ean, qtd }]
+  const itensBrutos = [];
+  (resposta.pedidos || []).forEach(pedido => {
+    const cnpjDigits = pedido.cnpj ? normalizarCNPJ(normalizarSoDigitos(pedido.cnpj)) : CNPJ_SEM_CADASTRO;
+    (pedido.itens || []).forEach(it => {
+      if (!it.quantidade || it.quantidade <= 0) return;
+      itensBrutos.push({
+        cnpjDigits,
+        codigo: it.codigo || '',
+        ean: it.ean ? normalizarEAN(it.ean) : '',
+        qtd: parseInt(it.quantidade, 10)
+      });
+    });
+  });
+  return itensBrutos;
+}
+
 // 4) EXTRAÇÃO DE ITENS (CNPJ + CÓDIGO/EAN + QTD) A PARTIR DAS LINHAS
 //    Funciona tanto para linhas do Excel (células) quanto do PDF (tokens)
 // Normaliza CNPJ para 14 dígitos (padding de zeros à esquerda)
@@ -3396,6 +3448,11 @@ if (TIPO_USUARIO !== 'ADMIN') {
 const linkAdmin = document.getElementById('linkAdminAcessos');
 if (linkAdmin) linkAdmin.remove();
 }
+if (TIPO_USUARIO === 'ADMIN') {
+  const blocoIA = document.getElementById('blocoOpcaoIA');
+  if (blocoIA) blocoIA.classList.remove('hidden');
+}
+       
 
 iniciarSplashAbertura();
 
