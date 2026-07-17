@@ -420,7 +420,40 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
+<div id="modalEscolhaManualHit" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" onclick="fecharEscolhaManualHitNoBackdrop(event)">
+  <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+    <header class="p-4 bg-purple-700 text-white flex items-center justify-between shrink-0">
+      <div class="min-w-0">
+        <h3 class="font-black text-sm sm:text-base tracking-tight">Escolha Manual — HIT</h3>
+        <p id="escolhaManualClienteNome" class="text-[11px] text-purple-200 truncate"></p>
+      </div>
+      <button onclick="fecharEscolhaManualHit()" class="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </header>
 
+    <div id="corpoEscolhaManualHit" class="p-4 flex-grow overflow-y-auto space-y-4 bg-slate-50/50 no-scrollbar"></div>
+
+    <div class="p-4 border-t border-slate-100 shrink-0 bg-white flex flex-col sm:flex-row items-center gap-3">
+      <div class="flex gap-4 text-xs flex-grow">
+        <div>
+          <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Selecionados</span>
+          <span id="escolhaManualTotalItens" class="font-black text-slate-800">0 itens</span>
+        </div>
+        <div>
+          <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Total Líquido</span>
+          <span id="escolhaManualTotalLiquido" class="font-black text-emerald-700">R$ 0,00</span>
+        </div>
+      </div>
+      <button onclick="adicionarSelecaoManualHit()"
+        class="w-full sm:w-auto px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+        Adicionar ao Pedido
+      </button>
+    </div>
+  </div>
+</div>
+    
    <div id="corpoSugestaoHit" class="p-4 flex-grow overflow-y-auto space-y-2 bg-slate-50/50"></div>
 
     <div class="p-4 border-t border-slate-100 shrink-0 bg-white">
