@@ -981,6 +981,28 @@ if (chevron) chevron.style.transform = '';
 }
 });
 // FILTROS
+function toggleBotaoLimparPesquisa() {
+const input = document.getElementById('barraPesquisa');
+const btn = document.getElementById('btnLimparPesquisa');
+if (!input || !btn) return;
+if (input.value.length > 0) {
+btn.classList.remove('hidden');
+btn.classList.add('flex');
+} else {
+btn.classList.add('hidden');
+btn.classList.remove('flex');
+}
+}
+
+function limparBarraPesquisa() {
+const input = document.getElementById('barraPesquisa');
+input.value = '';
+input.focus();
+toggleBotaoLimparPesquisa();
+executarFiltrosGerais();
+}
+
+// FILTROS
 function toggleFiltroEstoque() {
 FILTRO_APENAS_COM_ESTOQUE = !FILTRO_APENAS_COM_ESTOQUE;
 const btn   = document.getElementById('btnFiltroEstoque');
@@ -994,6 +1016,8 @@ badge.classList.toggle('hidden', !FILTRO_APENAS_COM_ESTOQUE);
 
 executarFiltrosGerais();
 }
+
+
 
 function executarFiltrosGerais(comAnimacao = true) {
 const busca = document.getElementById('barraPesquisa').value.toLowerCase().trim();
