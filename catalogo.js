@@ -173,7 +173,195 @@ mostrarToast('success', `${adicionados} item(ns) da sugestão HIT adicionados ao
 mostrarToast('warning', 'Nenhum item pôde ser adicionado (sem estoque disponível ou já no pedido).');
 }
 }
+// =========================================================================
+// ESCOLHA MANUAL HIT — vendedor define quantidades por produto, por grupo
+// =========================================================================
+let HIT_MANUAL_QTDS = {}; // { produtoId: qtd }
 
+function abrirEscolhaManualHit() {
+  if (TIPO_USUARIO === 'VENDEDOR_FARMA') { mostrarToast('warning', 'Função disponível apenas para equipe Dedicado.'); return; }
+  if (!CLIENTE_SELECIONADO) { mostrarToast('warning', 'Selecione um cliente antes.'); return; }
+  const equipe = String(CLIENTE_SELECIONADO.equipe || '').toUpperCase().trim();
+  if (equipe !== 'DEDICADO') { mostrarToast('warning', 'Esta função é exclusiva para clientes com equipe Dedicado.'); return; }
+  if (!HIT_DADOS_CLIENTE) {
+    mostrarToast('info', 'Carregando dados HIT do cliente...');
+    carregarSugestaoHit();
+    setTimeout(() => {
+      if (HIT_DADOS_CLIENTE) abrirEscolhaManualHit();
+      else mostrarToast('error', 'Não há campanha HIT ativa para este cliente.');
+    }, 900);
+    return;
+  }
+
+  HIT_MANUAL_QTDS = {};
+  document.getElementById('escolhaManualClienteNome').innerText = (CLIENTE_SELECIONADO.razao || '').toUpperCase();
+  renderizarEscolhaManualHit();
+  document.getElementById('modalEscolhaManualHit').classList.remove('hidden');
+}
+
+function fecharEscolhaManualHit() { document.getElementById('modalEscolhaManualHit').classList.add('hidden'); }
+function fecharEscolhaManualHitNoBackdrop(evt) { if (evt.target.id === 'modalEscolhaManualHit') fecharEscolhaManualHit(); }
+
+function renderizarEscolhaManualHit() {
+  const corpo = document.getElementById('corpoEscolhaManualHit');
+  if (!HIT_DADOS_CLIENTE || !HIT_DADOS_CLIENTE.alavancas || HIT_DADOS_CLIENTE.alavancas.length === 0) {
+    corpo.innerHTML = '<div class="text-center py-10 text-slate-400 text-sm font-medium">Nenhuma alavanca disponível para este cliente.</div>';
+    return;
+  }
+
+  corpo.innerHTML = HIT_DADOS_CLIENTE.alavancas.map(al => {
+    const totalGrupos = (al.grupos || []).length;
+    const positivados = (al.grupos || []).filter(g => g.positivado).length;
+    const pct = totalGrupos > 0 ? Math.round((positivados / totalGrupos) * 100) : 0;
+
+    const gruposHtml = (al.grupos || []).map(g => {
+      if (g.positivado) {
+        const item = g.itens && g.itens[0] ? g.itens[0] : {};
+        return `
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider">${g.itens.length > 1 ? 'OU — Qualquer um destes' : 'SKU único'}</span>
+              <span class="text-[9px] font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">✅ Positivado</span>
+            </div>
+            <p class="text-[11px] font-bold text-slate-700">${item.descricao || item.cod || ''}</p>
+          </div>`;
+      }
+
+      const itensResolvidos = (g.itens || []).map(item => {
+        const eanAlvo = normalizarSoDigitos(item.ean);
+        let p = BD_PRODUTOS.find(prod => normalizarSoDigitos(prod.ean) === eanAlvo && eanAlvo !== '');
+        if (!p && item.cod) p = BD_PRODUTOS.find(prod => String(prod.id).trim() === String(item.cod).trim());
+        return { item, produto: p };
+      }).filter(x => x.produto);
+
+      if (itensResolvidos.length === 0) {
+        return `
+          <div class="bg-slate-100 border border-slate-200 rounded-xl p-3">
+            <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider block mb-1">${g.itens.length > 1 ? 'OU — Qualquer um destes' : 'SKU único'}</span>
+            <p class="text-[11px] text-slate-400 italic">Nenhuma opção disponível no catálogo atual.</p>
+          </div>`;
+      }
+
+      const linhasItens = itensResolvidos.map(({ item, produto }) => {
+        const estoque = Number(produto.estoque || 0);
+        const { precoFinal } = calcularPrecos(produto);
+        const qtdAtual = HIT_MANUAL_QTDS[produto.id] || 0;
+        const disabled = estoque <= 0;
+        return `
+          <div class="flex items-center gap-2.5 bg-white border border-slate-100 rounded-xl p-2">
+            <img src="${produto.imagens}" class="w-10 h-10 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0 mix-blend-multiply">
+            <div class="min-w-0 flex-grow">
+              <p class="text-[11px] font-bold text-slate-800 truncate">${produto.descricao || item.cod}</p>
+              <p class="text-[9px] text-slate-400 font-mono">Cód ${item.cod} • Est: ${estoque} • ${formatarParaReal(precoFinal)}</p>
+            </div>
+            <div id="manualqtd-${produto.id}" class="shrink-0">
+              ${_htmlStepperManualHit(produto.id, qtdAtual, estoque, disabled)}
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="bg-white border border-slate-200 rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider">${g.itens.length > 1 ? 'OU — Qualquer um destes' : 'SKU único'}</span>
+            <span class="text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">— Pendente</span>
+          </div>
+          <div class="space-y-1.5">${linhasItens}</div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-black text-purple-700 uppercase tracking-wider">${al.alavanca}</span>
+          <span class="text-[10px] font-bold text-slate-400">${positivados}/${totalGrupos} positivados (${pct}%)</span>
+        </div>
+        <div class="space-y-2">${gruposHtml}</div>
+      </div>`;
+  }).join('<div class="border-t border-slate-200 my-1"></div>');
+
+  _atualizarRodapeEscolhaManualHit();
+}
+
+function _htmlStepperManualHit(produtoId, qtd, estoqueMax, disabled) {
+  if (disabled) return `<span class="text-[9px] font-bold text-red-400 px-2">Sem estoque</span>`;
+  if (qtd > 0) return `
+    <div class="flex items-center bg-purple-50 border border-purple-200 rounded-lg p-0.5">
+      <button onclick="alterarQtdManualHit('${produtoId}', -1, ${estoqueMax})" class="w-6 h-6 bg-white hover:bg-purple-100 rounded font-bold text-xs text-purple-600 flex items-center justify-center border border-purple-100">−</button>
+      <input type="number" value="${qtd}" min="1" max="${estoqueMax}" onchange="atualizarQtdManualHitDigitada('${produtoId}', this.value, ${estoqueMax})" onkeydown="if(event.key==='Enter') this.blur();"
+        class="w-9 text-center font-black text-xs text-purple-700 bg-transparent focus:outline-none p-0 border-0">
+      <button onclick="alterarQtdManualHit('${produtoId}', 1, ${estoqueMax})" class="w-6 h-6 bg-white hover:bg-purple-100 rounded font-bold text-xs text-purple-600 flex items-center justify-center border border-purple-100">+</button>
+    </div>`;
+  return `<button onclick="alterarQtdManualHit('${produtoId}', 1, ${estoqueMax})" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold rounded-lg transition-all">+ Add</button>`;
+}
+
+function alterarQtdManualHit(produtoId, delta, estoqueMax) {
+  let qtd = (HIT_MANUAL_QTDS[produtoId] || 0) + delta;
+  if (qtd > estoqueMax) { mostrarToast('warning', `Máximo em estoque: ${estoqueMax} un.`); qtd = estoqueMax; }
+  if (qtd <= 0) { delete HIT_MANUAL_QTDS[produtoId]; qtd = 0; }
+  else HIT_MANUAL_QTDS[produtoId] = qtd;
+  const el = document.getElementById(`manualqtd-${produtoId}`);
+  if (el) el.innerHTML = _htmlStepperManualHit(produtoId, qtd, estoqueMax, false);
+  _atualizarRodapeEscolhaManualHit();
+}
+
+function atualizarQtdManualHitDigitada(produtoId, valor, estoqueMax) {
+  let qtd = parseInt(valor);
+  if (isNaN(qtd) || qtd <= 0) { delete HIT_MANUAL_QTDS[produtoId]; qtd = 0; }
+  else {
+    if (qtd > estoqueMax) { mostrarToast('warning', `Máximo em estoque: ${estoqueMax} un.`); qtd = estoqueMax; }
+    HIT_MANUAL_QTDS[produtoId] = qtd;
+  }
+  const el = document.getElementById(`manualqtd-${produtoId}`);
+  if (el) el.innerHTML = _htmlStepperManualHit(produtoId, qtd, estoqueMax, false);
+  _atualizarRodapeEscolhaManualHit();
+}
+
+function _atualizarRodapeEscolhaManualHit() {
+  let totalItens = 0, totalLiquido = 0;
+  Object.keys(HIT_MANUAL_QTDS).forEach(idProd => {
+    const qtd = HIT_MANUAL_QTDS[idProd];
+    if (qtd <= 0) return;
+    const p = BD_PRODUTOS.find(prod => prod.id === idProd);
+    if (!p) return;
+    const { precoFinal } = calcularPrecos(p);
+    totalItens += qtd;
+    totalLiquido += precoFinal * qtd;
+  });
+  document.getElementById('escolhaManualTotalItens').innerText = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
+  document.getElementById('escolhaManualTotalLiquido').innerText = formatarParaReal(totalLiquido);
+}
+
+function adicionarSelecaoManualHit() {
+  const chaves = Object.keys(HIT_MANUAL_QTDS).filter(id => HIT_MANUAL_QTDS[id] > 0);
+  if (chaves.length === 0) { mostrarToast('warning', 'Escolha ao menos um item e defina a quantidade.'); return; }
+
+  let adicionados = 0;
+  chaves.forEach(idProd => {
+    const p = BD_PRODUTOS.find(prod => prod.id === idProd);
+    if (!p) return;
+    const estoqueMax = Number(p.estoque || 0);
+    const qtdEscolhida = Math.min(HIT_MANUAL_QTDS[idProd], estoqueMax);
+    if (qtdEscolhida <= 0) return;
+
+    CARRINHO[idProd] = (CARRINHO[idProd] || 0) + qtdEscolhida;
+    adicionados++;
+
+    const c = document.getElementById(`card-btn-${idProd}`);
+    if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, CARRINHO[idProd], estoqueMax, false);
+    _atualizarEstadoVisualCard(idProd);
+  });
+
+  atualizarIndicadoresFinanceirosGlobais();
+  atualizarIndicadorMinimosBarra();
+  atualizarBotaoSugestaoHit();
+
+  HIT_MANUAL_QTDS = {};
+  fecharEscolhaManualHit();
+
+  if (adicionados > 0) mostrarToast('success', `${adicionados} produto(s) HIT adicionados ao pedido.`);
+  else mostrarToast('warning', 'Nenhum item pôde ser adicionado.');
+}
 
 // -----------------------------------------------------------------------
 // DARK MODE — aplicado antes de qualquer render
