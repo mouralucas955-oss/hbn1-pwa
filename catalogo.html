@@ -472,7 +472,16 @@
       </div>
       <span id="badgeMenuCarrinho" class="hidden bg-[#FF6B00] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shrink-0">0</span>
     </button>
-
+<button id="itemMenuEscolhaManualHit" onclick="fecharMenuPedido(); abrirEscolhaManualHit();"
+  class="w-full p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-2xl flex items-center gap-3 transition-all text-left border border-purple-100">
+  <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center shrink-0">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+  </div>
+  <div class="flex-grow">
+    <p class="font-black text-sm">Escolha Manual — HIT</p>
+    <p class="text-[11px] text-purple-500">Montar pedido HIT alavanca por alavanca</p>
+  </div>
+</button>
     <button onclick="fecharMenuPedido(); abrirModalPedidosSalvos();"
       class="w-full p-4 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-2xl flex items-center gap-3 transition-all text-left border border-blue-100">
       <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
