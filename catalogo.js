@@ -408,6 +408,35 @@ window.location.href = 'index.html';
 let UFS_PERMITIDAS_USUARIO = [];
 try { UFS_PERMITIDAS_USUARIO = JSON.parse(localStorage.getItem('hbn1_ufs') || '[]'); } catch(e) {}
 if (UFS_PERMITIDAS_USUARIO.length === 0) UFS_PERMITIDAS_USUARIO = [UF_USUARIO];
+// =========================================================================
+// CACHE DE PRODUTOS (stale-while-revalidate) — abre o catálogo já com os
+// produtos da última visita, atualizando em segundo plano
+// =========================================================================
+const CHAVE_CACHE_PRODUTOS = 'hbn1_cache_produtos_' + UF_USUARIO;
+
+function _salvarCacheProdutos(produtos) {
+  try {
+    localStorage.setItem(CHAVE_CACHE_PRODUTOS, JSON.stringify({
+      timestamp: Date.now(),
+      produtos: produtos
+    }));
+  } catch (e) {
+    // Cache é só uma otimização — se não couber, o catálogo segue funcionando normalmente
+    console.warn('Não foi possível cachear produtos:', e.message);
+  }
+}
+
+function _carregarCacheProdutos() {
+  try {
+    const bruto = localStorage.getItem(CHAVE_CACHE_PRODUTOS);
+    if (!bruto) return null;
+    const obj = JSON.parse(bruto);
+    if (!obj || !Array.isArray(obj.produtos) || obj.produtos.length === 0) return null;
+    return obj.produtos;
+  } catch (e) {
+    return null;
+  }
+}
 
 function renderizarSeletorUF() {
   const badge = document.getElementById('ufBadgeTitulo');
@@ -3900,6 +3929,31 @@ if (_AVISOS_LISTA.length > 1) _AVISOS_TIMER = setInterval(_avancarAviso, 5000);
 };
 
 function atualizarProdutosInvisivel(isPrimeiraCarga) {
+if (isPrimeiraCarga) {
+const cache = _carregarCacheProdutos();
+if (cache && cache.length > 0) {
+// STALE: já mostra os produtos da última visita, sem esperar a rede
+BD_PRODUTOS = cache;
+const fornecedorSalvo = localStorage.getItem('hbn1_fornecedor_ativo');
+const fornecedorAindaExiste = fornecedorSalvo && BD_PRODUTOS.some(p =>
+p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID' &&
+(p.fornecedor || '').trim().toUpperCase() === fornecedorSalvo
+);
+if (fornecedorAindaExiste) {
+entrarFornecedor(fornecedorSalvo);
+} else {
+mostrarTelaPortais();
+}
+recalcularTotaisGerais();
+} else {
+// Sem cache ainda (primeiro acesso): mostra os portais com skeleton, como antes
+document.getElementById('telaPortais').classList.remove('hidden');
+document.getElementById('portaisNomeUsuario').innerText =
+localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
+renderizarGridPortais();
+}
+}
+
 chamarApi('produtos', { uf: UF_USUARIO })
 .then(dados => {
 dados.sort((a, b) => {
@@ -3910,17 +3964,16 @@ return String(a.descricao || '').localeCompare(String(b.descricao || ''));
 });
 const qtdAnt = BD_PRODUTOS.length;
 BD_PRODUTOS = dados;
+_salvarCacheProdutos(dados);
+
 if (isPrimeiraCarga) {
-const fornecedorSalvo = localStorage.getItem('hbn1_fornecedor_ativo');
-const fornecedorAindaExiste = fornecedorSalvo && BD_PRODUTOS.some(p =>
-p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID' &&
-(p.fornecedor || '').trim().toUpperCase() === fornecedorSalvo
-);
-if (fornecedorAindaExiste) {
-entrarFornecedor(fornecedorSalvo); // restaura onde o vendedor estava
+// REVALIDATE: atualiza silenciosamente a tela em que o vendedor já está
+if (!document.getElementById('mainProdutos').classList.contains('hidden')) {
+executarFiltrosGerais(false);
+document.getElementById('qtdProdutosFornecedor').innerText =
+PRODUTOS_FILTRADOS.length + ' produto' + (PRODUTOS_FILTRADOS.length !== 1 ? 's' : '');
 } else {
-if (fornecedorSalvo) localStorage.removeItem('hbn1_fornecedor_ativo');
-mostrarTelaPortais();
+renderizarGridPortais();
 }
 } else {
 if (qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
@@ -3933,7 +3986,7 @@ atualizarTextoUltimaSincronizacao();
 console.error("Erro na busca de produtos:", erro);
 const elAtualizacao = document.getElementById('textoUltimaAtualizacao');
 if (elAtualizacao) elAtualizacao.innerHTML = `<span class="text-red-500">⚠ Falha ao sincronizar dados</span>`;
-if (isPrimeiraCarga) {
+if (isPrimeiraCarga && BD_PRODUTOS.length === 0) {
 document.getElementById('gridProdutos').innerHTML = `<div class="col-span-full text-center py-10 text-red-500 font-bold">Erro ao conectar com o Google Sheets. Tente atualizar a página.</div>`;
 }
 });
@@ -3979,11 +4032,7 @@ verificarEExibirAvisoCache();
 setInterval(verificarEExibirAvisoCache, 300000); // reavalia a cada 5 min, igual aos outros polls
 const fornecedorSalvo = localStorage.getItem('hbn1_fornecedor_ativo');
 if (!fornecedorSalvo) {
-// Sem fornecedor salvo: mostra portais imediatamente com o skeleton, como antes
-document.getElementById('telaPortais').classList.remove('hidden');
-document.getElementById('portaisNomeUsuario').innerText =
-localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
-renderizarGridPortais();
+
 } else {
 // Havia um fornecedor selecionado — evita o flash da tela de portais
 document.getElementById('mainProdutos').classList.remove('hidden');
