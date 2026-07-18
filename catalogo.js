@@ -385,6 +385,7 @@ localStorage.removeItem('hbn1_ufs');
 localStorage.removeItem('hbn1_nome');
 localStorage.removeItem('hbn1_login_ts');
 localStorage.removeItem('hbn1_session');
+localStorage.removeItem('hbn1_fornecedor_ativo');       
 window.location.href = 'index.html';
 }
 );
@@ -681,6 +682,7 @@ btn.classList.add('opacity-100', 'translate-y-0', 'scale-100');
 
 function entrarFornecedor(nomeFornecedor) {
 filtroFornecedorAtual = nomeFornecedor.toUpperCase();
+localStorage.setItem('hbn1_fornecedor_ativo', filtroFornecedorAtual);
 const cfg = getConfigFornecedor(nomeFornecedor);
 
 // Esconde portais, mostra produtos
@@ -737,6 +739,7 @@ return `
 
 function voltarParaPortais() {
 filtroFornecedorAtual = 'TODOS';
+localStorage.removeItem('hbn1_fornecedor_ativo');
 atualizarBotaoSugestaoHit();
 mostrarTelaPortais();
 }
@@ -3908,8 +3911,17 @@ return String(a.descricao || '').localeCompare(String(b.descricao || ''));
 const qtdAnt = BD_PRODUTOS.length;
 BD_PRODUTOS = dados;
 if (isPrimeiraCarga) {
-// Primeira carga: abre tela de portais
+const fornecedorSalvo = localStorage.getItem('hbn1_fornecedor_ativo');
+const fornecedorAindaExiste = fornecedorSalvo && BD_PRODUTOS.some(p =>
+p.id && String(p.id).trim() !== '' && String(p.id).trim() !== 'Sem ID' &&
+(p.fornecedor || '').trim().toUpperCase() === fornecedorSalvo
+);
+if (fornecedorAindaExiste) {
+entrarFornecedor(fornecedorSalvo); // restaura onde o vendedor estava
+} else {
+if (fornecedorSalvo) localStorage.removeItem('hbn1_fornecedor_ativo');
 mostrarTelaPortais();
+}
 } else {
 if (qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
 executarFiltrosGerais(false);
@@ -3965,11 +3977,19 @@ carregarValoresMinimos();
 atualizarBadgesPedidosSalvos();
 verificarEExibirAvisoCache();
 setInterval(verificarEExibirAvisoCache, 300000); // reavalia a cada 5 min, igual aos outros polls
-// Mostra portais imediatamente e já desenha o skeleton (grid atualiza quando produtos chegarem)
+const fornecedorSalvo = localStorage.getItem('hbn1_fornecedor_ativo');
+if (!fornecedorSalvo) {
+// Sem fornecedor salvo: mostra portais imediatamente com o skeleton, como antes
 document.getElementById('telaPortais').classList.remove('hidden');
 document.getElementById('portaisNomeUsuario').innerText =
 localStorage.getItem('hbn1_nome') || localStorage.getItem('hbn1_usuario') || '';
 renderizarGridPortais();
+} else {
+// Havia um fornecedor selecionado — evita o flash da tela de portais
+document.getElementById('mainProdutos').classList.remove('hidden');
+document.getElementById('gridProdutos').innerHTML =
+'<div class="col-span-full text-center py-20 text-slate-400 font-medium">Restaurando catálogo...</div>';
+}
 
 setInterval(atualizarMuralInvisivel,     60000);   // 1 min
 setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
