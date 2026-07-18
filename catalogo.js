@@ -3513,6 +3513,7 @@ const salvouComSucesso = persistirPedidosSalvos(lista);
 if (!salvouComSucesso) return;
 
 atualizarBadgesPedidosSalvos();
+registrarPedidoNoHistoricoAtual();       
 
 // Inicia automaticamente um novo pedido (limpa o carrinho atual)
 limparCarrinhoSemConfirmacao();
