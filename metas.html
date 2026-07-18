@@ -74,9 +74,9 @@
   .camp-loading { text-align:center; padding:40px 20px; color:var(--text-secondary); font-size:13px; font-weight:600; }
 
  .camp-table-scroll { overflow-x:auto; border:1px solid var(--border-subtle); border-top:none; border-radius:0 0 10px 10px; margin-bottom:16px; }
-  .camp-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; min-width:760px; }
-  .camp-table th:nth-child(1), .camp-table td:nth-child(1) { width:24%; }
-  .camp-table th:nth-child(n+2), .camp-table td:nth-child(n+2) { width:15.2%; }
+  .camp-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:12.5px; min-width:880px; }
+  .camp-table th:nth-child(1), .camp-table td:nth-child(1) { width:21%; }
+  .camp-table th:nth-child(n+2), .camp-table td:nth-child(n+2) { width:13.16%; }
   .camp-table thead th {
     background:var(--surface-secondary); color:var(--text-secondary); text-transform:uppercase; letter-spacing:.04em;
     font-size:10px; font-weight:700; text-align:center; padding:8px 12px; border-bottom:1px solid var(--border-subtle); white-space:nowrap;
@@ -186,7 +186,15 @@
     const larguraFinal = Math.max(0, Math.min(pct, 100));
     return `<div class="camp-progress-track ${classeExtra || ''}"><div class="camp-progress-fill ${campFillClasse(pct)}" data-w="${larguraFinal}"></div></div>`;
   }
-
+  
+function campProjecaoHtml(meta, projecao) {
+    const pct = campCalcPct(meta, projecao);
+    const pctExibir = meta > 0 ? pct.toFixed(1) + '%' : '—';
+    return `<div class="camp-cell-cobertura">
+      <span class="camp-pct-pill ${campClassePct(pct)}">${pctExibir}</span>
+      <span class="mono" style="font-size:10px; color:var(--text-secondary);">${campFormatBRL(projecao)}</span>
+    </div>`;
+  }
   // Prefixos que devem ser agrupados visualmente na tabela (membros + linha TOTAL).
   // Qualquer campanha cujo fornecedor comece com "PREFIXO " é tratada como membro do grupo,
   // e a linha "PREFIXO" ou "PREFIXO TOTAL" é tratada como o total do grupo.
@@ -406,12 +414,13 @@ const aproveitamentoHtml = `
           </td>
           <td class="camp-num mono">${campFormatBRL(c.meta)}</td>
           <td class="camp-num mono">${campFormatBRL(c.realizado)}</td>
-          <td class="camp-num">
+         <td class="camp-num">
             <div class="camp-cell-cobertura">
               ${campPctPillHtml(c.meta, c.realizado)}
               ${campBarraHtml(c.meta, c.realizado)}
             </div>
           </td>
+          <td class="camp-num">${campProjecaoHtml(c.meta, c.projecaoFechamento || 0)}</td>
           <td class="camp-num mono ${gap > 0 ? 'camp-gap-neg' : 'camp-gap-pos'}">${gap > 0 ? campFormatBRL(gap) : '—'}</td>
           <td class="camp-num mono">${mediaNecessaria > 0 ? campFormatBRL(mediaNecessaria) : '—'}</td>
         </tr>`;
@@ -426,6 +435,7 @@ const aproveitamentoHtml = `
               <th class="camp-num">Meta</th>
               <th class="camp-num">Realizado</th>
               <th class="camp-num">Cobertura</th>
+              <th class="camp-num">Projeção Fechamento</th>
               <th class="camp-num">Gap</th>
               <th class="camp-num">Média Necessária/Dia</th>
             </tr>
