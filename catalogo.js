@@ -3061,6 +3061,46 @@ if (chaves.length === 0) return;
 mostrarAlertaMinimos(async () => { await _executarDownloadExcel(); }, 'Baixar Mesmo Assim');
 }
 
+function registrarPedidoNoHistoricoAtual() {
+  const chaves = Object.keys(CARRINHO);
+  if (chaves.length === 0) return;
+
+  const itensPorFornecedor = {};
+
+  chaves.forEach(idProd => {
+    const p = BD_PRODUTOS.find(item => item.id === idProd);
+    if (!p) return;
+    const qtd = CARRINHO[idProd];
+    const { precoFinal, percentual } = calcularPrecos(p);
+    const forn = p.fornecedor ? String(p.fornecedor).trim().toUpperCase() : 'GERAL';
+    if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+    itensPorFornecedor[forn].push({
+      nome: p.descricao || p.id,
+      ean: p.ean,
+      quantidade: qtd,
+      precoUnitario: precoFinal,
+      total: precoFinal * qtd,
+      desconto: percentual
+    });
+  });
+
+  // Uma linha de histórico por fornecedor (o backend guarda 1 fornecedor por linha)
+  Object.keys(itensPorFornecedor).forEach(forn => {
+    const itens = itensPorFornecedor[forn];
+    const valorForn = itens.reduce((s, i) => s + i.total, 0);
+    chamarApi('registrarHistoricoPedido', {
+      dados: {
+        cnpj: CLIENTE_SELECIONADO ? CLIENTE_SELECIONADO.cnpj : '',
+        clienteNome: CLIENTE_SELECIONADO ? CLIENTE_SELECIONADO.razao : '',
+        fornecedor: forn,
+        itens: itens,
+        valorTotal: valorForn,
+        descontoAplicado: OL_ATIVO ? ('OL ' + OL_ATIVO) : '',
+        observacoes: ''
+      }
+    }).catch(e => console.error('Erro ao registrar histórico (' + forn + '):', e));
+  });
+}
 
 async function _executarDownloadExcel() {
 const chaves = Object.keys(CARRINHO);
@@ -3111,6 +3151,7 @@ nomeArquivo = `Pedido_HBN1_${dataHoje}.xlsx`;
 }
 
 await baixarWorkbook(workbook, nomeArquivo);
+registrarPedidoNoHistoricoAtual()       
 mostrarToast('success', `${nomeArquivo} baixado com sucesso.`);
 } catch (erro) {
 console.error('Erro ao gerar o Excel do pedido:', erro);
