@@ -1711,7 +1711,14 @@ document.getElementById('modalDivisaoFranquia').innerText = (divi && fran) ? `${
 const badgeTag = document.getElementById('modalTagBadge');
 if (p.tag && p.tag.trim() !== '') { badgeTag.innerText = p.tag; badgeTag.classList.remove('hidden'); }
 else badgeTag.classList.add('hidden');
-
+const btnInfo = document.getElementById('modalBtnImagemInfo');
+if (p.imagemInfo && p.imagemInfo.trim() !== '') {
+  btnInfo.dataset.url = p.imagemInfo;
+  btnInfo.classList.remove('hidden');
+} else {
+  btnInfo.classList.add('hidden');
+}
+       
 const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
 const temDesconto = percentual > 0;
 
@@ -1769,6 +1776,11 @@ const zoom = document.getElementById('modalZoomImagem');
 if (zoom && !zoom.classList.contains('hidden')) fecharZoomImagem();
 }
 });
+function abrirZoomImagemDireto(url) {
+  if (!url) return;
+  document.getElementById('modalZoomImg').src = url;
+  document.getElementById('modalZoomImagem').classList.remove('hidden');
+}
 function abrirModalResumoCliente() {
 if (!CLIENTE_SELECIONADO) return;
 document.getElementById('resumoClienteNome').innerText = (CLIENTE_SELECIONADO.razao || '').toUpperCase();
@@ -4030,16 +4042,7 @@ carregarValoresMinimos();
 atualizarBadgesPedidosSalvos();
 verificarEExibirAvisoCache();
 setInterval(verificarEExibirAvisoCache, 300000); // reavalia a cada 5 min, igual aos outros polls
-const fornecedorSalvo = localStorage.getItem('hbn1_fornecedor_ativo');
-if (!fornecedorSalvo) {
-
-} else {
-// Havia um fornecedor selecionado — evita o flash da tela de portais
-document.getElementById('mainProdutos').classList.remove('hidden');
-document.getElementById('gridProdutos').innerHTML =
-'<div class="col-span-full text-center py-20 text-slate-400 font-medium">Restaurando catálogo...</div>';
-}
-
+       
 setInterval(atualizarMuralInvisivel,     60000);   // 1 min
 setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
 setInterval(atualizarClientesInvisivel, 300000);  // 5 min
