@@ -1691,12 +1691,56 @@ function alterarQtdNoModal(idProd, mudanca)               { alterarQtd(idProd, m
 function atualizarQtdNoModalDigitada(idProd, valor, max)  { atualizarQtdDigitada(idProd, valor, max); abrirModalCarrinho(); }
 function fecharModalCarrinho()                            { document.getElementById('modalCarrinho').classList.add('hidden'); }
 function fecharModalCarrinhoNoBackdrop(event)             { if (event.target.id === 'modalCarrinho') fecharModalCarrinho(); }
+// =========================================================================
+// CARROSSEL DE IMAGENS DO PRODUTO (foto principal + fotos extras da coluna AF)
+// =========================================================================
+let GALERIA_IMAGENS = [];
+let GALERIA_INDEX = 0;
+
+function _montarGaleriaImagens(p) {
+  const extras = String(p.imagemInfo || '')
+    .split('|')
+    .map(s => s.trim())
+    .filter(Boolean);
+  const principal = p.imagens ? [p.imagens] : [];
+  return [...new Set([...principal, ...extras])]; // remove duplicadas, mantém ordem
+}
+
+function _renderizarGaleria() {
+  const total = GALERIA_IMAGENS.length;
+  document.getElementById('modalImagem').src = GALERIA_IMAGENS[GALERIA_INDEX] || '';
+
+  const btnAnt    = document.getElementById('galeriaBtnAnterior');
+  const btnProx   = document.getElementById('galeriaBtnProxima');
+  const contador  = document.getElementById('galeriaContador');
+  const temVarias = total > 1;
+
+  btnAnt.classList.toggle('hidden', !temVarias);
+  btnProx.classList.toggle('hidden', !temVarias);
+  contador.classList.toggle('hidden', !temVarias);
+  if (temVarias) contador.innerText = `${GALERIA_INDEX + 1} / ${total}`;
+}
+
+function galeriaAnterior() {
+  if (GALERIA_IMAGENS.length <= 1) return;
+  GALERIA_INDEX = (GALERIA_INDEX - 1 + GALERIA_IMAGENS.length) % GALERIA_IMAGENS.length;
+  _renderizarGaleria();
+}
+
+function galeriaProxima() {
+  if (GALERIA_IMAGENS.length <= 1) return;
+  GALERIA_INDEX = (GALERIA_INDEX + 1) % GALERIA_IMAGENS.length;
+  _renderizarGaleria();
+}
+
 // MODAL DETALHES
 function abrirModalDetalhes(idProd) {
 const p = BD_PRODUTOS.find(item => item.id === idProd);
 if (!p) return;
 
-document.getElementById('modalImagem').src      = p.imagens;
+GALERIA_IMAGENS = _montarGaleriaImagens(p);
+GALERIA_INDEX = 0;
+_renderizarGaleria();
 document.getElementById('modalMarca').innerText = p.marca || 'OUTROS';
 document.getElementById('modalDescricao').innerText = p.descricao || 'Sem descrição cadastrada';
 document.getElementById('modalId').innerText    = p.id;
@@ -1711,14 +1755,7 @@ document.getElementById('modalDivisaoFranquia').innerText = (divi && fran) ? `${
 const badgeTag = document.getElementById('modalTagBadge');
 if (p.tag && p.tag.trim() !== '') { badgeTag.innerText = p.tag; badgeTag.classList.remove('hidden'); }
 else badgeTag.classList.add('hidden');
-const btnInfo = document.getElementById('modalBtnImagemInfo');
-if (p.imagemInfo && p.imagemInfo.trim() !== '') {
-  btnInfo.dataset.url = p.imagemInfo;
-  btnInfo.classList.remove('hidden');
-} else {
-  btnInfo.classList.add('hidden');
-}
-       
+     
 const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
 const temDesconto = percentual > 0;
 
