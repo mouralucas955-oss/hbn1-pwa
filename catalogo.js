@@ -1708,7 +1708,8 @@ function _montarGaleriaImagens(p) {
 
 function _renderizarGaleria() {
   const total = GALERIA_IMAGENS.length;
-  document.getElementById('modalImagem').src = GALERIA_IMAGENS[GALERIA_INDEX] || '';
+  const urlAtual = GALERIA_IMAGENS[GALERIA_INDEX] || '';
+  document.getElementById('modalImagem').src = urlAtual;
 
   const btnAnt    = document.getElementById('galeriaBtnAnterior');
   const btnProx   = document.getElementById('galeriaBtnProxima');
@@ -1719,6 +1720,27 @@ function _renderizarGaleria() {
   btnProx.classList.toggle('hidden', !temVarias);
   contador.classList.toggle('hidden', !temVarias);
   if (temVarias) contador.innerText = `${GALERIA_INDEX + 1} / ${total}`;
+
+  // Se o zoom estiver aberto, mantém a imagem ampliada sincronizada
+  const modalZoom = document.getElementById('modalZoomImagem');
+  if (modalZoom && !modalZoom.classList.contains('hidden')) {
+    document.getElementById('modalZoomImg').src = urlAtual;
+    _atualizarSetasZoom();
+  }
+}
+
+function _atualizarSetasZoom() {
+  const total = GALERIA_IMAGENS.length;
+  const temVarias = total > 1;
+  const btnAntZoom  = document.getElementById('zoomBtnAnterior');
+  const btnProxZoom = document.getElementById('zoomBtnProxima');
+  const contadorZoom = document.getElementById('zoomContador');
+  if (btnAntZoom)   btnAntZoom.classList.toggle('hidden', !temVarias);
+  if (btnProxZoom)  btnProxZoom.classList.toggle('hidden', !temVarias);
+  if (contadorZoom) {
+    contadorZoom.classList.toggle('hidden', !temVarias);
+    if (temVarias) contadorZoom.innerText = `${GALERIA_INDEX + 1} / ${total}`;
+  }
 }
 
 function galeriaAnterior() {
@@ -1799,10 +1821,11 @@ function fecharModalDetalhes()              { document.getElementById('modalDeta
 function fecharModalDetalhesNoBackdrop(evt) { if (evt.target.id === 'modalDetalhes') fecharModalDetalhes(); }
 // ZOOM DA IMAGEM DO PRODUTO (lightbox)
 function abrirZoomImagem() {
-const src = document.getElementById('modalImagem').src;
-if (!src) return;
-document.getElementById('modalZoomImg').src = src;
-document.getElementById('modalZoomImagem').classList.remove('hidden');
+  const src = document.getElementById('modalImagem').src;
+  if (!src) return;
+  document.getElementById('modalZoomImg').src = src;
+  document.getElementById('modalZoomImagem').classList.remove('hidden');
+  _atualizarSetasZoom();
 }
 function fecharZoomImagem()              { document.getElementById('modalZoomImagem').classList.add('hidden'); }
 function fecharZoomImagemNoBackdrop(evt) { if (evt.target.id === 'modalZoomImagem') fecharZoomImagem(); }
