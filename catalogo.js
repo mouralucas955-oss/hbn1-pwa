@@ -1831,10 +1831,12 @@ function fecharZoomImagem()              { document.getElementById('modalZoomIma
 function fecharZoomImagemNoBackdrop(evt) { if (evt.target.id === 'modalZoomImagem') fecharZoomImagem(); }
 
 document.addEventListener('keydown', function(e) {
-if (e.key === 'Escape') {
-const zoom = document.getElementById('modalZoomImagem');
-if (zoom && !zoom.classList.contains('hidden')) fecharZoomImagem();
-}
+  const zoom = document.getElementById('modalZoomImagem');
+  if (zoom && !zoom.classList.contains('hidden')) {
+    if (e.key === 'Escape') fecharZoomImagem();
+    if (e.key === 'ArrowLeft') galeriaAnterior();
+    if (e.key === 'ArrowRight') galeriaProxima();
+  }
 });
 function abrirZoomImagemDireto(url) {
   if (!url) return;
