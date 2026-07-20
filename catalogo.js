@@ -6,6 +6,19 @@ let filtroFornecedorAtual = "TODOS";
 let BD_CLIENTES         = [];
 let CLIENTE_SELECIONADO = null;
 let FILTRO_APENAS_COM_ESTOQUE = false;
+let FILTRO_MARCA_ATIVA = null;
+let FILTRO_DIVISAO_ATIVA = null;
+let FILTRO_APENAS_COM_DESCONTO = false;
+let ORDENACAO_ATIVA = 'padrao'; // padrao | desconto_desc | preco_asc | preco_desc | estoque_desc | alfabetica
+
+const OPCOES_ORDENACAO = [
+  { valor: 'padrao', label: 'Padrão' },
+  { valor: 'desconto_desc', label: 'Maior desconto' },
+  { valor: 'preco_asc', label: 'Menor preço' },
+  { valor: 'preco_desc', label: 'Maior preço' },
+  { valor: 'estoque_desc', label: 'Mais estoque' },
+  { valor: 'alfabetica', label: 'Ordem alfabética' },
+];
 // =========================================================================
 // SUGESTÃO HIT — itens pendentes de positivação do cliente Dedicado selecionado 
 // =========================================================================
@@ -711,6 +724,10 @@ btn.classList.add('opacity-100', 'translate-y-0', 'scale-100');
 
 function entrarFornecedor(nomeFornecedor) {
 filtroFornecedorAtual = nomeFornecedor.toUpperCase();
+FILTRO_MARCA_ATIVA = null;
+FILTRO_DIVISAO_ATIVA = null;
+atualizarEstiloBotaoFiltro('btnFiltroMarca', false, 'Marca');
+atualizarEstiloBotaoFiltro('btnFiltroDivisao', false, 'Divisão');       
 localStorage.setItem('hbn1_fornecedor_ativo', filtroFornecedorAtual);
 const cfg = getConfigFornecedor(nomeFornecedor);
 
@@ -1198,8 +1215,12 @@ if (popover && estadoCom && !estadoCom.contains(e.target)) {
 popover.classList.add('hidden');
 const chevron = document.getElementById('chipChevron');
 if (chevron) chevron.style.transform = '';
-}
-});
+['dropdownFiltroMarca', 'dropdownFiltroDivisao', 'dropdownOrdenar'].forEach(id => {
+    const dd = document.getElementById(id);
+    if (dd && !dd.classList.contains('hidden') && !dd.parentElement.contains(e.target)) {
+      dd.classList.add('hidden');
+    }
+  });
 // FILTROS
 function toggleBotaoLimparPesquisa() {
 const input = document.getElementById('barraPesquisa');
@@ -1236,27 +1257,172 @@ badge.classList.toggle('hidden', !FILTRO_APENAS_COM_ESTOQUE);
 
 executarFiltrosGerais();
 }
+function toggleDropdownFiltro(tipo) {
+  const mapaIds = { marca: 'dropdownFiltroMarca', divisao: 'dropdownFiltroDivisao', ordenar: 'dropdownOrdenar' };
+  const idAlvo = mapaIds[tipo];
+  Object.values(mapaIds).forEach(id => {
+    if (id !== idAlvo) document.getElementById(id).classList.add('hidden');
+  });
+  const dd = document.getElementById(idAlvo);
+  const abrindo = dd.classList.contains('hidden');
+  dd.classList.toggle('hidden');
+  if (!abrindo) return;
 
+  if (tipo === 'marca')    renderizarDropdownMarca();
+  if (tipo === 'divisao')  renderizarDropdownDivisao();
+  if (tipo === 'ordenar')  renderizarDropdownOrdenar();
+}
+
+// Base sempre pelo fornecedor ativo (não pelos outros filtros), pra lista
+// de opções não sumir conforme o usuário vai filtrando
+function _produtosBaseParaOpcoes() {
+  return BD_PRODUTOS.filter(p => {
+    if (!p.id || String(p.id).trim() === '' || String(p.id).trim() === 'Sem ID') return false;
+    return filtroFornecedorAtual === "TODOS" || (p.fornecedor && String(p.fornecedor).trim().toUpperCase() === filtroFornecedorAtual);
+  });
+}
+
+function renderizarDropdownMarca() {
+  const base = _produtosBaseParaOpcoes();
+  const marcas = [...new Set(base.map(p => String(p.marca || '').trim().toUpperCase()).filter(Boolean))].sort();
+  const dd = document.getElementById('dropdownFiltroMarca');
+  let html = `<button onclick="selecionarFiltroMarca(null)" class="w-full text-left px-3 py-2 text-[11px] font-bold ${!FILTRO_MARCA_ATIVA ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">Todas as marcas</button>`;
+  html += marcas.map(m => `
+    <button onclick="selecionarFiltroMarca('${m.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 ${FILTRO_MARCA_ATIVA === m ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${m}</button>`).join('');
+  dd.innerHTML = html;
+}
+
+function renderizarDropdownDivisao() {
+  const base = _produtosBaseParaOpcoes();
+  const divisoes = [...new Set(base.map(p => String(p.divisao || '').trim().toUpperCase()).filter(v => v && v !== '-'))].sort();
+  const dd = document.getElementById('dropdownFiltroDivisao');
+  if (divisoes.length === 0) {
+    dd.innerHTML = `<div class="px-3 py-2 text-[11px] text-slate-400 italic">Sem divisões cadastradas</div>`;
+    return;
+  }
+  let html = `<button onclick="selecionarFiltroDivisao(null)" class="w-full text-left px-3 py-2 text-[11px] font-bold ${!FILTRO_DIVISAO_ATIVA ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">Todas as divisões</button>`;
+  html += divisoes.map(d => `
+    <button onclick="selecionarFiltroDivisao('${d.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 ${FILTRO_DIVISAO_ATIVA === d ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${d}</button>`).join('');
+  dd.innerHTML = html;
+}
+
+function renderizarDropdownOrdenar() {
+  const dd = document.getElementById('dropdownOrdenar');
+  dd.innerHTML = OPCOES_ORDENACAO.map(o => `
+    <button onclick="selecionarOrdenacao('${o.valor}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 first:border-t-0 ${ORDENACAO_ATIVA === o.valor ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${o.label}</button>`).join('');
+}
+
+function selecionarFiltroMarca(marca) {
+  FILTRO_MARCA_ATIVA = marca;
+  document.getElementById('dropdownFiltroMarca').classList.add('hidden');
+  atualizarEstiloBotaoFiltro('btnFiltroMarca', !!marca, marca || 'Marca');
+  executarFiltrosGerais();
+}
+
+function selecionarFiltroDivisao(divisao) {
+  FILTRO_DIVISAO_ATIVA = divisao;
+  document.getElementById('dropdownFiltroDivisao').classList.add('hidden');
+  atualizarEstiloBotaoFiltro('btnFiltroDivisao', !!divisao, divisao || 'Divisão');
+  executarFiltrosGerais();
+}
+
+function selecionarOrdenacao(valor) {
+  ORDENACAO_ATIVA = valor;
+  document.getElementById('dropdownOrdenar').classList.add('hidden');
+  const opt = OPCOES_ORDENACAO.find(o => o.valor === valor);
+  document.getElementById('labelOrdenacaoAtual').innerText = valor === 'padrao' ? 'Ordenar' : opt.label;
+  executarFiltrosGerais();
+}
+
+function toggleFiltroDesconto() {
+  FILTRO_APENAS_COM_DESCONTO = !FILTRO_APENAS_COM_DESCONTO;
+  const btn = document.getElementById('btnFiltroDesconto');
+  const badge = document.getElementById('badgeFiltroDescontoAtivo');
+  btn.className = FILTRO_APENAS_COM_DESCONTO
+    ? "px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all border-red-200 bg-red-50 text-red-600 flex items-center gap-1.5"
+    : "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5 transition-all";
+  badge.classList.toggle('hidden', !FILTRO_APENAS_COM_DESCONTO);
+  executarFiltrosGerais();
+}
+
+function atualizarEstiloBotaoFiltro(idBtn, ativo, label) {
+  const btn = document.getElementById(idBtn);
+  if (!btn) return;
+  btn.className = ativo
+    ? "px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all border-orange-300 bg-orange-50 text-orange-600 flex items-center gap-1.5"
+    : "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5 transition-all";
+  btn.innerHTML = `${label}<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>`;
+}
+
+function limparFiltrosExtras() {
+  FILTRO_MARCA_ATIVA = null;
+  FILTRO_DIVISAO_ATIVA = null;
+  FILTRO_APENAS_COM_DESCONTO = false;
+  ORDENACAO_ATIVA = 'padrao';
+  atualizarEstiloBotaoFiltro('btnFiltroMarca', false, 'Marca');
+  atualizarEstiloBotaoFiltro('btnFiltroDivisao', false, 'Divisão');
+  document.getElementById('labelOrdenacaoAtual').innerText = 'Ordenar';
+  const btnDesc = document.getElementById('btnFiltroDesconto');
+  btnDesc.className = "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5 transition-all";
+  document.getElementById('badgeFiltroDescontoAtivo').classList.add('hidden');
+  executarFiltrosGerais();
+}
+
+function atualizarBadgesFiltrosExtras() {
+  const algumAtivo = FILTRO_MARCA_ATIVA || FILTRO_DIVISAO_ATIVA || FILTRO_APENAS_COM_DESCONTO || ORDENACAO_ATIVA !== 'padrao';
+  const btn = document.getElementById('btnLimparFiltrosExtras');
+  if (btn) btn.classList.toggle('hidden', !algumAtivo);
+}
 
 
 function executarFiltrosGerais(comAnimacao = true) {
-const busca = document.getElementById('barraPesquisa').value.toLowerCase().trim();
-PRODUTOS_FILTRADOS = BD_PRODUTOS.filter(p => {
-// Ignora linhas sem ID válido (linhas de controle/cabeçalho na planilha)
-if (!p.id || String(p.id).trim() === '' || String(p.id).trim() === 'Sem ID') return false;
-const condForn = filtroFornecedorAtual === "TODOS" || (p.fornecedor && String(p.fornecedor).trim().toUpperCase() === filtroFornecedorAtual);
-if (FILTRO_APENAS_COM_ESTOQUE && (parseInt(p.estoque) || 0) <= 0) return false;
-const condBusca = !busca ||
-(p.id        && String(p.id).toLowerCase().includes(busca))        ||
-(p.ean       && String(p.ean).toLowerCase().includes(busca))       ||
-(p.descricao && String(p.descricao).toLowerCase().includes(busca)) ||
-(p.marca     && String(p.marca).toLowerCase().includes(busca))     ||
-(p.divisao   && String(p.divisao).toLowerCase().includes(busca))   ||
-(p.franquia  && String(p.franquia).toLowerCase().includes(busca))  ||
-(p.tag       && String(p.tag).toLowerCase().includes(busca));
-return condForn && condBusca;
-});
-renderizarInterfaceGrafica(PRODUTOS_FILTRADOS, comAnimacao);
+  const busca = document.getElementById('barraPesquisa').value.toLowerCase().trim();
+  PRODUTOS_FILTRADOS = BD_PRODUTOS.filter(p => {
+    if (!p.id || String(p.id).trim() === '' || String(p.id).trim() === 'Sem ID') return false;
+    const condForn = filtroFornecedorAtual === "TODOS" || (p.fornecedor && String(p.fornecedor).trim().toUpperCase() === filtroFornecedorAtual);
+    if (FILTRO_APENAS_COM_ESTOQUE && (parseInt(p.estoque) || 0) <= 0) return false;
+    if (FILTRO_MARCA_ATIVA && String(p.marca || '').trim().toUpperCase() !== FILTRO_MARCA_ATIVA) return false;
+    if (FILTRO_DIVISAO_ATIVA && String(p.divisao || '').trim().toUpperCase() !== FILTRO_DIVISAO_ATIVA) return false;
+    if (FILTRO_APENAS_COM_DESCONTO) {
+      const { percentual } = calcularPrecos(p);
+      if (!(percentual > 0)) return false;
+    }
+    const condBusca = !busca ||
+      (p.id        && String(p.id).toLowerCase().includes(busca))        ||
+      (p.ean       && String(p.ean).toLowerCase().includes(busca))       ||
+      (p.descricao && String(p.descricao).toLowerCase().includes(busca)) ||
+      (p.marca     && String(p.marca).toLowerCase().includes(busca))     ||
+      (p.divisao   && String(p.divisao).toLowerCase().includes(busca))   ||
+      (p.franquia  && String(p.franquia).toLowerCase().includes(busca))  ||
+      (p.tag       && String(p.tag).toLowerCase().includes(busca));
+    return condForn && condBusca;
+  });
+
+  aplicarOrdenacaoAtual();
+  renderizarInterfaceGrafica(PRODUTOS_FILTRADOS, comAnimacao);
+  atualizarBadgesFiltrosExtras();
+}
+
+function aplicarOrdenacaoAtual() {
+  switch (ORDENACAO_ATIVA) {
+    case 'desconto_desc':
+      PRODUTOS_FILTRADOS.sort((a, b) => calcularPrecos(b).percentual - calcularPrecos(a).percentual);
+      break;
+    case 'preco_asc':
+      PRODUTOS_FILTRADOS.sort((a, b) => calcularPrecos(a).precoFinal - calcularPrecos(b).precoFinal);
+      break;
+    case 'preco_desc':
+      PRODUTOS_FILTRADOS.sort((a, b) => calcularPrecos(b).precoFinal - calcularPrecos(a).precoFinal);
+      break;
+    case 'estoque_desc':
+      PRODUTOS_FILTRADOS.sort((a, b) => (Number(b.estoque) || 0) - (Number(a.estoque) || 0));
+      break;
+    case 'alfabetica':
+      PRODUTOS_FILTRADOS.sort((a, b) => String(a.descricao || '').localeCompare(String(b.descricao || '')));
+      break;
+    default:
+      break; // mantém a ordem original (a que já vem de BD_PRODUTOS)
+  }
 }
 
 function renderizarInterfaceGrafica(lista, comAnimacao = true) {
