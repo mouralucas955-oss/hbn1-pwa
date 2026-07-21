@@ -425,9 +425,11 @@ function montarItensSugestaoPedido() {
     const { precoFinal } = calcularPrecos(produto);
     if (precoFinal <= 0) continue;
 
-    // Quantidade: tenta chegar perto do que falta pro alvo, mínimo 1, respeitando estoque
-    const faltamParaAlvo = valorAlvo - acumulado;
-    let qtdSugerida = Math.max(1, Math.round(faltamParaAlvo / precoFinal));
+    // Quantidade "natural": valor médio gasto nesse item por compra (histórico),
+    // convertido em unidades ao preço atual — evita que um único item absorva
+    // o valor alvo inteiro sozinho.
+    const valorMedioPorCompra = item.valorTotal / Math.max(item.freq, 1);
+    let qtdSugerida = Math.max(1, Math.round(valorMedioPorCompra / precoFinal));
     qtdSugerida = Math.min(qtdSugerida, estoque);
 
     const valorItem = precoFinal * qtdSugerida;
@@ -439,7 +441,6 @@ function montarItensSugestaoPedido() {
     });
   }
 }
-
 function atualizarBotaoSugestaoPedido() {
   const btn = document.getElementById('btnSugestaoPedido');
   const badge = document.getElementById('badgeSugestaoPedido');
