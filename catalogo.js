@@ -456,10 +456,18 @@ function abrirPainelSugestaoPedido() {
   document.getElementById('sugestaoPedidoClienteNome').innerText =
     CLIENTE_SELECIONADO ? (CLIENTE_SELECIONADO.razao || '').toUpperCase() : '';
 
-  const origemTxt = SUGESTAO_PEDIDO_DADOS.temHistorico
-    ? `Com base no histórico de compras do cliente`
-    : `Sem histórico neste fornecedor — sugestão baseada no mix mais comprado pela equipe ${SUGESTAO_PEDIDO_DADOS.equipe || ''}`;
-  document.getElementById('sugestaoPedidoOrigem').innerText = origemTxt;
+let origemTxt;
+if (SUGESTAO_PEDIDO_DADOS.temHistorico) {
+  const meses = SUGESTAO_PEDIDO_DADOS.mesesConsiderados || 0;
+  if (meses > 0) {
+    origemTxt = `Com base no histórico de compras do cliente — média calculada sobre ${meses} ${meses === 1 ? 'mês fechado' : 'meses fechados'}`;
+  } else {
+    origemTxt = `Cliente novo neste fornecedor (só há compras no mês em andamento) — usando piso de R$ 1.000`;
+  }
+} else {
+  origemTxt = `Sem histórico neste fornecedor — sugestão baseada no mix mais comprado pela equipe ${SUGESTAO_PEDIDO_DADOS.equipe || ''}`;
+}
+document.getElementById('sugestaoPedidoOrigem').innerText = origemTxt;
 
   const corpo = document.getElementById('corpoSugestaoPedido');
   let acBruto = 0, acLiquido = 0;
