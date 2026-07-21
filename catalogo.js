@@ -883,7 +883,7 @@ btn.classList.add('opacity-100', 'translate-y-0', 'scale-100');
 });
 }
 
-//function entrarFornecedor(nomeFornecedor) {
+function entrarFornecedor(nomeFornecedor) {
 filtroFornecedorAtual = nomeFornecedor.toUpperCase();
 FILTRO_MARCA_ATIVA = null;
 FILTRO_DIVISAO_ATIVA = null;
@@ -914,7 +914,7 @@ renderizarMiniSwitcher(nomeFornecedor);
 // Filtra e renderiza produtos
 executarFiltrosGerais();
 atualizarBotaoSugestaoHit();
-//carregarSugestaoPedido(); 
+carregarSugestaoPedido(); 
 
 const qtd = PRODUTOS_FILTRADOS.length;
 document.getElementById('qtdProdutosFornecedor').innerText = qtd + ' produto' + (qtd !== 1 ? 's' : '');
@@ -1265,7 +1265,7 @@ pop.classList.toggle('hidden', !abrindo);
 if (chevron) chevron.style.transform = abrindo ? 'rotate(180deg)' : '';
 }
 
-//function selecionarCliente(id) {
+function selecionarCliente(id) {
 const cliente = BD_CLIENTES.find(c => String(c.id) === String(id));
 if (!cliente) return;
 CLIENTE_SELECIONADO = cliente;
@@ -1319,7 +1319,7 @@ atualizarIndicadoresFinanceirosGlobais();
 atualizarPaineisOLPorFornecedor(filtroFornecedorAtual);
 atualizarResumoValoresMinimos();
 carregarSugestaoHit();
-//carregarSugestaoPedido();  
+carregarSugestaoPedido();  
 }
 
 function limparClienteSelecionado() {
@@ -1352,7 +1352,7 @@ _resetBotoesOmron();
 HIT_DADOS_CLIENTE = null;
 HIT_ITENS_PENDENTES = [];
 atualizarBotaoSugestaoHit();
-//carregarSugestaoPedido();  
+carregarSugestaoPedido();  
 
 executarFiltrosGerais();
 atualizarIndicadoresFinanceirosGlobais();
