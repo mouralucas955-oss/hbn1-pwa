@@ -898,6 +898,7 @@ renderizarMiniSwitcher(nomeFornecedor);
 // Filtra e renderiza produtos
 executarFiltrosGerais();
 atualizarBotaoSugestaoHit();
+carregarSugestaoPedido(); 
 
 const qtd = PRODUTOS_FILTRADOS.length;
 document.getElementById('qtdProdutosFornecedor').innerText = qtd + ' produto' + (qtd !== 1 ? 's' : '');
