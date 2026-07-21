@@ -376,6 +376,151 @@ function adicionarSelecaoManualHit() {
   else mostrarToast('warning', 'Nenhum item pôde ser adicionado.');
 }
 
+// =========================================================================
+// SUGESTÃO DE PEDIDO — baseada no histórico do Fat. Tri (cliente ou grupo)
+// =========================================================================
+let SUGESTAO_PEDIDO_DADOS   = null; // resposta bruta da API
+let SUGESTAO_PEDIDO_ITENS   = [];   // [{ produto, freq, score, valorSugerido }] já casados com BD_PRODUTOS e montados até o valor alvo
+
+function carregarSugestaoPedido() {
+  SUGESTAO_PEDIDO_DADOS = null;
+  SUGESTAO_PEDIDO_ITENS = [];
+  atualizarBotaoSugestaoPedido();
+
+  if (!CLIENTE_SELECIONADO) return;
+  if (filtroFornecedorAtual === 'TODOS') return; // precisa de um fornecedor ativo
+
+  chamarApi('sugestaoPedido', {
+    uf: UF_USUARIO,
+    codCliente: CLIENTE_SELECIONADO.id,
+    fornecedor: filtroFornecedorAtual
+  })
+  .then(resp => {
+    if (!resp || resp.erro) return;
+    SUGESTAO_PEDIDO_DADOS = resp;
+    montarItensSugestaoPedido();
+    atualizarBotaoSugestaoPedido();
+  })
+  .catch(e => console.error('Erro ao carregar sugestão de pedido:', e));
+}
+
+function montarItensSugestaoPedido() {
+  SUGESTAO_PEDIDO_ITENS = [];
+  if (!SUGESTAO_PEDIDO_DADOS || !SUGESTAO_PEDIDO_DADOS.itens) return;
+
+  const valorAlvo = SUGESTAO_PEDIDO_DADOS.valorAlvo || 1000;
+  let acumulado = 0;
+
+  for (const item of SUGESTAO_PEDIDO_DADOS.itens) {
+    if (acumulado >= valorAlvo) break;
+
+    const eanAlvo = normalizarSoDigitos(item.ean);
+    let produto = BD_PRODUTOS.find(p => normalizarSoDigitos(p.ean) === eanAlvo && eanAlvo !== '');
+    if (!produto && item.cod) produto = BD_PRODUTOS.find(p => String(p.id).trim() === String(item.cod).trim());
+    if (!produto) continue;
+
+    const estoque = Number(produto.estoque || 0);
+    if (estoque <= 0) continue;
+
+    const { precoFinal } = calcularPrecos(produto);
+    if (precoFinal <= 0) continue;
+
+    // Quantidade: tenta chegar perto do que falta pro alvo, mínimo 1, respeitando estoque
+    const faltamParaAlvo = valorAlvo - acumulado;
+    let qtdSugerida = Math.max(1, Math.round(faltamParaAlvo / precoFinal));
+    qtdSugerida = Math.min(qtdSugerida, estoque);
+
+    const valorItem = precoFinal * qtdSugerida;
+    acumulado += valorItem;
+
+    SUGESTAO_PEDIDO_ITENS.push({
+      produto, qtd: qtdSugerida, precoFinal, valorItem,
+      freq: item.freq, ean: item.ean
+    });
+  }
+}
+
+function atualizarBotaoSugestaoPedido() {
+  const btn = document.getElementById('btnSugestaoPedido');
+  const badge = document.getElementById('badgeSugestaoPedido');
+  if (!btn) return;
+  const temItens = SUGESTAO_PEDIDO_ITENS.length > 0;
+  btn.classList.toggle('hidden', !temItens);
+  if (badge) badge.innerText = SUGESTAO_PEDIDO_ITENS.length;
+}
+
+function abrirPainelSugestaoPedido() {
+  if (SUGESTAO_PEDIDO_ITENS.length === 0) return;
+
+  document.getElementById('sugestaoPedidoClienteNome').innerText =
+    CLIENTE_SELECIONADO ? (CLIENTE_SELECIONADO.razao || '').toUpperCase() : '';
+
+  const origemTxt = SUGESTAO_PEDIDO_DADOS.temHistorico
+    ? `Com base no histórico de compras do cliente`
+    : `Sem histórico neste fornecedor — sugestão baseada no mix mais comprado pela equipe ${SUGESTAO_PEDIDO_DADOS.equipe || ''}`;
+  document.getElementById('sugestaoPedidoOrigem').innerText = origemTxt;
+
+  const corpo = document.getElementById('corpoSugestaoPedido');
+  let acBruto = 0, acLiquido = 0;
+
+  corpo.innerHTML = SUGESTAO_PEDIDO_ITENS.map(({ produto, qtd, precoFinal, valorItem, freq }) => {
+    const { precoOriginal } = calcularPrecos(produto);
+    acBruto   += precoOriginal * qtd;
+    acLiquido += valorItem;
+    return `
+       <div class="flex items-center gap-3 bg-white border border-slate-100 rounded-xl p-2.5">
+         <img src="${produto.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0 mix-blend-multiply">
+         <div class="min-w-0 flex-grow">
+           <p class="text-xs font-bold text-slate-800 truncate">${produto.descricao || produto.id}</p>
+           <p class="text-[10px] text-slate-400 font-mono">Qtd sugerida: ${qtd} un ${freq ? `• Comprado ${freq}x no período` : ''}</p>
+         </div>
+         <div class="text-right shrink-0">
+           <p class="text-[11px] font-black text-slate-800">${formatarParaReal(valorItem)}</p>
+         </div>
+       </div>`;
+  }).join('');
+
+  document.getElementById('sugestaoPedidoTotalBruto').innerText   = formatarParaReal(acBruto);
+  document.getElementById('sugestaoPedidoTotalLiquido').innerText = formatarParaReal(acLiquido);
+
+  document.getElementById('overlaySugestaoPedido').classList.remove('hidden');
+  document.getElementById('painelSugestaoPedido').classList.remove('translate-x-full');
+}
+
+function fecharPainelSugestaoPedido() {
+  document.getElementById('overlaySugestaoPedido').classList.add('hidden');
+  document.getElementById('painelSugestaoPedido').classList.add('translate-x-full');
+}
+
+function adicionarItensSugestaoPedido() {
+  if (SUGESTAO_PEDIDO_ITENS.length === 0) return;
+
+  let adicionados = 0;
+  SUGESTAO_PEDIDO_ITENS.forEach(({ produto, qtd }) => {
+    const estoqueMax = Number(produto.estoque || 0);
+    if (estoqueMax <= 0) return;
+    const qtdAtual = CARRINHO[produto.id] || 0;
+    const qtdFinal = Math.min(qtdAtual + qtd, estoqueMax);
+    if (qtdFinal === qtdAtual) return;
+
+    CARRINHO[produto.id] = qtdFinal;
+    adicionados++;
+    const c = document.getElementById(`card-btn-${produto.id}`);
+    if (c) c.innerHTML = obterHtmlBotaoAcao(produto.id, CARRINHO[produto.id], estoqueMax, false);
+    _atualizarEstadoVisualCard(produto.id);
+  });
+
+  atualizarIndicadoresFinanceirosGlobais();
+  atualizarIndicadorMinimosBarra();
+  fecharPainelSugestaoPedido();
+
+  if (adicionados > 0) {
+    mostrarToast('success', `${adicionados} item(ns) da sugestão de pedido adicionados.`);
+  } else {
+    mostrarToast('warning', 'Nenhum item pôde ser adicionado (sem estoque ou já no pedido).');
+  }
+}
+
 // -----------------------------------------------------------------------
 // DARK MODE — aplicado antes de qualquer render
 // -----------------------------------------------------------------------
@@ -1157,6 +1302,7 @@ atualizarIndicadoresFinanceirosGlobais();
 atualizarPaineisOLPorFornecedor(filtroFornecedorAtual);
 atualizarResumoValoresMinimos();
 carregarSugestaoHit();
+carregarSugestaoPedido();  
 }
 
 function limparClienteSelecionado() {
@@ -1178,13 +1324,18 @@ const painelOL = document.getElementById('painelOL');
 if (painelOL) painelOL.classList.add('hidden');
 const painelOmron = document.getElementById('painelOLOmron');
 if (painelOmron) painelOmron.classList.add('hidden');
-
+  
+SUGESTAO_PEDIDO_DADOS = null;
+SUGESTAO_PEDIDO_ITENS = [];
+atualizarBotaoSugestaoPedido();
+  
 // Reset estados dos botões
 _resetBotoesOL();
 _resetBotoesOmron();
 HIT_DADOS_CLIENTE = null;
 HIT_ITENS_PENDENTES = [];
 atualizarBotaoSugestaoHit();
+carregarSugestaoPedido();  
 
 executarFiltrosGerais();
 atualizarIndicadoresFinanceirosGlobais();
