@@ -1339,8 +1339,8 @@ function toggleFiltroDesconto() {
   const btn = document.getElementById('btnFiltroDesconto');
   const badge = document.getElementById('badgeFiltroDescontoAtivo');
   btn.className = FILTRO_APENAS_COM_DESCONTO
-    ? "px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all border-red-200 bg-red-50 text-red-600 flex items-center gap-1.5"
-    : "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5 transition-all";
+    ? "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)] flex items-center gap-1.5"
+    : "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-200 bg-white text-slate-500 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5";
   badge.classList.toggle('hidden', !FILTRO_APENAS_COM_DESCONTO);
   executarFiltrosGerais();
 }
@@ -1349,8 +1349,8 @@ function atualizarEstiloBotaoFiltro(idBtn, ativo, label) {
   const btn = document.getElementById(idBtn);
   if (!btn) return;
   btn.className = ativo
-    ? "px-3 py-1.5 text-[11px] font-bold rounded-lg border transition-all border-orange-300 bg-orange-50 text-orange-600 flex items-center gap-1.5"
-    : "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5 transition-all";
+    ? "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-[var(--accent-border)] bg-[var(--accent-soft)] text-[var(--accent)] flex items-center gap-1.5"
+    : "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-200 bg-white text-slate-500 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5";
   btn.innerHTML = `${label}<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>`;
 }
 
@@ -1363,7 +1363,7 @@ function limparFiltrosExtras() {
   atualizarEstiloBotaoFiltro('btnFiltroDivisao', false, 'Divisão');
   document.getElementById('labelOrdenacaoAtual').innerText = 'Ordenar';
   const btnDesc = document.getElementById('btnFiltroDesconto');
-  btnDesc.className = "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5 transition-all";
+  btnDesc.className = "px-3 py-1 text-[10px] font-black rounded-lg border transition-all border-slate-200 bg-white text-slate-500 hover:border-orange-400 hover:text-orange-500 flex items-center gap-1.5";
   document.getElementById('badgeFiltroDescontoAtivo').classList.add('hidden');
   executarFiltrosGerais();
 }
