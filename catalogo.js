@@ -409,11 +409,10 @@ function montarItensSugestaoPedido() {
   if (!SUGESTAO_PEDIDO_DADOS || !SUGESTAO_PEDIDO_DADOS.itens) return;
 
   const valorAlvo = SUGESTAO_PEDIDO_DADOS.valorAlvo || 1000;
-  let acumulado = 0;
 
+  // 1) Seleciona os itens mais relevantes (limite razoável pra não pulverizar demais)
+  const candidatos = [];
   for (const item of SUGESTAO_PEDIDO_DADOS.itens) {
-    if (acumulado >= valorAlvo) break;
-
     const eanAlvo = normalizarSoDigitos(item.ean);
     let produto = BD_PRODUTOS.find(p => normalizarSoDigitos(p.ean) === eanAlvo && eanAlvo !== '');
     if (!produto && item.cod) produto = BD_PRODUTOS.find(p => String(p.id).trim() === String(item.cod).trim());
@@ -425,21 +424,29 @@ function montarItensSugestaoPedido() {
     const { precoFinal } = calcularPrecos(produto);
     if (precoFinal <= 0) continue;
 
-    // Quantidade "natural": valor médio gasto nesse item por compra (histórico),
-    // convertido em unidades ao preço atual — evita que um único item absorva
-    // o valor alvo inteiro sozinho.
-    const valorMedioPorCompra = item.valorTotal / Math.max(item.freq, 1);
-    let qtdSugerida = Math.max(1, Math.round(valorMedioPorCompra / precoFinal));
-    qtdSugerida = Math.min(qtdSugerida, estoque);
+    candidatos.push({ produto, precoFinal, estoque, valorHistorico: item.valorTotal, freq: item.freq, ean: item.ean });
+    if (candidatos.length >= 12) break; // top 12 já é uma cesta bem representativa
+  }
 
-    const valorItem = precoFinal * qtdSugerida;
-    acumulado += valorItem;
+  if (candidatos.length === 0) return;
+
+  // 2) Distribui o valor alvo proporcionalmente ao peso histórico de cada item
+  const somaHistorico = candidatos.reduce((s, c) => s + c.valorHistorico, 0);
+
+  candidatos.forEach(c => {
+    const participacao = somaHistorico > 0 ? (c.valorHistorico / somaHistorico) : (1 / candidatos.length);
+    const valorAlocado = valorAlvo * participacao;
+
+    let qtdSugerida = Math.max(1, Math.round(valorAlocado / c.precoFinal));
+    qtdSugerida = Math.min(qtdSugerida, c.estoque);
+
+    const valorItem = c.precoFinal * qtdSugerida;
 
     SUGESTAO_PEDIDO_ITENS.push({
-      produto, qtd: qtdSugerida, precoFinal, valorItem,
-      freq: item.freq, ean: item.ean
+      produto: c.produto, qtd: qtdSugerida, precoFinal: c.precoFinal, valorItem,
+      freq: c.freq, ean: c.ean
     });
-  }
+  });
 }
 function atualizarBotaoSugestaoPedido() {
   const btn = document.getElementById('btnSugestaoPedido');
