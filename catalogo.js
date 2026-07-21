@@ -1215,12 +1215,15 @@ if (popover && estadoCom && !estadoCom.contains(e.target)) {
 popover.classList.add('hidden');
 const chevron = document.getElementById('chipChevron');
 if (chevron) chevron.style.transform = '';
+}
 ['dropdownFiltroMarca', 'dropdownFiltroDivisao', 'dropdownOrdenar'].forEach(id => {
     const dd = document.getElementById(id);
     if (dd && !dd.classList.contains('hidden') && !dd.parentElement.contains(e.target)) {
       dd.classList.add('hidden');
     }
   });
+});
+
 // FILTROS
 function toggleBotaoLimparPesquisa() {
 const input = document.getElementById('barraPesquisa');
