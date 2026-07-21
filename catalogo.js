@@ -4923,3 +4923,288 @@ if (idsSemImagem.length > 0) {
   verificarEExibirAvisoCache(); // NOVO — reflete o uso imediatamente após gerar o PDF
 }
 }
+// =========================================================================
+// TALÃO DE PEDIDO EM BRANCO (Excel com fórmulas) — catálogo completo do
+// fornecedor ativo (respeita os filtros atuais: marca, divisão, estoque,
+// busca), pronto pra preencher a quantidade em campo/offline.
+// Reproduz o formato do talão físico: cabeçalho com Apontador/Cliente/
+// Fatura Mínima/Prazo, caixa de resumo por Franquia (SUMIFS) e Valor
+// Bruto/Líquido calculados por fórmula (=Qtd × Preço) linha a linha —
+// exatamente como a planilha original usada em campo.
+//
+// COMO ADICIONAR:
+// 1) Cole este bloco inteiro em catalogo.js (ex: logo após a função
+//    baixarCatalogoPdf(), que já é o padrão mais parecido).
+// 2) No catalogo.html, adicione o botão abaixo ao lado do botão
+//    "Baixar Catálogo PDF" (mesmo container, mesma barra de controles):
+//
+//    <button id="btnBaixarTalaoExcel" onclick="baixarTalaoEmBranco()"
+//      class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-xs rounded-xl border border-blue-200 transition-all flex items-center gap-1.5">
+//      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+//      </svg>
+//      Baixar Talão Excel
+//    </button>
+// =========================================================================
+
+// Agrupa por FRANQUIA (ou por MARCA quando o fornecedor não usa franquia —
+// fora da Unilever a franquia normalmente vem "GERAL", então cai pra marca)
+function _obterChaveGrupoTalao(p) {
+  const franquia = String(p.franquia || '').trim().toUpperCase();
+  if (franquia && franquia !== 'GERAL') return franquia;
+  return String(p.marca || 'GERAL').trim().toUpperCase() || 'GERAL';
+}
+
+async function baixarTalaoEmBranco() {
+  if (filtroFornecedorAtual === 'TODOS') {
+    mostrarToast('warning', 'Selecione um fornecedor antes de gerar o talão.');
+    return;
+  }
+  const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + marca + divisão + estoque atuais
+  if (lista.length === 0) {
+    mostrarToast('warning', 'Nenhum produto para gerar o talão com os filtros atuais.');
+    return;
+  }
+  if (lista.length > 3000) {
+    mostrarToast('warning', `Muitos produtos para um único talão (${lista.length}). Refine os filtros (marca/divisão) antes de exportar.`);
+    return;
+  }
+
+  const btn = document.getElementById('btnBaixarTalaoExcel');
+  const htmlOriginal = btn ? btn.innerHTML : null;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Gerando...`;
+  }
+
+  try {
+    const workbook = await _construirWorkbookTalao(lista);
+    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const sufixoCliente = (CLIENTE_SELECIONADO && CLIENTE_SELECIONADO.razao)
+      ? '_' + limparNomeArquivo(CLIENTE_SELECIONADO.razao.toUpperCase())
+      : '';
+    const nomeArquivo = `Talao_${limparNomeArquivo(filtroFornecedorAtual)}${sufixoCliente}_${UF_USUARIO}_${dataHoje}.xlsx`;
+    await baixarWorkbook(workbook, nomeArquivo);
+    mostrarToast('success', 'Talão em branco gerado com sucesso.');
+  } catch (erro) {
+    console.error('Erro ao gerar talão em branco:', erro);
+    mostrarToast('error', 'Ocorreu um erro ao gerar o talão. Tente novamente.');
+  } finally {
+    if (btn) { btn.disabled = false; if (htmlOriginal !== null) btn.innerHTML = htmlOriginal; }
+  }
+}
+
+async function _construirWorkbookTalao(lista) {
+  const LARANJA     = 'FFFF6B00';
+  const LARANJA_ESC = 'FFE55300';
+  const CINZA_CLARO = 'FFF4F4F4';
+  const AZUL_ESC    = 'FF1E293B';
+  const BORDA       = { style: 'thin', color: { argb: 'FFE2E2E2' } };
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'HBN1 - Nazária Distribuidora Farmacêutica';
+  workbook.created = new Date();
+
+  const nomeAba = limparNomeArquivo('Talao ' + filtroFornecedorAtual).substring(0, 31) || 'Talao';
+  const ws = workbook.addWorksheet(nomeAba, { views: [{ showGridLines: false }] });
+
+  ws.columns = [
+    { key: 'sp',    width: 2.5 },
+    { key: 'cod',   width: 12 },
+    { key: 'desc',  width: 46 },
+    { key: 'ean',   width: 16 },
+    { key: 'div',   width: 14 },
+    { key: 'fran',  width: 16 },
+    { key: 'pb',    width: 13 },
+    { key: 'desc%', width: 10 },
+    { key: 'pf',    width: 13 },
+    { key: 'est',   width: 10 },
+    { key: 'qtd',   width: 12 },
+    { key: 'vb',    width: 16 },
+    { key: 'vl',    width: 16 }
+  ];
+
+  // --- Banner ---
+  ws.mergeCells('A1:M3');
+  const banner = ws.getCell('A1');
+  const dataHoraAgora = new Date().toLocaleString('pt-BR');
+  banner.value = {
+    richText: [
+      { font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' } }, text: 'TALÃO DE PEDIDO — HBN1\n' },
+      { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' } }, text: `FORNECEDOR: ${filtroFornecedorAtual}\n` },
+      { font: { size: 9, color: { argb: 'FFFFE8D6' } }, text: `UF: ${UF_USUARIO} • ${dataHoraAgora} • ${lista.length} produto(s)` }
+    ]
+  };
+  banner.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  banner.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA } };
+  ws.getRow(1).height = 18; ws.getRow(2).height = 16; ws.getRow(3).height = 16;
+
+  // --- Área de cabeçalho: campos p/ preencher à mão + caixa de franquias ---
+  const grupos = [...new Set(lista.map(_obterChaveGrupoTalao))].sort();
+  const infoLinhaInicio = 5;
+
+  const camposInfo = [
+    ['APONTADOR:', ''],
+    ['CLIENTE:', CLIENTE_SELECIONADO ? (CLIENTE_SELECIONADO.razao || '').toUpperCase() : ''],
+    ['CNPJ:', CLIENTE_SELECIONADO ? (CLIENTE_SELECIONADO.cnpj || '') : ''],
+    ['FATURA MÍNIMA:', ''],
+    ['PRAZO:', ''],
+    ['DATA:', new Date().toLocaleDateString('pt-BR')]
+  ];
+
+  camposInfo.forEach(([label, valor], i) => {
+    const r = infoLinhaInicio + i;
+    const lbl = ws.getCell(`B${r}`);
+    lbl.value = label;
+    lbl.font = { bold: true, size: 10, color: { argb: 'FF555555' } };
+    ws.mergeCells(`C${r}:E${r}`);
+    const val = ws.getCell(`C${r}`);
+    val.value = valor;
+    val.font = { bold: true, size: 10, color: { argb: 'FF1E1E1E' } };
+    val.border = { bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } } }; // linha pra escrever à mão
+    ws.getRow(r).height = 16;
+  });
+
+  // Caixa de resumo por franquia (colunas K:M), com SUMIFS ligado à tabela —
+  // atualiza sozinha conforme o vendedor vai preenchendo as quantidades.
+  const franquiaHeaderRow = infoLinhaInicio;
+  ['FRANQUIA', 'R$ BRUTO', 'R$ LÍQUIDO'].forEach((titulo, i) => {
+    const cel = ws.getCell(franquiaHeaderRow, 11 + i); // K, L, M
+    cel.value = titulo;
+    cel.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } };
+    cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL_ESC } };
+    cel.alignment = { horizontal: 'center' };
+  });
+
+  const linhasHeaderInfo   = camposInfo.length;
+  const linhasFranquiaBox  = grupos.length + 2; // header + grupos + total
+  const linhasArea         = Math.max(linhasHeaderInfo, linhasFranquiaBox);
+
+  const tabelaHeaderRow = infoLinhaInicio + linhasArea + 1;
+  const dadosInicioRow  = tabelaHeaderRow + 1;
+  const dadosFimRow     = dadosInicioRow + lista.length - 1;
+  const totalGeralRow   = dadosFimRow + 1;
+
+  grupos.forEach((grupo, i) => {
+    const r = franquiaHeaderRow + 1 + i;
+    ws.getCell(r, 11).value = grupo;
+    ws.getCell(r, 11).font  = { bold: true, size: 9.5, color: { argb: 'FF334155' } };
+    const celBruto = ws.getCell(r, 12);
+    celBruto.value  = { formula: `SUMIFS($L$${dadosInicioRow}:$L$${dadosFimRow},$F$${dadosInicioRow}:$F$${dadosFimRow},$K${r})` };
+    celBruto.numFmt = '"R$" #,##0.00';
+    const celLiq = ws.getCell(r, 13);
+    celLiq.value  = { formula: `SUMIFS($M$${dadosInicioRow}:$M$${dadosFimRow},$F$${dadosInicioRow}:$F$${dadosFimRow},$K${r})` };
+    celLiq.numFmt = '"R$" #,##0.00';
+    ws.getRow(r).height = 15;
+  });
+
+  const franquiaTotalRow = franquiaHeaderRow + 1 + grupos.length;
+  ws.getCell(franquiaTotalRow, 11).value = 'TOTAL';
+  ws.getCell(franquiaTotalRow, 11).font  = { bold: true, size: 9.5, color: { argb: 'FFFFFFFF' } };
+  ws.getCell(franquiaTotalRow, 11).fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA_ESC } };
+  [12, 13].forEach(col => {
+    const letra = col === 12 ? 'L' : 'M';
+    const cel = ws.getCell(franquiaTotalRow, col);
+    cel.value  = { formula: `SUM(${letra}${franquiaHeaderRow + 1}:${letra}${franquiaTotalRow - 1})` };
+    cel.numFmt = '"R$" #,##0.00';
+    cel.font   = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cel.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA_ESC } };
+  });
+
+  // --- Cabeçalho da tabela de produtos ---
+  const titulosColunas = ['CÓDIGO', 'DESCRIÇÃO', 'EAN', 'DIVISÃO', 'FRANQUIA', 'PREÇO BRUTO', 'DESCONTO%', 'PREÇO FINAL', 'ESTOQUE', 'QTD PEDIDO', 'VALOR BRUTO', 'VALOR LÍQUIDO'];
+  const linhaCab = ws.getRow(tabelaHeaderRow);
+  titulosColunas.forEach((titulo, i) => {
+    const cel = linhaCab.getCell(i + 2); // começa na coluna B
+    cel.value = titulo;
+    cel.font = { bold: true, size: 9.5, color: { argb: 'FFFFFFFF' } };
+    cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LARANJA } };
+    cel.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    cel.border = { top: BORDA, bottom: BORDA, left: BORDA, right: BORDA };
+  });
+  linhaCab.height = 28;
+
+  // --- Linhas de produtos (QTD PEDIDO fica em branco, destacada) ---
+  const itensOrdenados = lista.slice().sort((a, b) => String(a.descricao || '').localeCompare(String(b.descricao || '')));
+  itensOrdenados.forEach((p, idx) => {
+    const r = dadosInicioRow + idx;
+    const linha = ws.getRow(r);
+    const corFundo = (idx % 2 === 0) ? 'FFFFFFFF' : CINZA_CLARO;
+    const { precoOriginal, percentual } = calcularPrecos(p);
+    const eanDigits = String(p.ean || '').replace(/\D/g, '');
+    const grupo = _obterChaveGrupoTalao(p);
+
+    const valoresFixos = {
+      2: p.id || '',
+      3: p.descricao || '',
+      4: eanDigits ? Number(eanDigits) : (p.ean || ''),
+      5: p.divisao || '',
+      6: grupo,
+      7: precoOriginal,
+      8: (percentual || 0) / 100,
+      10: Number(p.estoque || 0)
+    };
+
+    Object.keys(valoresFixos).forEach(colStr => {
+      const col = Number(colStr);
+      const cel = linha.getCell(col);
+      cel.value = valoresFixos[col];
+      cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corFundo } };
+      cel.border = { top: BORDA, bottom: BORDA, left: BORDA, right: BORDA };
+      cel.font = { size: 9, color: { argb: 'FF1E1E1E' } };
+      cel.alignment = { vertical: 'middle', horizontal: (col === 3) ? 'left' : 'center', wrapText: (col === 3) };
+    });
+
+    // Colunas de fórmula / campo em branco também precisam de fundo + borda
+    [9, 11, 12, 13].forEach(col => {
+      const cel = linha.getCell(col);
+      cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corFundo } };
+      cel.border = { top: BORDA, bottom: BORDA, left: BORDA, right: BORDA };
+      cel.font = { size: 9, color: { argb: 'FF1E1E1E' } };
+      cel.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+
+    linha.getCell(4).numFmt  = '0';                 // EAN sem notação científica
+    linha.getCell(7).numFmt  = '"R$" #,##0.00';      // Preço Bruto
+    linha.getCell(8).numFmt  = '0.00%';               // Desconto %
+    linha.getCell(9).value   = { formula: `G${r}-(G${r}*H${r})` };
+    linha.getCell(9).numFmt  = '"R$" #,##0.00';       // Preço Final
+    linha.getCell(12).value  = { formula: `K${r}*G${r}` };
+    linha.getCell(12).numFmt = '"R$" #,##0.00';       // Valor Bruto
+    linha.getCell(13).value  = { formula: `I${r}*K${r}` };
+    linha.getCell(13).numFmt = '"R$" #,##0.00';       // Valor Líquido
+    linha.getCell(11).fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF7E6' } }; // destaca a coluna a preencher
+
+    linha.height = 15;
+  });
+
+  // --- Linha de total geral ---
+  ws.mergeCells(`B${totalGeralRow}:J${totalGeralRow}`);
+  const totalLabel = ws.getCell(`B${totalGeralRow}`);
+  totalLabel.value = 'TOTAL GERAL DO TALÃO';
+  totalLabel.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
+  totalLabel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL_ESC } };
+  totalLabel.alignment = { horizontal: 'right', vertical: 'middle' };
+
+  const celQtd = ws.getCell(totalGeralRow, 11);
+  celQtd.value  = { formula: `SUM(K${dadosInicioRow}:K${dadosFimRow})` };
+  celQtd.numFmt = '#,##0';
+  const celVBruto = ws.getCell(totalGeralRow, 12);
+  celVBruto.value  = { formula: `SUM(L${dadosInicioRow}:L${dadosFimRow})` };
+  celVBruto.numFmt = '"R$" #,##0.00';
+  const celVLiq = ws.getCell(totalGeralRow, 13);
+  celVLiq.value  = { formula: `SUM(M${dadosInicioRow}:M${dadosFimRow})` };
+  celVLiq.numFmt = '"R$" #,##0.00';
+  [11, 12, 13].forEach(col => {
+    const cel = ws.getCell(totalGeralRow, col);
+    cel.font = { bold: true, size: 10.5, color: { argb: 'FFFFFFFF' } };
+    cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: AZUL_ESC } };
+    cel.alignment = { horizontal: 'center', vertical: 'middle' };
+  });
+  ws.getRow(totalGeralRow).height = 22;
+
+  // Congela o cabeçalho da tabela ao rolar (útil pra talões longos)
+  ws.views = [{ state: 'frozen', ySplit: tabelaHeaderRow, xSplit: 0, showGridLines: false }];
+
+  return workbook;
+}
