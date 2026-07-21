@@ -4280,10 +4280,6 @@ if (!PERFIS_TALAO_EXCEL || PERFIS_TALAO_EXCEL.includes(TIPO_USUARIO)) {
   const btnTalao = document.getElementById('btnBaixarTalaoExcel');
   if (btnTalao) btnTalao.classList.remove('hidden');
 }
-
-  const btnTalao = document.getElementById('btnBaixarTalaoExcel');
-  if (btnTalao) btnTalao.classList.remove('hidden');
-}
       
 iniciarSplashAbertura();
 
