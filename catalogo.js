@@ -4271,9 +4271,11 @@ if (linkAdmin) linkAdmin.remove();
 if (TIPO_USUARIO === 'ADMIN') {
   const blocoIA = document.getElementById('blocoOpcaoIA');
   if (blocoIA) blocoIA.classList.remove('hidden');
-}
-       
 
+  const btnTalao = document.getElementById('btnBaixarTalaoExcel');
+  if (btnTalao) btnTalao.classList.remove('hidden');
+}
+      
 iniciarSplashAbertura();
 
 // ── MURAL COM FADE ──────────────────────────────────────────────────
@@ -4956,8 +4958,8 @@ function _obterChaveGrupoTalao(p) {
 }
 
 async function baixarTalaoEmBranco() {
-  if (filtroFornecedorAtual === 'TODOS') {
-    mostrarToast('warning', 'Selecione um fornecedor antes de gerar o talão.');
+  if (TIPO_USUARIO !== 'ADMIN') {
+    mostrarToast('warning', 'Função disponível apenas para administradores.');
     return;
   }
   const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + marca + divisão + estoque atuais
