@@ -382,27 +382,27 @@ function adicionarSelecaoManualHit() {
 let SUGESTAO_PEDIDO_DADOS   = null; // resposta bruta da API
 let SUGESTAO_PEDIDO_ITENS   = [];   // [{ produto, freq, score, valorSugerido }] já casados com BD_PRODUTOS e montados até o valor alvo
 
-function carregarSugestaoPedido() {
-  SUGESTAO_PEDIDO_DADOS = null;
-  SUGESTAO_PEDIDO_ITENS = [];
-  atualizarBotaoSugestaoPedido();
+//function carregarSugestaoPedido() {
+  //SUGESTAO_PEDIDO_DADOS = null;
+  //SUGESTAO_PEDIDO_ITENS = [];
+  //atualizarBotaoSugestaoPedido();
 
-  if (!CLIENTE_SELECIONADO) return;
-  if (filtroFornecedorAtual === 'TODOS') return; // precisa de um fornecedor ativo
+  //if (!CLIENTE_SELECIONADO) return;
+  //if (filtroFornecedorAtual === 'TODOS') return; // precisa de um fornecedor ativo
 
-  chamarApi('sugestaoPedido', {
-    uf: UF_USUARIO,
-    codCliente: CLIENTE_SELECIONADO.id,
-    fornecedor: filtroFornecedorAtual
-  })
-  .then(resp => {
-    if (!resp || resp.erro) return;
-    SUGESTAO_PEDIDO_DADOS = resp;
-    montarItensSugestaoPedido();
-    atualizarBotaoSugestaoPedido();
-  })
-  .catch(e => console.error('Erro ao carregar sugestão de pedido:', e));
-}
+  //chamarApi('sugestaoPedido', {
+    //uf: UF_USUARIO,
+    //codCliente: CLIENTE_SELECIONADO.id,
+    //fornecedor: filtroFornecedorAtual
+  //})
+  //.then(resp => {
+    //if (!resp || resp.erro) return;
+    //SUGESTAO_PEDIDO_DADOS = resp;
+   // montarItensSugestaoPedido();
+    //atualizarBotaoSugestaoPedido();
+ // })
+//  .catch(e => console.error('Erro ao carregar sugestão de pedido:', e));
+//}
 
 function montarItensSugestaoPedido() {
   SUGESTAO_PEDIDO_ITENS = [];
@@ -914,7 +914,7 @@ renderizarMiniSwitcher(nomeFornecedor);
 // Filtra e renderiza produtos
 executarFiltrosGerais();
 atualizarBotaoSugestaoHit();
-carregarSugestaoPedido(); 
+//carregarSugestaoPedido(); 
 
 const qtd = PRODUTOS_FILTRADOS.length;
 document.getElementById('qtdProdutosFornecedor').innerText = qtd + ' produto' + (qtd !== 1 ? 's' : '');
@@ -1319,7 +1319,7 @@ atualizarIndicadoresFinanceirosGlobais();
 atualizarPaineisOLPorFornecedor(filtroFornecedorAtual);
 atualizarResumoValoresMinimos();
 carregarSugestaoHit();
-carregarSugestaoPedido();  
+//carregarSugestaoPedido();  
 }
 
 function limparClienteSelecionado() {
@@ -1352,7 +1352,7 @@ _resetBotoesOmron();
 HIT_DADOS_CLIENTE = null;
 HIT_ITENS_PENDENTES = [];
 atualizarBotaoSugestaoHit();
-carregarSugestaoPedido();  
+//carregarSugestaoPedido();  
 
 executarFiltrosGerais();
 atualizarIndicadoresFinanceirosGlobais();
