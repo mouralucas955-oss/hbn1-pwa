@@ -661,6 +661,9 @@ function trocarUfAtiva(novaUf) {
 // Compatibilidade: cadastros antigos com "VENDEDOR" puro contam como Farma.
 let TIPO_USUARIO = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
 if (TIPO_USUARIO === 'VENDEDOR') TIPO_USUARIO = 'VENDEDOR_FARMA';
+// Perfis autorizados a usar o Talão em branco (Excel). Pra liberar geral,
+// troque por: const PERFIS_TALAO_EXCEL = null; (null = libera pra todo mundo)
+const PERFIS_TALAO_EXCEL = ['ADMIN'];
 
 // Controle de OL Danone: 0 = sem OL, 250 | 500 | 1000
 let OL_ATIVO = 0;
@@ -4271,6 +4274,12 @@ if (linkAdmin) linkAdmin.remove();
 if (TIPO_USUARIO === 'ADMIN') {
   const blocoIA = document.getElementById('blocoOpcaoIA');
   if (blocoIA) blocoIA.classList.remove('hidden');
+}
+
+if (!PERFIS_TALAO_EXCEL || PERFIS_TALAO_EXCEL.includes(TIPO_USUARIO)) {
+  const btnTalao = document.getElementById('btnBaixarTalaoExcel');
+  if (btnTalao) btnTalao.classList.remove('hidden');
+}
 
   const btnTalao = document.getElementById('btnBaixarTalaoExcel');
   if (btnTalao) btnTalao.classList.remove('hidden');
@@ -4958,8 +4967,12 @@ function _obterChaveGrupoTalao(p) {
 }
 
 async function baixarTalaoEmBranco() {
-  if (TIPO_USUARIO !== 'ADMIN') {
+  if (PERFIS_TALAO_EXCEL && !PERFIS_TALAO_EXCEL.includes(TIPO_USUARIO)) {
     mostrarToast('warning', 'Função disponível apenas para administradores.');
+    return;
+  }
+  if (filtroFornecedorAtual === 'TODOS') {
+    mostrarToast('warning', 'Selecione um fornecedor antes de gerar o talão.');
     return;
   }
   const lista = PRODUTOS_FILTRADOS.slice(); // respeita busca + marca + divisão + estoque atuais
