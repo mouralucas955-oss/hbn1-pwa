@@ -560,8 +560,9 @@ header .bg-white {
   -webkit-backdrop-filter: blur(6px);
 }
 
-/* Janela do modal */
-[id^="modal"] > div {
+/* Janela do modal (apenas overlays reais: fixed + inset-0, evita pegar
+   divs internas como #modalBlocoPrecoDestaque que só começam com "modal") */
+[id^="modal"].fixed > div {
   background-color: var(--surface-card);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-modal);
