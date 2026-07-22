@@ -758,23 +758,25 @@
             <span id="modalDivisaoFranquia" class="text-xs font-medium text-slate-600">-</span>
           </div>
         </div>
-        <div class="flex items-center justify-between border-t border-slate-100 pt-4 mt-2">
-          <div>
-            <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Valor Unitário</span>
-            <div id="modalBlocoPrecos" class="flex items-baseline gap-2 mt-0.5">
-              <span id="modalPrecoFinal" class="text-xl font-black text-slate-900">R$ 0,00</span>
-              <span id="modalPrecoOriginal" class="text-xs text-slate-400 line-through font-medium"></span>
+        <div class="border-t border-slate-100 pt-4 mt-2">
+          <div id="modalBlocoPrecoDestaque" class="bg-orange-50 rounded-2xl p-4">
+            <div id="modalLinhaOriginalDesconto" class="hidden items-center gap-2 mb-1">
+              <span id="modalPrecoOriginal" class="text-sm text-slate-400 line-through font-bold"></span>
+              <span id="modalBadgeDesconto" class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">0% OFF</span>
             </div>
-            <div id="modalBlocoST" class="hidden mt-1 flex items-center gap-1.5">
+            <div class="flex items-baseline gap-2">
+              <span id="modalPrecoFinal" class="text-3xl font-black text-[#FF6B00]">R$ 0,00</span>
+              <span class="text-xs font-bold text-slate-400">Preço Final</span>
+            </div>
+            <p id="modalTextoEconomia" class="hidden text-xs font-bold text-emerald-600 mt-1"></p>
+            <div id="modalBlocoST" class="hidden mt-2 flex items-center gap-1.5">
               <span class="text-[9px] font-black text-amber-600 uppercase tracking-wider">+ ST:</span>
               <span id="modalValorST" class="text-[11px] font-black text-amber-700">R$ 0,00</span>
               <span class="text-[9px] text-slate-400">→ Total:</span>
               <span id="modalPrecoComST" class="text-[13px] font-black text-slate-900">R$ 0,00</span>
             </div>
           </div>
-          <div id="modalBadgeDescontoCont" class="hidden">
-            <span id="modalBadgeDesconto" class="bg-red-500 text-white text-xs font-black px-2 py-1 rounded-md shadow-sm">0% OFF</span>
-          </div>
+          <div id="modalBotaoAcao" class="mt-4"></div>
         </div>
       </div>
     </div>
