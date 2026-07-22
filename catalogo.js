@@ -1672,7 +1672,7 @@ const corBarraEstoque = isEsgotado ? 'bg-red-500'
 
 const blocoPrecoHtml = temDesconto
 ? `<div>
-            <p class="text-base font-black text-slate-900 leading-none">${formatarParaReal(precoExibidoFinal)}</p>
+            <p class="text-base font-black text-[#FF6B00] leading-none">${formatarParaReal(precoExibidoFinal)}</p>
             <p class="text-[10px] text-slate-400 line-through leading-tight mt-0.5">${formatarParaReal(precoExibidoOriginal)}</p>
           </div>`
 : `<div>
@@ -1765,6 +1765,10 @@ CARRINHO[idProd] = novaQtd;
 const c = document.getElementById(`card-btn-${idProd}`);
 if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
 // Card inteiro precisa re-renderizar para refletir borda/badge "no carrinho"
+// Card inteiro precisa re-renderizar para refletir borda/badge "no carrinho"
+_atualizarEstadoVisualCard(idProd);
+_atualizarBotaoModalDetalhes(idProd);
+atualizarIndicadoresFinanceirosGlobais();
 _atualizarEstadoVisualCard(idProd);
 atualizarIndicadoresFinanceirosGlobais();
 atualizarIndicadorMinimosBarra();
@@ -1783,6 +1787,9 @@ else CARRINHO[idProd] = novaQtd;
 const c = document.getElementById(`card-btn-${idProd}`);
 if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
 _atualizarEstadoVisualCard(idProd);
+_atualizarBotaoModalDetalhes(idProd);
+atualizarIndicadoresFinanceirosGlobais();
+  
 atualizarIndicadoresFinanceirosGlobais();
 atualizarIndicadorMinimosBarra();
 atualizarBotaoSugestaoHit();
@@ -2036,6 +2043,7 @@ function fecharModalCarrinhoNoBackdrop(event)             { if (event.target.id 
 // =========================================================================
 let GALERIA_IMAGENS = [];
 let GALERIA_INDEX = 0;
+let MODAL_PRODUTO_ATUAL = null;
 
 function _montarGaleriaImagens(p) {
   const extras = String(p.imagemInfo || '')
@@ -2121,8 +2129,22 @@ else badgeTag.classList.add('hidden');
 const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
 const temDesconto = percentual > 0;
 
-document.getElementById('modalPrecoFinal').innerText   = precoOriginal > 0 ? formatarParaReal(precoFinal) : '-';
-document.getElementById('modalPrecoOriginal').innerText = temDesconto ? formatarParaReal(precoOriginal) : '';
+document.getElementById('modalPrecoFinal').innerText = precoOriginal > 0 ? formatarParaReal(precoFinal) : '-';
+
+const linhaOriginal = document.getElementById('modalLinhaOriginalDesconto');
+const textoEconomia = document.getElementById('modalTextoEconomia');
+if (temDesconto) {
+  document.getElementById('modalPrecoOriginal').innerText = formatarParaReal(precoOriginal);
+  document.getElementById('modalBadgeDesconto').innerText = `${percentual}% OFF`;
+  linhaOriginal.classList.remove('hidden');
+  linhaOriginal.classList.add('flex');
+  textoEconomia.innerText = `Você economiza: ${formatarParaReal(precoOriginal - precoFinal)} por unidade`;
+  textoEconomia.classList.remove('hidden');
+} else {
+  linhaOriginal.classList.add('hidden');
+  linhaOriginal.classList.remove('flex');
+  textoEconomia.classList.add('hidden');
+}
 
 // Bloco ST no modal — mesma lógica: desconto sobre (preço + ST)
 const valorSTModal       = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
@@ -2137,13 +2159,7 @@ blocoST.classList.remove('hidden');
 blocoST.classList.add('hidden');
 }
 
-const badgeDescCont = document.getElementById('modalBadgeDescontoCont');
-if (temDesconto) {
-document.getElementById('modalBadgeDesconto').innerText = `-${percentual}% OFF`;
-badgeDescCont.classList.remove('hidden');
-} else {
-badgeDescCont.classList.add('hidden');
-}
+MODAL_PRODUTO_ATUAL = p.id;
 
 const estoque = Number(p.estoque || 0);
 const badge = document.getElementById('modalEstoqueBadge');
@@ -2154,11 +2170,26 @@ badge.className = "absolute bottom-3 right-3 text-[10px] font-bold px-2.5 py-1 r
 badge.innerText = "Item Esgotado";
 badge.className = "absolute bottom-3 right-3 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm bg-red-100 text-red-800 border border-red-200";
 }
+
+const qtdModal = CARRINHO[p.id] || 0;
+document.getElementById('modalBotaoAcao').innerHTML = obterHtmlBotaoAcao(p.id, qtdModal, estoque, estoque <= 0);
+
 document.getElementById('modalDetalhes').classList.remove('hidden');
 }
 
-function fecharModalDetalhes()              { document.getElementById('modalDetalhes').classList.add('hidden'); }
+function fecharModalDetalhes()              { document.getElementById('modalDetalhes').classList.add('hidden'); MODAL_PRODUTO_ATUAL = null; }
 function fecharModalDetalhesNoBackdrop(evt) { if (evt.target.id === 'modalDetalhes') fecharModalDetalhes(); }
+
+function _atualizarBotaoModalDetalhes(idProd) {
+  if (MODAL_PRODUTO_ATUAL !== idProd) return;
+  const p = BD_PRODUTOS.find(item => item.id === idProd);
+  if (!p) return;
+  const estoque = Number(p.estoque || 0);
+  const qtd = CARRINHO[idProd] || 0;
+  const el = document.getElementById('modalBotaoAcao');
+  if (el) el.innerHTML = obterHtmlBotaoAcao(idProd, qtd, estoque, estoque <= 0);
+}
+
 // ZOOM DA IMAGEM DO PRODUTO (lightbox)
 function abrirZoomImagem() {
   const src = document.getElementById('modalImagem').src;
