@@ -5074,7 +5074,7 @@ async function _construirWorkbookTalao(lista) {
     richText: [
       { font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' } }, text: 'TALÃO DE PEDIDO — HBN1\n' },
       { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' } }, text: `FORNECEDOR: ${filtroFornecedorAtual}\n` },
-      { font: { size: 9, color: { argb: 'FFFFE8D6' } }, text: `UF: ${UF_USUARIO} • ${dataHoraAgora} • ${lista.length} produto(s)` }
+      { font: { size: 9, color: { argb: 'FFFFE8D6' } }, text: `UF: ${UF_USUARIO} • ${dataHoraAgora} • ${lista.length} produto(s)${ST_ATIVO ? ' • Preço bruto já com ST' : ''}` }
     ]
   };
   banner.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
@@ -5173,6 +5173,9 @@ async function _construirWorkbookTalao(lista) {
     const linha = ws.getRow(r);
     const corFundo = (idx % 2 === 0) ? 'FFFFFFFF' : CINZA_CLARO;
     const { precoOriginal, percentual } = calcularPrecos(p);
+    // ST: soma ANTES do desconto — mesma regra usada no card do catálogo e no modal
+    const valorST = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
+    const precoOriginalComST = precoOriginal + valorST;
     const eanDigits = String(p.ean || '').replace(/\D/g, '');
     const grupo = _obterChaveGrupoTalao(p);
 
@@ -5182,7 +5185,7 @@ async function _construirWorkbookTalao(lista) {
       4: eanDigits ? Number(eanDigits) : (p.ean || ''),
       5: p.divisao || '',
       6: grupo,
-      7: precoOriginal,
+      7: precoOriginalComST,
       8: (percentual || 0) / 100,
       10: Number(p.estoque || 0)
     };
