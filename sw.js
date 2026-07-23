@@ -2,7 +2,7 @@
 // SERVICE WORKER — HBN1 PWA v5
 // Cache do app shell com versionamento automático
 // ==========================================================================
-const CACHE_NAME = 'hbn1-shell-v5';
+const CACHE_NAME = 'hbn1-shell-v6';
 const ARQUIVOS_PARA_CACHE = [
   './',
   './index.html',
