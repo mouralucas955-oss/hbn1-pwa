@@ -575,8 +575,10 @@ document.documentElement.setAttribute('data-theme', t);
 const params = new URLSearchParams(window.location.search);
 const UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 
-// Sem usuário logado? manda de volta para o login
-if (!localStorage.getItem('hbn1_usuario')) {
+// Sem usuário logado? manda de volta para o login — exceto se a URL tiver
+// ?oferta=TOKEN, caso em que quem decide o que mostrar é o script de
+// bootstrap da oferta compartilhada (ver <head> do catalogo.html).
+if (!localStorage.getItem('hbn1_usuario') && !params.get('oferta')) {
 window.location.href = 'index.html';
 }
 let UFS_PERMITIDAS_USUARIO = [];
@@ -3579,6 +3581,48 @@ function registrarPedidoNoHistoricoAtual() {
   });
 }
 
+// =========================================================================
+// OFERTA COMPARTILHADA — vendedor gera um link temporário pro cliente
+// selecionado montar o próprio pedido sozinho e devolver via WhatsApp.
+// =========================================================================
+async function compartilharOfertaComCliente() {
+  if (!CLIENTE_SELECIONADO) {
+    mostrarToast('warning', 'Selecione um cliente antes de compartilhar a oferta.');
+    return;
+  }
+
+  const botao = document.getElementById('btnCompartilharOferta');
+  const textoOriginal = botao ? botao.innerHTML : null;
+  if (botao) { botao.disabled = true; botao.style.opacity = '0.6'; botao.style.cursor = 'wait'; }
+
+  try {
+    const resp = await chamarApi('criarOfertaCompartilhada', { codCliente: CLIENTE_SELECIONADO.id });
+    if (!resp || resp.erro || !resp.token) {
+      mostrarToast('error', (resp && resp.mensagem) || 'Não foi possível gerar o link.');
+      return;
+    }
+
+    const url = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}catalogo.html?oferta=${resp.token}`;
+    const nomeCliente = resp.clienteNome || CLIENTE_SELECIONADO.razao || 'você';
+    const mensagem = `Olá! Segue o catálogo com sua oferta, ${nomeCliente}. É só montar o pedido por aqui: ${url}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Catálogo HBN1', text: mensagem });
+        return;
+      } catch (e) {
+        // usuário cancelou o compartilhamento nativo — cai pro link do WhatsApp abaixo
+      }
+    }
+    window.open('https://wa.me/?text=' + encodeURIComponent(mensagem), '_blank');
+  } catch (erro) {
+    console.error('Erro ao compartilhar oferta:', erro);
+    mostrarToast('error', 'Erro ao gerar o link. Tente novamente.');
+  } finally {
+    if (botao) { botao.disabled = false; botao.style.opacity = ''; botao.style.cursor = ''; botao.innerHTML = textoOriginal; }
+  }
+}
+
 async function _executarDownloadExcel() {
 const chaves = Object.keys(CARRINHO);
 const btnExcel = document.getElementById('btnBaixarExcel');
@@ -4455,7 +4499,7 @@ aplicarRestricoesClienteLogado();
 // poder buscar/trocar (BD_CLIENTES sempre tem só ele mesmo, pelo backend).
 // CLIENTE_REDE: mantém a busca, mas BD_CLIENTES já vem restrita à rede dele.
 function aplicarRestricoesClienteLogado() {
-  if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE') {
+  if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE' || TIPO_USUARIO === 'CLIENTE_OFERTA') {
     if (BD_CLIENTES.length > 0 && !CLIENTE_SELECIONADO) {
       selecionarCliente(BD_CLIENTES[0].id);
     }
