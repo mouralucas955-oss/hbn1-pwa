@@ -4315,8 +4315,8 @@ const icon = document.getElementById('iconDarkMode');
 renderizarSeletorUF();
 if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
 
-// Cliente (Independente ou Rede) só vê o próprio pedido — nada de gestão/vendas
-if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE' || TIPO_USUARIO === 'CLIENTE_REDE') {
+// Cliente (Independente, Rede ou Oferta Compartilhada) só vê o próprio pedido — nada de gestão/vendas
+if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE' || TIPO_USUARIO === 'CLIENTE_REDE' || TIPO_USUARIO === 'CLIENTE_OFERTA') {
   ['itemMenuVerValorPedido', 'itemMenuCentralInvestimento', 'itemMenuCarteira',
    'linkHitAlavancas', 'itemMenuEscolhaManualHit', 'linkCampanhasMetas', 'linkAdminAcessos'].forEach(id => {
     const el = document.getElementById(id);
@@ -4345,6 +4345,23 @@ if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE' || TIPO_USUARIO === 'CLIENTE_REDE') 
 if (TIPO_USUARIO !== 'ADMIN') {
 const linkAdmin = document.getElementById('linkAdminAcessos');
 if (linkAdmin) linkAdmin.remove();
+}
+
+// Oferta compartilhada: além das restrições de cliente acima, esconde
+// também o que nem pro Cliente Independente é escondido hoje — ferramentas
+// que não fazem sentido pra quem só abriu um link pra montar UM pedido.
+if (TIPO_USUARIO === 'CLIENTE_OFERTA') {
+  const btnCatalogoPdf = document.getElementById('btnBaixarCatalogoPdf');
+  if (btnCatalogoPdf) btnCatalogoPdf.remove();
+
+  const importMobile = document.getElementById('btnAbrirImportacaoMobile');
+  if (importMobile) importMobile.remove();
+
+  const pedidosSalvosDesktop = document.querySelector('button[onclick="fecharMenuPedido(); abrirModalPedidosSalvos();"]');
+  if (pedidosSalvosDesktop) pedidosSalvosDesktop.remove();
+
+  const pedidosSalvosMobile = document.querySelector('footer button[onclick="abrirModalPedidosSalvos()"]');
+  if (pedidosSalvosMobile) pedidosSalvosMobile.remove();
 }
 if (TIPO_USUARIO === 'ADMIN') {
   const blocoIA = document.getElementById('blocoOpcaoIA');
