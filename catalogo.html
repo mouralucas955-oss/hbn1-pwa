@@ -26,6 +26,46 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="api.js"></script>
+  <!-- OFERTA COMPARTILHADA: se a URL tiver ?oferta=TOKEN, troca o token por uma
+       sessão de cliente ANTES do catalogo.js rodar (ele roda com "defer" e
+       checa "hbn1_usuario" assim que carrega — sem isso ele mandaria pro
+       login). type="module" com top-level await garante essa ordem: scripts
+       defer/module executam na ordem em que aparecem no HTML, e um module
+       com "await" pendente atrasa os que vêm depois dele nessa fila. -->
+  <script type="module">
+    const paramsOferta = new URLSearchParams(window.location.search);
+    const tokenOferta = paramsOferta.get('oferta');
+    if (tokenOferta) {
+      try {
+        const resposta = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'abrirOferta', token: tokenOferta })
+        });
+        const dados = await resposta.json();
+        if (dados && dados.sucesso) {
+          localStorage.setItem('hbn1_usuario', dados.nome);
+          localStorage.setItem('hbn1_nome', dados.nome);
+          localStorage.setItem('hbn1_uf', dados.uf);
+          localStorage.setItem('hbn1_ufs', JSON.stringify(dados.ufs || [dados.uf]));
+          localStorage.setItem('hbn1_tipo', dados.tipo);
+          localStorage.setItem('hbn1_session', dados.sessionToken);
+          localStorage.setItem('hbn1_login_ts', String(Date.now()));
+          localStorage.setItem('hbn1_oferta_token', tokenOferta);
+        } else {
+          document.body.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;padding:24px;font-family:sans-serif;color:#334155;">' +
+            '<div><p style="font-size:15px;font-weight:700;margin-bottom:6px;">Não foi possível abrir a oferta</p>' +
+            '<p style="font-size:13px;color:#64748b;">' + ((dados && dados.mensagem) || 'Link inválido ou expirado.') + '</p></div></div>';
+        }
+      } catch (erroOferta) {
+        document.body.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;padding:24px;font-family:sans-serif;color:#334155;">' +
+          '<div><p style="font-size:15px;font-weight:700;margin-bottom:6px;">Não foi possível abrir a oferta</p>' +
+          '<p style="font-size:13px;color:#64748b;">Verifique sua conexão e tente abrir o link novamente.</p></div></div>';
+      }
+    }
+  </script>
   <link rel="stylesheet" href="catalogo.css">
   <style>
     /* ── Animações: toasts e modal de confirmação ───────────────────────── */
@@ -176,6 +216,12 @@
                 </div>
               </div>
               <div id="popCliBadges" class="hidden px-3 py-2 flex flex-wrap gap-1.5"></div>
+              <div class="p-3 pt-0">
+                <button id="btnCompartilharOferta" onclick="compartilharOfertaComCliente()"
+                  class="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-bold transition-all">
+                  📲 Compartilhar oferta
+                </button>
+              </div>
             </div>
           </div>
         </div>
