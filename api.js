@@ -1,6 +1,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzuDKL1ML4oQk1-qDVadToviO1nsEG47_KMhNco2ZL53n5_BvDKY2Udzj0qWnUxACNMEQ/exec";
 
-async function chamarApi(action, params, _tentativaAposRaceCondition) {
+async function chamarApi(action, params, _numeroTentativa) {
+  _numeroTentativa = _numeroTentativa || 0;
   const corpo = Object.assign({ action: action }, params || {});
   if (action !== 'login' && action !== 'ping') {
     corpo._session = localStorage.getItem('hbn1_session');
@@ -24,16 +25,17 @@ async function chamarApi(action, params, _tentativaAposRaceCondition) {
     // mínimos, heartbeat) podem chegar ao backend antes da sessão
     // recém-criada "propagar" no cache — um sessaoExpirada aqui costuma
     // ser falso positivo dessa corrida, não uma sessão de verdade
-    // vencida. Por isso, se a sessão tem menos de 6s de vida, tenta a
-    // mesma chamada de novo uma vez (com um pequeno atraso) antes de
-    // desistir e derrubar o usuário. Numa sessão realmente expirada
-    // (horas depois), essa condição nunca é satisfeita.
+    // vencida. Por isso, se a sessão tem menos de 8s de vida, tenta de
+    // novo com espera crescente (até 3 tentativas) antes de desistir.
+    // Numa sessão realmente expirada (horas depois), isso nunca dispara.
     const loginTs = parseInt(localStorage.getItem('hbn1_login_ts') || '0', 10);
-    const sessaoRecente = (Date.now() - loginTs) < 6000;
+    const sessaoRecente = (Date.now() - loginTs) < 8000;
+    const MAX_TENTATIVAS_RACE = 3;
 
-    if (sessaoRecente && !_tentativaAposRaceCondition) {
-      await new Promise(r => setTimeout(r, 800));
-      return chamarApi(action, params, true);
+    if (sessaoRecente && _numeroTentativa < MAX_TENTATIVAS_RACE) {
+      const espera = 600 * (_numeroTentativa + 1); // 600ms, 1200ms, 1800ms
+      await new Promise(r => setTimeout(r, espera));
+      return chamarApi(action, params, _numeroTentativa + 1);
     }
 
     localStorage.removeItem('hbn1_session');
