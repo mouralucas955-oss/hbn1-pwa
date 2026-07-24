@@ -1,55 +1,70 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzuDKL1ML4oQk1-qDVadToviO1nsEG47_KMhNco2ZL53n5_BvDKY2Udzj0qWnUxACNMEQ/exec";
+const API_URL = 'https://script.google.com/macros/s/AKfycbzuDKL1ML4oQk1-qDVadToviO1nsEG47_KMhNco2ZL53n5_BvDKY2Udzj0qWnUxACNMEQ/exec';
 
-async function chamarApi(action, params, _numeroTentativa) {
-  _numeroTentativa = _numeroTentativa || 0;
-  const corpo = Object.assign({ action: action }, params || {});
-  if (action !== 'login' && action !== 'ping') {
+const ACOES_SEM_SESSAO = new Set(['login', 'ping', 'abrirOferta']);
+const JANELA_SESSAO_RECENTE_MS = 15000;
+const MAX_TENTATIVAS_SESSAO_RECENTE = 4;
+let redirecionamentoDeSessaoEmAndamento = false;
+
+const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+function limparDadosDaSessao(preservarTokenOferta = false) {
+  [
+    'hbn1_session', 'hbn1_usuario', 'hbn1_uf', 'hbn1_ufs',
+    'hbn1_nome', 'hbn1_tipo', 'hbn1_login_ts'
+  ].forEach(chave => localStorage.removeItem(chave));
+
+  if (!preservarTokenOferta) {
+    localStorage.removeItem('hbn1_oferta_token');
+  }
+}
+
+function redirecionarPorSessaoExpirada() {
+  if (redirecionamentoDeSessaoEmAndamento) return;
+  redirecionamentoDeSessaoEmAndamento = true;
+
+  // Capture antes de limpar: a oferta ainda pode estar válida e será reaberta.
+  const tokenOferta = localStorage.getItem('hbn1_oferta_token');
+  limparDadosDaSessao(true);
+
+  if (tokenOferta) {
+    window.location.replace('catalogo.html?oferta=' + encodeURIComponent(tokenOferta));
+  } else {
+    window.location.replace('index.html');
+  }
+}
+
+async function chamarApi(action, params = {}, tentativa = 0) {
+  const corpo = Object.assign({ action }, params);
+  if (!ACOES_SEM_SESSAO.has(action)) {
     corpo._session = localStorage.getItem('hbn1_session');
   }
+
   const resposta = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(corpo)
   });
+
   if (!resposta.ok) {
-    throw new Error("Falha na API (" + resposta.status + ")");
+    throw new Error('Falha na API (' + resposta.status + ')');
   }
+
   const dados = await resposta.json();
 
-  // Sessão expirada em qualquer chamada → limpa e volta pro login
   if (dados && dados.sessaoExpirada) {
-    // O CacheService do Apps Script não garante consistência instantânea
-    // entre chamadas concorrentes. Nos primeiros segundos de uma sessão
-    // nova (login normal ou abertura de oferta compartilhada), várias
-    // chamadas em paralelo (mural, produtos, clientes, ST, valores
-    // mínimos, heartbeat) podem chegar ao backend antes da sessão
-    // recém-criada "propagar" no cache — um sessaoExpirada aqui costuma
-    // ser falso positivo dessa corrida, não uma sessão de verdade
-    // vencida. Por isso, se a sessão tem menos de 8s de vida, tenta de
-    // novo com espera crescente (até 3 tentativas) antes de desistir.
-    // Numa sessão realmente expirada (horas depois), isso nunca dispara.
-    const loginTs = parseInt(localStorage.getItem('hbn1_login_ts') || '0', 10);
-    const sessaoRecente = (Date.now() - loginTs) < 8000;
-    const MAX_TENTATIVAS_RACE = 3;
+    const criadaEm = Number(localStorage.getItem('hbn1_login_ts') || 0);
+    const sessaoRecente = criadaEm > 0 &&
+      (Date.now() - criadaEm) < JANELA_SESSAO_RECENTE_MS;
 
-    if (sessaoRecente && _numeroTentativa < MAX_TENTATIVAS_RACE) {
-      const espera = 600 * (_numeroTentativa + 1); // 600ms, 1200ms, 1800ms
-      await new Promise(r => setTimeout(r, espera));
-      return chamarApi(action, params, _numeroTentativa + 1);
+    if (sessaoRecente && tentativa < MAX_TENTATIVAS_SESSAO_RECENTE) {
+      // 250, 500, 1000 e 2000 ms: só protege a abertura de sessão.
+      await esperar(250 * Math.pow(2, tentativa));
+      return chamarApi(action, params, tentativa + 1);
     }
 
-    localStorage.removeItem('hbn1_session');
-    localStorage.removeItem('hbn1_usuario');
-    localStorage.removeItem('hbn1_uf');
-    localStorage.removeItem('hbn1_login_ts');
-    const tokenOferta = localStorage.getItem('hbn1_oferta_token');
-    if (tokenOferta) {
-      // Sessão de link compartilhado expirada em pleno uso — volta pro
-      // mesmo link, que renova a sessão automaticamente (ver oferta-bootstrap).
-      window.location.href = 'catalogo.html?oferta=' + encodeURIComponent(tokenOferta);
-    } else {
-      window.location.href = 'index.html';
-    }
+    redirecionarPorSessaoExpirada();
+    throw new Error('Sessão expirada. Redirecionando...');
   }
+
   return dados;
 }
