@@ -26,6 +26,37 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="api.js"></script>
+  
+<script>
+  window.HBN1_SESSAO_PRONTA = (async function () {
+    const params = new URLSearchParams(window.location.search);
+    const tokenOferta = params.get('oferta');
+
+    // Abertura normal por login: não há trabalho assíncrono a fazer.
+    if (!tokenOferta) return;
+
+    // Um link de oferta não deve aproveitar a identidade de quem abriu o link.
+    [
+      'hbn1_session', 'hbn1_usuario', 'hbn1_uf', 'hbn1_ufs',
+      'hbn1_nome', 'hbn1_tipo', 'hbn1_login_ts'
+    ].forEach(chave => localStorage.removeItem(chave));
+
+    const resposta = await chamarApi('abrirOferta', { token: tokenOferta });
+    if (!resposta || !resposta.sucesso || !resposta.sessionToken) {
+      throw new Error((resposta && resposta.mensagem) || 'Não foi possível abrir esta oferta.');
+    }
+
+    localStorage.setItem('hbn1_session', resposta.sessionToken);
+    localStorage.setItem('hbn1_usuario', 'oferta_' + tokenOferta.slice(0, 8));
+    localStorage.setItem('hbn1_nome', resposta.nome || 'Cliente');
+    localStorage.setItem('hbn1_uf', resposta.uf);
+    localStorage.setItem('hbn1_ufs', JSON.stringify(resposta.ufs || [resposta.uf]));
+    localStorage.setItem('hbn1_tipo', resposta.tipo || 'CLIENTE_OFERTA');
+    localStorage.setItem('hbn1_oferta_token', tokenOferta);
+    localStorage.setItem('hbn1_login_ts', String(Date.now()));
+  })();
+</script>
+  
   <!-- OFERTA COMPARTILHADA: se a URL tiver ?oferta=TOKEN, troca o token por uma
        sessão de cliente ANTES do catalogo.js rodar (ele roda com "defer" e
        checa "hbn1_usuario" assim que carrega — sem isso ele mandaria pro
