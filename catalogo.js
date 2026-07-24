@@ -680,7 +680,7 @@ async function aguardarSessaoInicial() {
   TIPO_USUARIO = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
   if (TIPO_USUARIO === 'VENDEDOR') TIPO_USUARIO = 'VENDEDOR_FARMA';
 }
-```
+
 // Perfis autorizados a usar o Talão em branco (Excel). Pra liberar geral,
 // troque por: const PERFIS_TALAO_EXCEL = null; (null = libera pra todo mundo)
 const PERFIS_TALAO_EXCEL = ['ADMIN'];
