@@ -3550,6 +3550,189 @@ mostrarToast('error', 'Ocorreu um erro ao gerar o arquivo Excel: ' + (erro && er
 btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; btn.innerHTML = textoOriginal;
 }
 }
+
+function obterItensConsolidadosImportacao() {
+  const mapa = new Map();
+
+  (IMPORT_RESULTADO.pedidos || []).forEach(pedido => {
+    const cliente = pedido.cliente || {};
+    const cnpj = String(cliente.cnpj || cliente.razao || 'SEM CNPJ');
+    const uf = String(cliente.uf || '');
+
+    Object.entries(pedido.itensPorFornecedor || {}).forEach(([fornecedor, itens]) => {
+      (itens || []).forEach(item => {
+        const produto = item.p || {};
+        const codigo = String(produto.id || '').trim();
+        const ean = String(produto.ean || '').replace(/\D/g, '');
+        // Fornecedor + código + EAN evita juntar produtos diferentes por engano.
+        const chave = [fornecedor, codigo, ean].join('|');
+        const quantidade = Number(item.qtd || 0);
+        const precoBruto = Number(item.precoOriginal || 0);
+        const precoLiquido = Number(item.precoFinal || 0);
+
+        if (!mapa.has(chave)) {
+          mapa.set(chave, {
+            fornecedor: String(fornecedor || 'GERAL').toUpperCase(),
+            codigo,
+            ean,
+            descricao: produto.descricao || '',
+            marca: produto.marca || '',
+            embalagem: produto.embalagem || '',
+            quantidade: 0,
+            valorBruto: 0,
+            valorLiquido: 0,
+            cnpjs: new Set(),
+            ufs: new Set()
+          });
+        }
+
+        const consolidado = mapa.get(chave);
+        consolidado.quantidade += quantidade;
+        consolidado.valorBruto += precoBruto * quantidade;
+        consolidado.valorLiquido += precoLiquido * quantidade;
+        consolidado.cnpjs.add(cnpj);
+        if (uf) consolidado.ufs.add(uf);
+      });
+    });
+  });
+
+  return Array.from(mapa.values()).sort((a, b) =>
+    a.fornecedor.localeCompare(b.fornecedor) ||
+    a.descricao.localeCompare(b.descricao) ||
+    a.codigo.localeCompare(b.codigo)
+  );
+}
+
+async function baixarExcelPedidoImportadoConsolidado() {
+  if (TIPO_USUARIO !== 'ADMIN') {
+    mostrarToast('warning', 'Função disponível apenas para administradores.');
+    return;
+  }
+
+  if (!IMPORT_RESULTADO || !IMPORT_RESULTADO.pedidos || IMPORT_RESULTADO.pedidos.length === 0) {
+    mostrarToast('warning', 'Importe e calcule pelo menos um pedido antes de compilar.');
+    return;
+  }
+
+  const btn = document.getElementById('btnBaixarExcelConsolidadoImportado');
+  const textoOriginal = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+    btn.innerHTML = 'Compilando...';
+  }
+
+  try {
+    const itens = obterItensConsolidadosImportacao();
+    if (itens.length === 0) {
+      mostrarToast('warning', 'Não há itens encontrados no catálogo para compilar.');
+      return;
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'HBN1 - Nazária Distribuidora Farmacêutica';
+    workbook.created = new Date();
+
+    const ws = workbook.addWorksheet('Pedido Consolidado', {
+      views: [{ showGridLines: false, state: 'frozen', ySplit: 4 }]
+    });
+
+    ws.columns = [
+      { width: 18 }, { width: 14 }, { width: 18 }, { width: 42 },
+      { width: 18 }, { width: 18 }, { width: 12 }, { width: 14 },
+      { width: 12 }, { width: 16 }, { width: 16 }, { width: 17 }
+    ];
+
+    ws.mergeCells('A1:L1');
+    const titulo = ws.getCell('A1');
+    titulo.value = 'PEDIDO CONSOLIDADO — TODOS OS CNPJs';
+    titulo.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } };
+    titulo.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+    titulo.alignment = { horizontal: 'center', vertical: 'middle' };
+    ws.getRow(1).height = 28;
+
+    ws.mergeCells('A2:L2');
+    const subtitulo = ws.getCell('A2');
+    subtitulo.value = `${IMPORT_RESULTADO.pedidos.length} pedido(s) / CNPJ(s) consolidado(s) em ${new Date().toLocaleString('pt-BR')}`;
+    subtitulo.font = { italic: true, size: 10, color: { argb: 'FF475569' } };
+    subtitulo.alignment = { horizontal: 'center' };
+
+    const cabecalhos = [
+      'FORNECEDOR', 'CÓDIGO', 'EAN', 'DESCRIÇÃO', 'MARCA', 'EMBALAGEM',
+      'UF(s)', 'QTD. TOTAL', 'CNPJs', 'VALOR BRUTO', 'VALOR LÍQUIDO', 'PREÇO LÍQ. MÉDIO'
+    ];
+    const linhaCabecalho = ws.getRow(4);
+    cabecalhos.forEach((tituloColuna, indice) => {
+      const celula = linhaCabecalho.getCell(indice + 1);
+      celula.value = tituloColuna;
+      celula.font = { bold: true, size: 9, color: { argb: 'FFFFFFFF' } };
+      celula.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+      celula.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    });
+    linhaCabecalho.height = 25;
+
+    let totalQuantidade = 0;
+    let totalBruto = 0;
+    let totalLiquido = 0;
+
+    itens.forEach((item, indice) => {
+      const linha = ws.getRow(indice + 5);
+      const fundo = indice % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+      const precoMedio = item.quantidade ? item.valorLiquido / item.quantidade : 0;
+
+      linha.values = [
+        item.fornecedor, item.codigo, item.ean, item.descricao, item.marca,
+        item.embalagem, Array.from(item.ufs).sort().join(', '), item.quantidade,
+        item.cnpjs.size, item.valorBruto, item.valorLiquido, precoMedio
+      ];
+      linha.eachCell({ includeEmpty: true }, celula => {
+        celula.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fundo } };
+        celula.alignment = { vertical: 'middle', wrapText: true };
+        celula.border = { bottom: { style: 'hair', color: { argb: 'FFE2E8F0' } } };
+      });
+      linha.getCell(3).numFmt = '@';
+      linha.getCell(8).numFmt = '#,##0';
+      linha.getCell(9).numFmt = '#,##0';
+      [10, 11, 12].forEach(coluna => { linha.getCell(coluna).numFmt = '"R$" #,##0.00'; });
+
+      totalQuantidade += item.quantidade;
+      totalBruto += item.valorBruto;
+      totalLiquido += item.valorLiquido;
+    });
+
+    const linhaTotal = ws.getRow(itens.length + 5);
+    ws.mergeCells(`A${linhaTotal.number}:G${linhaTotal.number}`);
+    linhaTotal.getCell(1).value = 'TOTAL GERAL CONSOLIDADO';
+    linhaTotal.getCell(8).value = totalQuantidade;
+    linhaTotal.getCell(10).value = totalBruto;
+    linhaTotal.getCell(11).value = totalLiquido;
+    linhaTotal.getCell(12).value = totalQuantidade ? totalLiquido / totalQuantidade : 0;
+    linhaTotal.eachCell({ includeEmpty: true }, celula => {
+      celula.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      celula.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+      celula.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+    linhaTotal.getCell(8).numFmt = '#,##0';
+    [10, 11, 12].forEach(coluna => { linhaTotal.getCell(coluna).numFmt = '"R$" #,##0.00'; });
+    linhaTotal.height = 22;
+
+    const dataHoje = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+    await baixarWorkbook(workbook, `Pedidos_Consolidados_HBN1_${dataHoje}.xlsx`);
+    mostrarToast('success', 'Pedido consolidado gerado com sucesso.');
+  } catch (erro) {
+    console.error('Erro ao compilar pedidos importados:', erro);
+    mostrarToast('error', 'Não foi possível gerar o pedido consolidado.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.cursor = '';
+      btn.innerHTML = textoOriginal;
+    }
+  }
+}
+
 // EXPORTAÇÃO DO CARRINHO ATUAL (botão "Fechar & Baixar Pedido")
 async function fazerDownloadExcel() {
 const chaves = Object.keys(CARRINHO);
@@ -4388,6 +4571,8 @@ if (TIPO_USUARIO === 'CLIENTE_OFERTA') {
 if (TIPO_USUARIO === 'ADMIN') {
   const blocoIA = document.getElementById('blocoOpcaoIA');
   if (blocoIA) blocoIA.classList.remove('hidden');
+  const btnCompilar = document.getElementById('btnBaixarExcelConsolidadoImportado');
+  if (btnCompilar) btnCompilar.classList.remove('hidden');
 }
 
 if (!PERFIS_TALAO_EXCEL || PERFIS_TALAO_EXCEL.includes(TIPO_USUARIO)) {
