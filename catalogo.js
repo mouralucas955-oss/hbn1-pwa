@@ -4370,6 +4370,9 @@ if (linkAdmin) linkAdmin.remove();
 // também o que nem pro Cliente Independente é escondido hoje — ferramentas
 // que não fazem sentido pra quem só abriu um link pra montar UM pedido.
 if (TIPO_USUARIO === 'CLIENTE_OFERTA') {
+  const btnCompartilharOferta = document.getElementById('btnCompartilharOferta');
+  if (btnCompartilharOferta) btnCompartilharOferta.remove();
+  
   const btnCatalogoPdf = document.getElementById('btnBaixarCatalogoPdf');
   if (btnCatalogoPdf) btnCatalogoPdf.remove();
 
