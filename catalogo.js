@@ -573,7 +573,7 @@ document.documentElement.setAttribute('data-theme', t);
 
 // UF do usuário logado: vem da URL (?uf=...) ou do localStorage (login feito em index.html)
 const params = new URLSearchParams(window.location.search);
-const UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+let UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 
 // Sem usuário logado? manda de volta para o login — exceto se a URL tiver
 // ?oferta=TOKEN, caso em que quem decide o que mostrar é o script de
@@ -663,6 +663,24 @@ function trocarUfAtiva(novaUf) {
 // Compatibilidade: cadastros antigos com "VENDEDOR" puro contam como Farma.
 let TIPO_USUARIO = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
 if (TIPO_USUARIO === 'VENDEDOR') TIPO_USUARIO = 'VENDEDOR_FARMA';
+
+async function aguardarSessaoInicial() {
+  try {
+    if (window.HBN1_SESSAO_PRONTA) {
+      await window.HBN1_SESSAO_PRONTA;
+    }
+  } catch (erro) {
+    alert(erro.message || 'Não foi possível abrir o link da oferta.');
+    window.location.replace('index.html');
+    throw erro;
+  }
+
+  // Releia depois do bootstrap, pois a oferta acabou de gravar o localStorage.
+  UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+  TIPO_USUARIO = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
+  if (TIPO_USUARIO === 'VENDEDOR') TIPO_USUARIO = 'VENDEDOR_FARMA';
+}
+```
 // Perfis autorizados a usar o Talão em branco (Excel). Pra liberar geral,
 // troque por: const PERFIS_TALAO_EXCEL = null; (null = libera pra todo mundo)
 const PERFIS_TALAO_EXCEL = ['ADMIN'];
@@ -4309,7 +4327,8 @@ e.returnValue = 'Você tem itens no seu pedido. Se sair ou atualizar a página, 
 return e.returnValue;
 }
 });
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  await aguardarSessaoInicial();
 // Sincroniza ícone do dark mode
 const icon = document.getElementById('iconDarkMode');
 renderizarSeletorUF();
