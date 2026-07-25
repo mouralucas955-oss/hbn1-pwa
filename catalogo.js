@@ -1106,6 +1106,7 @@ colunaAtiva = 'kimberlyFarma';
 percentual = converterPercentual(p.descontoPadrao);
 if (percentual > 0) colunaAtiva = 'descontoPadrao';
 }
+  }
 
 // NOVO — fallback: se a regra específica do fornecedor não gerou desconto
 // (coluna vazia ou perfil/equipe do cliente não bate com nenhum critério),
