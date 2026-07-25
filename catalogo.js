@@ -3815,6 +3815,44 @@ function registrarPedidoNoHistoricoAtual() {
   });
 }
 
+function escolherEscopoOferta() {
+  const fornecedorAtual = String(filtroFornecedorAtual || '').toUpperCase();
+  if (!fornecedorAtual || fornecedorAtual === 'TODOS') {
+    return Promise.resolve('catalogo');
+  }
+
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4';
+    overlay.innerHTML = `
+      <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+          <p class="text-base font-black text-slate-800">Compartilhar oferta</p>
+          <p class="text-xs text-slate-500 mt-1">Escolha o catálogo que o cliente poderá visualizar.</p>
+        </div>
+        <div class="p-5 space-y-3">
+          <button id="ofertaEscopoCompleto" class="w-full text-left p-4 rounded-2xl border border-slate-200 hover:border-orange-300 hover:bg-orange-50 transition-colors">
+            <span class="block text-sm font-black text-slate-800">Catálogo completo</span>
+            <span class="block text-xs text-slate-500 mt-1">O cliente poderá navegar por todos os fornecedores.</span>
+          </button>
+          <button id="ofertaEscopoFornecedor" class="w-full text-left p-4 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
+            <span id="ofertaNomeFornecedor" class="block text-sm font-black text-slate-800"></span>
+            <span class="block text-xs text-slate-500 mt-1">O cliente verá somente os produtos deste fornecedor.</span>
+          </button>
+          <button id="ofertaEscopoCancelar" class="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-800">Cancelar</button>
+        </div>
+      </div>`;
+
+    const fechar = escolha => { overlay.remove(); resolve(escolha); };
+    overlay.querySelector('#ofertaNomeFornecedor').textContent = `Somente ${fornecedorAtual}`;
+    overlay.querySelector('#ofertaEscopoCompleto').onclick = () => fechar('catalogo');
+    overlay.querySelector('#ofertaEscopoFornecedor').onclick = () => fechar('fornecedor');
+    overlay.querySelector('#ofertaEscopoCancelar').onclick = () => fechar(null);
+    overlay.onclick = evento => { if (evento.target === overlay) fechar(null); };
+    document.body.appendChild(overlay);
+  });
+}
+
 // =========================================================================
 // OFERTA COMPARTILHADA — vendedor gera um link temporário pro cliente
 // selecionado montar o próprio pedido sozinho e devolver via WhatsApp.
@@ -3825,12 +3863,26 @@ async function compartilharOfertaComCliente() {
     return;
   }
 
+  const escopo = await escolherEscopoOferta();
+  if (!escopo) return;
+
+  const fornecedor = escopo === 'fornecedor'
+    ? String(filtroFornecedorAtual || '').toUpperCase()
+    : '';
+
   const botao = document.getElementById('btnCompartilharOferta');
   const textoOriginal = botao ? botao.innerHTML : null;
-  if (botao) { botao.disabled = true; botao.style.opacity = '0.6'; botao.style.cursor = 'wait'; }
+  if (botao) {
+    botao.disabled = true;
+    botao.style.opacity = '0.6';
+    botao.style.cursor = 'wait';
+  }
 
   try {
-    const resp = await chamarApi('criarOfertaCompartilhada', { codCliente: CLIENTE_SELECIONADO.id });
+    const resp = await chamarApi('criarOfertaCompartilhada', {
+      codCliente: CLIENTE_SELECIONADO.id,
+      fornecedor: fornecedor
+    });
     if (!resp || resp.erro || !resp.token) {
       mostrarToast('error', (resp && resp.mensagem) || 'Não foi possível gerar o link.');
       return;
@@ -3838,14 +3890,17 @@ async function compartilharOfertaComCliente() {
 
     const url = `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}catalogo.html?oferta=${resp.token}`;
     const nomeCliente = resp.clienteNome || CLIENTE_SELECIONADO.razao || 'você';
-    const mensagem = `Olá! Segue o catálogo com sua oferta, ${nomeCliente}. É só montar o pedido por aqui: ${url}`;
+    const descricao = fornecedor ? `o catálogo de ${fornecedor}` : 'o catálogo completo';
+    const mensagem = `Olá! Segue ${descricao} para você, ${nomeCliente}. É só montar o pedido por aqui: ${url}`;
 
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Catálogo HBN1', text: mensagem });
         return;
-      } catch (e) {
-        // usuário cancelou o compartilhamento nativo — cai pro link do WhatsApp abaixo
+      } catch (erroCompartilhar) {
+        if (erroCompartilhar && erroCompartilhar.name !== 'AbortError') {
+          console.warn('Compartilhamento nativo indisponível:', erroCompartilhar);
+        }
       }
     }
     window.open('https://wa.me/?text=' + encodeURIComponent(mensagem), '_blank');
@@ -3853,7 +3908,12 @@ async function compartilharOfertaComCliente() {
     console.error('Erro ao compartilhar oferta:', erro);
     mostrarToast('error', 'Erro ao gerar o link. Tente novamente.');
   } finally {
-    if (botao) { botao.disabled = false; botao.style.opacity = ''; botao.style.cursor = ''; botao.innerHTML = textoOriginal; }
+    if (botao) {
+      botao.disabled = false;
+      botao.style.opacity = '';
+      botao.style.cursor = '';
+      botao.innerHTML = textoOriginal;
+    }
   }
 }
 
