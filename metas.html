@@ -111,6 +111,103 @@
 
   .camp-gap-neg { color:#dc2626; font-weight:700; }
   .camp-gap-pos { color:var(--text-muted); }
+
+  /* Resumo executivo consolidado */
+  .camp-resumo {
+    position:relative; overflow:hidden; background:var(--surface-header);
+    border-radius:16px; padding:18px 20px; color:#fff; margin-bottom:16px;
+  }
+  .camp-resumo::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 10% 10%,rgba(255,255,255,.11),transparent 48%);
+    pointer-events:none;
+  }
+  .camp-resumo-grid {
+    position:relative; display:grid;
+    grid-template-columns:minmax(230px,1.25fr) repeat(5,minmax(105px,.75fr));
+    gap:16px; align-items:center;
+  }
+  .camp-resumo-vendedor { display:flex; align-items:center; gap:14px; }
+  .camp-resumo-stat { min-width:0; }
+  .camp-resumo-stat .lbl {
+    font-size:9px; text-transform:uppercase; letter-spacing:.06em;
+    color:#9dadc1; margin-bottom:4px; font-weight:700;
+  }
+  .camp-resumo-stat .val { font-size:15px; font-weight:800; }
+  .camp-status {
+    display:inline-flex; width:max-content; align-items:center; gap:5px;
+    padding:4px 8px; border-radius:999px; font-size:9px; font-weight:800;
+  }
+  .camp-status-ok { color:#4ade80; background:rgba(34,197,94,.15); border:1px solid rgba(74,222,128,.32); }
+  .camp-status-risco { color:#fbbf24; background:rgba(245,158,11,.15); border:1px solid rgba(251,191,36,.32); }
+
+  .camp-prioridades {
+    background:var(--surface-card); border:1px solid var(--border-subtle);
+    border-radius:14px; padding:15px 16px; margin-bottom:16px;
+  }
+  .camp-prioridades-head {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:12px; margin-bottom:10px;
+  }
+  .camp-prioridades-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+  .camp-prioridades-title { font-size:15px; font-weight:800; color:var(--text-primary); }
+  .camp-prioridade-card {
+    position:relative; border:1px solid var(--border-subtle); background:var(--surface-secondary);
+    border-radius:10px; padding:11px 12px 11px 42px;
+  }
+  .camp-prioridade-rank {
+    position:absolute; left:11px; top:11px; color:#dc2626;
+    font:800 10px 'IBM Plex Mono',monospace;
+  }
+  .camp-prioridade-metricas {
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:7px;
+    color:var(--text-secondary); font-size:9.5px; margin-top:8px;
+  }
+  .camp-prioridade-metricas b { color:var(--text-primary); margin-left:3px; }
+  .camp-prioridade-ok {
+    grid-column:1 / -1; border:1px solid rgba(34,197,94,.24);
+    background:rgba(34,197,94,.08); color:#15803d; border-radius:10px;
+    padding:12px; font-size:11.5px; font-weight:700;
+  }
+  .camp-prioridade-foot { color:var(--text-secondary); font-size:10px; margin-top:9px; }
+  .camp-prioridade {
+    border:1px solid var(--border-subtle); background:var(--surface-secondary);
+    border-radius:10px; padding:10px 11px;
+  }
+  .camp-prioridade-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .camp-prioridade-nome {
+    font-size:10.5px; font-weight:800; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .camp-prioridade-risco {
+    flex-shrink:0; color:#dc2626; background:rgba(220,38,38,.10);
+    border:1px solid rgba(220,38,38,.24); padding:3px 7px;
+    border-radius:999px; font-size:8.5px; font-weight:800;
+  }
+  .camp-prioridade-meta {
+    display:flex; justify-content:space-between; gap:8px;
+    color:var(--text-secondary); font-size:9px; margin-top:7px;
+  }
+  .camp-legenda {
+    display:flex; align-items:center; flex-wrap:wrap; gap:9px;
+    color:var(--text-secondary); font-size:9px;
+  }
+  .camp-legenda i { width:7px; height:7px; display:inline-block; border-radius:50%; margin-right:3px; }
+
+  @media (max-width:1050px) {
+    .camp-resumo-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .camp-resumo-vendedor { grid-column:1 / -1; }
+  }
+  @media (max-width:700px) {
+    .camp-body { padding:14px; }
+    .camp-filtro-pills { flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+    .camp-filtro-pill { padding-right:13px; flex-shrink:0; }
+    .camp-pill-label { max-width:220px; opacity:1; margin-left:8px; }
+    .camp-resumo-grid { grid-template-columns:1fr 1fr; }
+    .camp-resumo-vendedor { grid-column:1 / -1; }
+    .camp-prioridades-list { grid-template-columns:1fr; }
+    .camp-prioridades-head { align-items:flex-start; flex-direction:column; }
+  }
 </style>
 </head>
 <body class="campdesk">
@@ -444,87 +541,79 @@ function campProjecaoHtml(meta, projecao) {
     const diasRestantes = resp.diasRestantesMes || 1;
     const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
     const pctGeral = campCalcPct(resp.totalGeral.meta, resp.totalGeral.realizado);
-    const qtdCampanhas = resp.campanhas.length;
+    const campanhasOrdenadas = campOrganizarGrupos(resp.campanhas);
+    // Linhas agregadas não contam novamente como campanhas individuais.
+    const campanhasValidas = campanhasOrdenadas.filter(c => !c._total);
+    const qtdCampanhas = campanhasValidas.length;
 
     // aproveitamento (quantidade de campanhas batidas, não R$)
-    const campanhasBatidas = resp.campanhas.filter(c => c.meta > 0 && c.realizado >= c.meta).length;
+    const campanhasBatidas = campanhasValidas.filter(c => c.meta > 0 && c.realizado >= c.meta).length;
     const pctAproveitamento = qtdCampanhas > 0 ? (campanhasBatidas / qtdCampanhas * 100) : 0;
     const faltamCampanhas = qtdCampanhas - campanhasBatidas;
-    const heroHtml = `
-      <div class="camp-hero-meta" style="margin-bottom:16px;">
-        <div class="camp-hero-left">
-          ${campAnelSvg(pctGeral, 84)}
+    const projecaoGeral = campanhasValidas.reduce((soma, c) => soma + (Number(c.projecaoFechamento) || 0), 0);
+    const campanhasEmRisco = campanhasValidas
+      .filter(c => c.meta > 0 && (Number(c.projecaoFechamento) || 0) < c.meta)
+      .sort((a, b) =>
+        (b.meta - (Number(b.projecaoFechamento) || 0)) -
+        (a.meta - (Number(a.projecaoFechamento) || 0))
+      );
+    const projecaoOk = projecaoGeral >= resp.totalGeral.meta;
+    const mediaGeralNecessaria = gapGeral > 0 ? gapGeral / diasRestantes : 0;
+    const resumoHtml = `
+      <section class="camp-resumo">
+        <div class="camp-resumo-grid">
+          <div class="camp-resumo-vendedor">
+            ${campAnelSvg(pctGeral, 84)}
+            <div>
+              <div class="camp-hero-eyebrow">Vendedor</div>
+              <div class="camp-hero-title">${resp.vendedor}</div>
+              <div class="camp-hero-sub">${resp.equipe ? resp.equipe + ' · ' : ''}${qtdCampanhas} campanha${qtdCampanhas === 1 ? '' : 's'} ativa${qtdCampanhas === 1 ? '' : 's'}</div>
+            </div>
+          </div>
+          <div class="camp-resumo-stat"><div class="lbl">Meta total</div><div class="val mono">${campFormatBRL(resp.totalGeral.meta)}</div></div>
+          <div class="camp-resumo-stat"><div class="lbl">Realizado</div><div class="val mono">${campFormatBRL(resp.totalGeral.realizado)}</div></div>
+          <div class="camp-resumo-stat"><div class="lbl">Gap atual</div><div class="val mono">${campFormatBRL(Math.max(0, gapGeral))}</div></div>
+          <div class="camp-resumo-stat">
+            <div class="lbl">Projeção de fechamento</div>
+            <div class="val mono">${campFormatBRL(projecaoGeral)}</div>
+            <span class="camp-status ${projecaoOk ? 'camp-status-ok' : 'camp-status-risco'}">${projecaoOk ? 'Dentro da meta' : 'Abaixo da meta'}</span>
+          </div>
+          <div class="camp-resumo-stat"><div class="lbl">Campanhas batidas</div><div class="val mono">${campanhasBatidas} de ${qtdCampanhas} · ${pctAproveitamento.toFixed(0)}%</div></div>
+          <div class="camp-resumo-stat"><div class="lbl">Necessário por dia</div><div class="val mono">${mediaGeralNecessaria > 0 ? campFormatBRL(mediaGeralNecessaria) : 'Meta atingida'}</div></div>
+        </div>
+      </section>`;
+
+    const prioridadesHtml = `
+      <section class="camp-prioridades">
+        <div class="camp-prioridades-head">
           <div>
-            <div class="camp-hero-eyebrow">Vendedor</div>
-            <div class="camp-hero-title">${resp.vendedor}</div>
-            <div class="camp-hero-sub">${resp.equipe ? resp.equipe + ' · ' : ''}${qtdCampanhas} campanha${qtdCampanhas === 1 ? '' : 's'} ativa${qtdCampanhas === 1 ? '' : 's'}</div>
+            <div class="camp-hero-eyebrow">Prioridade sugerida</div>
+            <div class="camp-prioridades-title">${campanhasEmRisco.length ? 'Top 3 campanhas em risco' : 'Todas as projeções estão dentro da meta'}</div>
+          </div>
+          <div class="camp-legenda">
+            <span><i style="background:#4ade80"></i> ≥ 100%</span>
+            <span><i style="background:#fbbf24"></i> 70–99%</span>
+            <span><i style="background:#f87171"></i> &lt; 70%</span>
           </div>
         </div>
-        <div class="camp-hero-stats">
-          <div><div class="lbl">Meta total</div><div class="val mono">${campFormatBRL(resp.totalGeral.meta)}</div></div>
-          <div><div class="lbl">Realizado total</div><div class="val mono">${campFormatBRL(resp.totalGeral.realizado)}</div></div>
-          <div><div class="lbl">Gap</div><div class="val mono">${gapGeral > 0 ? campFormatBRL(gapGeral) : campFormatBRL(0)}</div></div>
+        <div class="camp-prioridades-list">
+          ${campanhasEmRisco.length
+            ? campanhasEmRisco.slice(0, 3).map((c, indice) => {
+                const gapProjetado = c.meta - (Number(c.projecaoFechamento) || 0);
+                const gapAtual = Math.max(0, c.meta - c.realizado);
+                return `<article class="camp-prioridade-card">
+                  <span class="camp-prioridade-rank">#${indice + 1}</span>
+                  <div class="camp-prioridade-nome">${c._labelExibir || c.fornecedor}</div>
+                  <div class="camp-prioridade-metricas">
+                    <span>Gap projetado <b class="mono">${campFormatBRL(gapProjetado)}</b></span>
+                    <span>Necessário/dia <b class="mono">${campFormatBRL(gapAtual / diasRestantes)}</b></span>
+                  </div>
+                </article>`;
+              }).join('')
+            : '<div class="camp-prioridade-ok">Excelente: nenhuma campanha apresenta risco na projeção de fechamento.</div>'}
         </div>
-      </div>`;
-    
-const aproveitamentoHtml = `
-      <div class="camp-hero-meta" style="margin-bottom:16px;">
-        <div class="camp-hero-left">
-          ${campAnelSvg(pctAproveitamento, 84)}
-          <div>
-            <div class="camp-hero-eyebrow">Aproveitamento</div>
-            <div class="camp-hero-title">${campanhasBatidas} de ${qtdCampanhas} campanhas batidas</div>
-            <div class="camp-hero-sub">${faltamCampanhas > 0 ? `Faltam ${faltamCampanhas} campanha${faltamCampanhas === 1 ? '' : 's'} para bater 100%` : 'Todas as campanhas batidas! 🎉'}</div>
-          </div>
-        </div>
-      </div>`;
-    
-   const campanhasOrdenadas = campOrganizarGrupos(resp.campanhas);
-
-    const linhasHtml = campanhasOrdenadas.map(c => {
-      const gap = c.meta - c.realizado;
-      const mediaNecessaria = gap > 0 ? gap / diasRestantes : 0;
-      const nomeExibir = c._labelExibir || c.fornecedor;
-      const classesLinha = [c._membro ? 'camp-row-membro' : '', c._total ? 'camp-row-total' : ''].filter(Boolean).join(' ');
-      return `
-        <tr class="${classesLinha}">
-          <td>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <img src="${campGerarAvatarLetra(nomeExibir)}" class="camp-pill-avatar" style="width:26px; height:26px;" alt="">
-              <span style="font-weight:${c._total ? 800 : 700};">${nomeExibir}</span>
-            </div>
-          </td>
-          <td class="camp-num mono">${campFormatBRL(c.meta)}</td>
-          <td class="camp-num mono">${campFormatBRL(c.realizado)}</td>
-         <td class="camp-num">
-            <div class="camp-cell-cobertura">
-              ${campPctPillHtml(c.meta, c.realizado)}
-              ${campBarraHtml(c.meta, c.realizado)}
-            </div>
-          </td>
-          <td class="camp-num">${campProjecaoHtml(c.meta, c.projecaoFechamento || 0)}</td>
-          <td class="camp-num mono ${gap > 0 ? 'camp-gap-neg' : 'camp-gap-pos'}">${gap > 0 ? campFormatBRL(gap) : '—'}</td>
-          <td class="camp-num mono">${mediaNecessaria > 0 ? campFormatBRL(mediaNecessaria) : '—'}</td>
-        </tr>`;
-    }).join('');
-
-    const tabelaHtml = `
-      <div class="camp-table-scroll solo">
-        <table class="camp-table">
-          <thead>
-            <tr>
-              <th>Campanha</th>
-              <th class="camp-num">Meta</th>
-              <th class="camp-num">Realizado</th>
-              <th class="camp-num">Cobertura</th>
-              <th class="camp-num">Projeção Fechamento</th>
-              <th class="camp-num">Gap</th>
-              <th class="camp-num">Média Necessária/Dia</th>
-            </tr>
-          </thead>
-          <tbody>${linhasHtml}</tbody>
-        </table>
-      </div>`;
+        ${faltamCampanhas > 0 ? `<div class="camp-prioridade-foot">Faltam ${faltamCampanhas} campanha${faltamCampanhas === 1 ? '' : 's'} para 100% de aproveitamento.</div>` : ''}
+      </section>`;
 
     // O KPI Oral é exibido junto da Kenvue, enquanto cada fornecedor
     // recebe seu próprio bloco visual.
@@ -539,11 +628,18 @@ const aproveitamentoHtml = `
       }
       gruposPorFornecedor[grupo].push(campanha);
     });
+    // Fornecedores com o maior gap projetado aparecem primeiro.
+    ordemFornecedores.sort((grupoA, grupoB) => {
+      const risco = grupo => Math.max(0, ...gruposPorFornecedor[grupo]
+        .filter(c => !c._total)
+        .map(c => Math.max(0, c.meta - (Number(c.projecaoFechamento) || 0))));
+      return risco(grupoB) - risco(grupoA);
+    });
     const tabelasPorFornecedor = ordemFornecedores
       .map(grupo => campTabelaFornecedorHtml(grupo, gruposPorFornecedor[grupo]))
       .join('');
 
-    wrap.innerHTML = heroHtml + aproveitamentoHtml + tabelasPorFornecedor;
+    wrap.innerHTML = resumoHtml + prioridadesHtml + tabelasPorFornecedor;
     campAnimarIndicadores();
   }
 
