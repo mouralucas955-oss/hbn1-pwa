@@ -1133,7 +1133,6 @@ img[alt="HBN1"] {
 .badge-desconto-forte {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
-  animation: pulseSuave 2.2s ease-in-out infinite;
 }
 @keyframes pulseSuave {
   0%, 100% { transform: scale(1); }
@@ -1149,4 +1148,16 @@ img[alt="HBN1"] {
 }
 #corpoSugestaoHit::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* A interface respeita a preferência de acessibilidade do sistema. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
