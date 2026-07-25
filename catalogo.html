@@ -47,13 +47,23 @@
     }
 
     localStorage.setItem('hbn1_session', resposta.sessionToken);
-    localStorage.setItem('hbn1_usuario', 'oferta_' + tokenOferta.slice(0, 8));
-    localStorage.setItem('hbn1_nome', resposta.nome || 'Cliente');
-    localStorage.setItem('hbn1_uf', resposta.uf);
-    localStorage.setItem('hbn1_ufs', JSON.stringify(resposta.ufs || [resposta.uf]));
-    localStorage.setItem('hbn1_tipo', resposta.tipo || 'CLIENTE_OFERTA');
-    localStorage.setItem('hbn1_oferta_token', tokenOferta);
-    localStorage.setItem('hbn1_login_ts', String(Date.now()));
+localStorage.setItem('hbn1_usuario', 'oferta_' + tokenOferta.slice(0, 8));
+localStorage.setItem('hbn1_nome', resposta.nome || 'Cliente');
+localStorage.setItem('hbn1_uf', resposta.uf);
+localStorage.setItem('hbn1_ufs', JSON.stringify(resposta.ufs || [resposta.uf]));
+localStorage.setItem('hbn1_tipo', resposta.tipo || 'CLIENTE_OFERTA');
+localStorage.setItem('hbn1_oferta_token', tokenOferta);
+
+const fornecedorOferta = String(resposta.fornecedor || '').toUpperCase().trim();
+localStorage.setItem('hbn1_oferta_fornecedor', fornecedorOferta);
+
+if (fornecedorOferta) {
+  localStorage.setItem('hbn1_fornecedor_ativo', fornecedorOferta);
+} else {
+  localStorage.removeItem('hbn1_fornecedor_ativo');
+}
+
+localStorage.setItem('hbn1_login_ts', String(Date.now()));
   })();
 </script>
   
