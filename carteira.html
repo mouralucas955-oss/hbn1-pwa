@@ -110,7 +110,7 @@
   .cart-detail-logo img { height:20px; max-width:120px; object-fit:contain; }
 
   .cart-table-scroll { overflow-x:auto; border:1px solid var(--border-subtle); border-radius:12px; }
-  .cart-table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:720px; }
+  .cart-table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:860px; }
   .cart-table thead th {
     position:sticky; top:0; background:var(--surface-secondary); color:var(--text-secondary);
     text-transform:uppercase; letter-spacing:.04em; font-size:10px; font-weight:700; text-align:left;
@@ -142,6 +142,108 @@
   }
   .cart-uf-pill:hover { border-color: var(--accent); }
   .cart-uf-pill-ativa { background: var(--accent); color:#fff; border-color:var(--accent); }
+
+  /* ── Nova hierarquia visual dos indicadores ───────────────────────── */
+  .cart-kpi-strip {
+    display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:12px; margin-bottom:16px;
+  }
+  .cart-kpi {
+    background:var(--surface-card); border:1px solid var(--border-subtle);
+    border-radius:14px; padding:15px 16px; min-height:112px;
+    display:flex; flex-direction:column; box-shadow:var(--shadow-sm);
+  }
+  .cart-kpi-principal {
+    background:var(--surface-header); color:#fff; border-color:transparent;
+  }
+  .cart-kpi-label {
+    font-size:9.5px; font-weight:800; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-secondary);
+  }
+  .cart-kpi-principal .cart-kpi-label { color:#aab7c9; }
+  .cart-kpi-valor {
+    font-family:'IBM Plex Mono', monospace; font-size:23px; font-weight:800;
+    letter-spacing:-.04em; margin:auto 0 7px;
+  }
+  .cart-kpi-sub { color:var(--text-secondary); font-size:10.5px; line-height:1.4; }
+  .cart-kpi-principal .cart-kpi-sub { color:#c5cfdd; }
+  .cart-card-destaque { padding:15px 16px 10px; }
+  .cart-card-destaque .cart-metric-label {
+    display:block; font-size:9.5px; font-weight:700; margin-bottom:3px;
+  }
+  .cart-card-valor-principal {
+    display:block; font-family:'IBM Plex Mono', monospace; font-size:22px;
+    line-height:1.15; font-weight:800; letter-spacing:-.04em; color:var(--text-primary);
+  }
+  .cart-card-contexto {
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
+    padding-top:10px; margin-top:10px; border-top:1px solid var(--border-subtle);
+  }
+  .cart-card-contexto > div { display:flex; flex-direction:column; gap:2px; }
+  .cart-card-contexto span { color:var(--text-secondary); font-size:9px; }
+  .cart-card-contexto strong { font-size:10.5px; }
+  .cart-faltam {
+    margin-top:7px; font-size:10px; color:var(--text-secondary);
+  }
+  .cart-faltam strong { color:var(--text-primary); }
+
+  /* ── Top 20 produtos do último trimestre ───────────────────────────── */
+  .cart-top-btn {
+    border:1px solid var(--border-default); background:var(--surface-secondary);
+    color:var(--text-primary); border-radius:8px; padding:6px 9px;
+    font-size:9.5px; font-weight:800; cursor:pointer; white-space:nowrap;
+  }
+  .cart-top-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .cart-top-wrap {
+    background:var(--surface-secondary); border-top:1px solid var(--border-subtle);
+    padding:14px;
+  }
+  .cart-top-header {
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:12px; flex-wrap:wrap; margin-bottom:10px;
+  }
+  .cart-top-header strong { display:block; font-size:12px; }
+  .cart-top-header span { color:var(--text-secondary); font-size:9.5px; }
+  .cart-top-total {
+    font-family:'IBM Plex Mono', monospace; font-size:11px!important;
+    font-weight:800; color:var(--text-primary)!important;
+  }
+  .cart-top-list {
+    display:flex; flex-direction:column; gap:6px; max-height:560px; overflow-y:auto;
+  }
+  .cart-top-produto {
+    display:grid; grid-template-columns:28px minmax(180px,1fr) 105px 62px;
+    align-items:center; gap:10px; background:var(--surface-card);
+    border:1px solid var(--border-subtle); border-radius:9px; padding:8px 10px;
+  }
+  .cart-top-posicao {
+    width:24px; height:24px; display:grid; place-items:center;
+    border-radius:7px; background:var(--surface-header); color:#fff;
+    font-size:9px; font-weight:800;
+  }
+  .cart-top-nome { min-width:0; }
+  .cart-top-nome strong {
+    display:block; font-size:10.5px; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .cart-top-nome small { display:block; color:var(--text-secondary); font-size:8.5px; margin-top:2px; }
+  .cart-top-valor { text-align:right; font-size:10px; font-weight:800; }
+  .cart-top-participacao { text-align:right; color:var(--accent); font-size:9.5px; font-weight:800; }
+  .cart-top-loading, .cart-top-vazio {
+    padding:20px; text-align:center; color:var(--text-secondary); font-size:11px;
+  }
+  .cart-top-direto { margin:0 16px 14px; border:1px solid var(--border-subtle); border-radius:10px; overflow:hidden; }
+
+  @media (max-width:900px) {
+    .cart-kpi-strip { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width:620px) {
+    .cart-body { padding:14px; }
+    .cart-kpi-strip { grid-template-columns:1fr; }
+    .cart-card-contexto { grid-template-columns:1fr; }
+    .cart-top-produto { grid-template-columns:25px minmax(130px,1fr) 85px; }
+    .cart-top-participacao { grid-column:2; text-align:left; }
+  }
 </style>
 </head>
 <body class="cartdesk">
@@ -273,6 +375,105 @@
   function cartBadgeVariacaoHtml(anoAnterior, mesAtual) {
     const v = cartCalcVariacaoYoY(anoAnterior, mesAtual);
     return `<span class="cart-var-badge ${v.classe}">${v.label}</span>`;
+  }
+
+  const CART_TOP_PRODUTOS_CACHE = {};
+
+  function cartEscHtml(valor) {
+    return String(valor == null ? '' : valor)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function cartIdSeguro(valor) {
+    return String(valor || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+  }
+
+  function cartFornecedorTopAtual() {
+    if (CART_KIMBERLY_CATEGORIA_ATUAL) return CART_KIMBERLY_CATEGORIA_ATUAL;
+    if (CART_UNILEVER_CATEGORIA_ATUAL) return CART_UNILEVER_CATEGORIA_ATUAL;
+    return CART_FORNECEDOR_ATUAL || '';
+  }
+
+  function cartRenderTopProdutos(resposta) {
+    if (!resposta || resposta.erro) {
+      return `<div class="cart-top-vazio">${cartEscHtml(
+        (resposta && resposta.mensagem) || 'Não foi possível carregar os produtos.'
+      )}</div>`;
+    }
+
+    const produtos = Array.isArray(resposta.produtos) ? resposta.produtos.slice(0, 20) : [];
+    const periodo = Array.isArray(resposta.meses) && resposta.meses.length
+      ? resposta.meses.join(' · ')
+      : 'período indisponível';
+
+    if (produtos.length === 0) {
+      return `
+        <div class="cart-top-header">
+          <div><strong>Top produtos · último trimestre fechado</strong><span>${periodo}</span></div>
+        </div>
+        <div class="cart-top-vazio">Nenhum produto encontrado para este cliente e fornecedor no período.</div>`;
+    }
+
+    const itens = produtos.map((produto, indice) => {
+      const meta = [
+        produto.codigo ? 'Cód. ' + cartEscHtml(produto.codigo) : '',
+        produto.ean ? 'EAN ' + cartEscHtml(produto.ean) : ''
+      ].filter(Boolean).join(' · ');
+
+      return `
+        <div class="cart-top-produto">
+          <span class="cart-top-posicao">${produto.posicao || (indice + 1)}</span>
+          <div class="cart-top-nome">
+            <strong title="${cartEscHtml(produto.descricao)}">${cartEscHtml(produto.descricao)}</strong>
+            <small>${meta || 'Produto sem código cadastrado'}</small>
+          </div>
+          <span class="cart-top-valor mono">${cartFormatBRL(produto.valor)}</span>
+          <span class="cart-top-participacao">${Number(produto.participacao || 0).toFixed(1)}%</span>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="cart-top-header">
+        <div>
+          <strong>Top ${produtos.length} produtos · último trimestre fechado</strong>
+          <span>${periodo} · ordenado por faturamento</span>
+        </div>
+        <span class="cart-top-total">Total do período: ${cartFormatBRL(resposta.totalFaturamento)}</span>
+      </div>
+      <div class="cart-top-list">${itens}</div>`;
+  }
+
+  function cartToggleTopProdutos(codClienteCodificado, fornecedorCodificado, alvoId) {
+    const codCliente = decodeURIComponent(codClienteCodificado);
+    const fornecedor = decodeURIComponent(fornecedorCodificado);
+    const alvo = document.getElementById(alvoId);
+    if (!alvo) return;
+
+    const estaAberto = alvo.style.display !== 'none';
+    document.querySelectorAll('.cart-top-wrap').forEach(el => { el.style.display = 'none'; });
+    if (estaAberto) return;
+
+    alvo.style.display = 'block';
+    const chaveCache = codCliente + '|' + fornecedor;
+    if (CART_TOP_PRODUTOS_CACHE[chaveCache]) {
+      alvo.innerHTML = cartRenderTopProdutos(CART_TOP_PRODUTOS_CACHE[chaveCache]);
+      return;
+    }
+
+    alvo.innerHTML = '<div class="cart-top-loading">Carregando os produtos do último trimestre...</div>';
+    chamarApi('topProdutosCliente', {
+      codCliente: codCliente,
+      fornecedor: fornecedor
+    }).then(resposta => {
+      CART_TOP_PRODUTOS_CACHE[chaveCache] = resposta;
+      if (alvo.style.display !== 'none') alvo.innerHTML = cartRenderTopProdutos(resposta);
+    }).catch(() => {
+      alvo.innerHTML = '<div class="cart-top-vazio">Não foi possível carregar os produtos. Tente novamente.</div>';
+    });
   }
 
   // ── ESTADO GLOBAL ─────────────────────────────────────────────────────
@@ -891,6 +1092,9 @@
       const logoHtml = cfg.logo
         ? `<img src="${cfg.logo}" alt="${f.fornecedor}" onerror="this.parentElement.innerHTML='<span style=\\'font-weight:800;font-size:11px;color:${cfg.cor2}\\'>${f.fornecedor}</span>'">`
         : `<span style="font-weight:800; font-size:11px; color:${cfg.cor2}">${f.fornecedor}</span>`;
+      const topId = 'cartTopDireto_' + cartIdSeguro(cliente.id || cliente.codCliente) + '_' + cartIdSeguro(f.fornecedor);
+      const codClienteTop = encodeURIComponent(cliente.id || cliente.codCliente || '');
+      const fornecedorTop = encodeURIComponent(f.fornecedor);
 
       return `
         <div class="cart-card">
@@ -921,6 +1125,13 @@
                 : '<span class="cart-badge cart-badge-nao">— Não comprou no mês</span>'}
             </div>
           </div>
+          <div class="cart-card-footer">
+            <button type="button" class="cart-top-btn" style="width:100%;"
+              onclick="cartToggleTopProdutos('${codClienteTop}','${fornecedorTop}','${topId}')">
+              Ver Top 20 produtos do trimestre
+            </button>
+          </div>
+          <div id="${topId}" class="cart-top-wrap" style="display:none;"></div>
         </div>`;
     }).join('');
 
@@ -940,6 +1151,45 @@
       return;
     }
 
+    const totalMes = fornecedores.reduce((soma, f) => soma + (Number(f.faturadoMesAtual) || 0), 0);
+    const totalTri = fornecedores.reduce((soma, f) => soma + (Number(f.faturadoTri) || 0), 0);
+    const totalAno = fornecedores.reduce((soma, f) => soma + (Number(f.faturadoAnoAnterior) || 0), 0);
+    const fornecedorLider = fornecedores.slice().sort((a, b) =>
+      (Number(b.faturadoMesAtual) || 0) - (Number(a.faturadoMesAtual) || 0)
+    )[0];
+    const maiorOportunidade = fornecedores.slice().sort((a, b) =>
+      ((Number(b.totalClientesCarteira) || 0) - (Number(b.clientesPositivados) || 0)) -
+      ((Number(a.totalClientesCarteira) || 0) - (Number(a.clientesPositivados) || 0))
+    )[0];
+    const faltamMaiorOportunidade = maiorOportunidade
+      ? Math.max(0, (Number(maiorOportunidade.totalClientesCarteira) || 0) -
+        (Number(maiorOportunidade.clientesPositivados) || 0))
+      : 0;
+
+    const kpisHtml = `
+      <div class="cart-kpi-strip">
+        <div class="cart-kpi cart-kpi-principal">
+          <span class="cart-kpi-label">Faturamento do mês</span>
+          <strong class="cart-kpi-valor">${cartFormatBRL(totalMes)}</strong>
+          <span class="cart-kpi-sub">Resultado atual da seleção</span>
+        </div>
+        <div class="cart-kpi">
+          <span class="cart-kpi-label">Média mensal · trimestre</span>
+          <strong class="cart-kpi-valor">${cartFormatBRL(cartMediaMensal(totalTri))}</strong>
+          <span class="cart-kpi-sub">Média dos três meses fechados anteriores</span>
+        </div>
+        <div class="cart-kpi">
+          <span class="cart-kpi-label">Fornecedor líder</span>
+          <strong class="cart-kpi-valor" style="font-family:inherit;">${fornecedorLider ? fornecedorLider.fornecedor : '—'}</strong>
+          <span class="cart-kpi-sub">${fornecedorLider ? cartFormatBRL(fornecedorLider.faturadoMesAtual) : 'Sem faturamento'}</span>
+        </div>
+        <div class="cart-kpi">
+          <span class="cart-kpi-label">Maior oportunidade</span>
+          <strong class="cart-kpi-valor" style="font-family:inherit;">${maiorOportunidade ? maiorOportunidade.fornecedor : '—'}</strong>
+          <span class="cart-kpi-sub">Faltam ${faltamMaiorOportunidade} clientes para positivar</span>
+        </div>
+      </div>`;
+
     const cardsHtml = fornecedores.map(f => {
       const cfg = cartGetConfigFornecedor(f.fornecedor);
       const logoHtml = cfg.logo
@@ -955,22 +1205,22 @@
             <span class="cart-card-header-nome">${f.fornecedor}</span>
             <div class="cart-card-header-logo">${logoHtml}</div>
           </div>
-          <div class="cart-card-body">
+          <div class="cart-card-body cart-card-destaque">
+            <span class="cart-metric-label">Faturamento do mês</span>
+            <strong class="cart-card-valor-principal">${cartFormatBRL(f.faturadoMesAtual)}</strong>
             <div class="cart-metric-row">
-              <span class="cart-metric-label">Fat. Ano Anterior</span>
-              <span class="cart-metric-value mono">${cartFormatBRL(f.faturadoAnoAnterior)}</span>
-            </div>
-            <div class="cart-metric-row">
-              <span class="cart-metric-label">Média Mensal (3 meses ant.)</span>
-              <span class="cart-metric-value mono">${cartFormatBRL(cartMediaMensal(f.faturadoTri))}</span>
-            </div>
-            <div class="cart-metric-row">
-              <span class="cart-metric-label">Fat. Mês Atual</span>
-              <span class="cart-metric-value mono" style="color:var(--accent)">${cartFormatBRL(f.faturadoMesAtual)}</span>
-            </div>
-            <div class="cart-metric-row">
-              <span class="cart-metric-label">Variação YoY</span>
+              <span class="cart-metric-label">Variação vs. ano anterior</span>
               ${cartBadgeVariacaoHtml(f.faturadoAnoAnterior, f.faturadoMesAtual)}
+            </div>
+            <div class="cart-card-contexto">
+              <div>
+                <span>Média mensal · trimestre</span>
+                <strong class="mono">${cartFormatBRL(cartMediaMensal(f.faturadoTri))}</strong>
+              </div>
+              <div>
+                <span>Base ano anterior</span>
+                <strong class="mono">${cartFormatBRL(f.faturadoAnoAnterior)}</strong>
+              </div>
             </div>
             <div class="cart-progress-wrap">
               <div class="cart-progress-track">
@@ -981,6 +1231,7 @@
                 <span style="font-weight:800; color:${corBarra};">${pct.toFixed(1)}%</span>
               </div>
             </div>
+            <div class="cart-faltam">Faltam <strong>${Math.max(0, f.totalClientesCarteira - f.clientesPositivados)}</strong> clientes para positivar</div>
           </div>
           <div class="cart-card-footer" style="display:flex; flex-direction:column; gap:6px;">
             <button type="button" class="cart-btn cart-btn-gold" onclick="cartVerDetalheFornecedor('${f.fornecedor.replace(/'/g, "\\'")}')">
@@ -998,7 +1249,7 @@
         </div>`;
     }).join('');
 
-    wrap.innerHTML = `<div class="cart-grid">${cardsHtml}</div>`;
+    wrap.innerHTML = `${kpisHtml}<div class="cart-grid">${cardsHtml}</div>`;
   }
 
   // ── NÍVEL 2 — CARTEIRA DE CLIENTES DE UM FORNECEDOR ──────────────────
@@ -1059,7 +1310,12 @@
       return;
     }
 
-    const linhas = clientes.map(c => `
+    const fornecedorTop = cartFornecedorTopAtual();
+    const fornecedorTopCodificado = encodeURIComponent(fornecedorTop);
+    const linhas = clientes.map(c => {
+      const topId = 'cartTop_' + cartIdSeguro(fornecedorTop) + '_' + cartIdSeguro(c.codCliente);
+      const codClienteCodificado = encodeURIComponent(c.codCliente);
+      return `
       <tr>
         <td>
           <div style="font-weight:700;">${(c.razao || '').toUpperCase()}</div>
@@ -1074,7 +1330,19 @@
             ? '<span class="cart-badge cart-badge-ok">✓ Positivado</span>'
             : '<span class="cart-badge cart-badge-nao">— Não comprou</span>'}
         </td>
-      </tr>`).join('');
+        <td class="cart-num">
+          <button type="button" class="cart-top-btn"
+            onclick="cartToggleTopProdutos('${codClienteCodificado}','${fornecedorTopCodificado}','${topId}')">
+            Top 20
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="7" style="padding:0; border-bottom:1px solid var(--border-subtle);">
+          <div id="${topId}" class="cart-top-wrap" style="display:none;"></div>
+        </td>
+      </tr>`;
+    }).join('');
 
     wrap.innerHTML = `
       <div class="cart-table-scroll">
@@ -1087,6 +1355,7 @@
               <th class="cart-num">Fat. Mês Atual</th>
               <th class="cart-num">Var. YoY</th>
               <th class="cart-num">Status</th>
+              <th class="cart-num">Produtos</th>
             </tr>
           </thead>
           <tbody>${linhas}</tbody>
