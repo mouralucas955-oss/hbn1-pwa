@@ -97,6 +97,50 @@
   .hit-uf-pill { font-family:inherit; font-size:12px; font-weight:700; border-radius:999px; padding:6px 14px; border:1.5px solid var(--border-default); background:var(--surface-secondary); color:var(--text-secondary); cursor:pointer; transition:all .15s; display:inline-flex; align-items:center; gap:5px; }
   .hit-uf-pill:hover { border-color:var(--accent); }
   .hit-uf-pill-ativa { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  /* Nova visão executiva e operacional */
+  .hit-kpi-strip {
+    display:grid; grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:12px; margin-bottom:16px;
+  }
+  .hit-kpi {
+    background:var(--surface-card); border:1px solid var(--border-subtle);
+    border-radius:14px; min-height:108px; padding:15px 16px;
+    display:flex; flex-direction:column; box-shadow:var(--shadow-sm);
+  }
+  .hit-kpi-principal { background:var(--surface-header); color:#fff; border-color:transparent; }
+  .hit-kpi-label {
+    font-size:9.5px; font-weight:800; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-secondary);
+  }
+  .hit-kpi-principal .hit-kpi-label { color:#aab7c9; }
+  .hit-kpi-valor {
+    font-family:'IBM Plex Mono', monospace; font-size:23px; font-weight:800;
+    letter-spacing:-.04em; margin:auto 0 7px;
+  }
+  .hit-kpi-sub { color:var(--text-secondary); font-size:10px; line-height:1.35; }
+  .hit-kpi-principal .hit-kpi-sub { color:#c5cfdd; }
+  .hit-faltam {
+    margin-top:2px; font-size:10px; font-weight:800; color:var(--warning);
+  }
+  .hit-card-prioridade {
+    display:inline-flex; width:max-content; background:var(--warning-soft);
+    color:var(--warning); border:1px solid var(--warning-border);
+    border-radius:999px; padding:3px 8px; font-size:9px; font-weight:800;
+  }
+  .hit-card-concluido {
+    display:inline-flex; width:max-content; background:var(--success-soft);
+    color:var(--success); border:1px solid var(--success-border);
+    border-radius:999px; padding:3px 8px; font-size:9px; font-weight:800;
+  }
+
+  @media (max-width:900px) {
+    .hit-kpi-strip { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width:620px) {
+    .hit-body { padding:14px; }
+    .hit-kpi-strip { grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body class="hitdesk">
@@ -510,9 +554,55 @@
       return;
     }
 
-    const cardsHtml = HIT_LISTA_CLIENTES_VEND.map(cli => {
-      const t = hitCalcularTotais(cli);
+    const clientesComTotais = HIT_LISTA_CLIENTES_VEND.map(cli => ({
+      cli,
+      totais: hitCalcularTotais(cli)
+    }));
+    const totalRequisitos = clientesComTotais.reduce((s, item) => s + item.totais.totalGrupos, 0);
+    const totalAtendidos = clientesComTotais.reduce((s, item) => s + item.totais.totalPositivados, 0);
+    const clientesCompletos = clientesComTotais.filter(item =>
+      item.totais.totalGrupos > 0 &&
+      item.totais.totalPositivados === item.totais.totalGrupos
+    ).length;
+    const progressoGeral = totalRequisitos > 0 ? totalAtendidos / totalRequisitos * 100 : 0;
+    const ordenados = clientesComTotais.slice().sort((a, b) => {
+      const faltaA = a.totais.totalGrupos - a.totais.totalPositivados;
+      const faltaB = b.totais.totalGrupos - b.totais.totalPositivados;
+      if (faltaA === 0 && faltaB !== 0) return 1;
+      if (faltaB === 0 && faltaA !== 0) return -1;
+      return faltaA - faltaB;
+    });
+    const maisPerto = ordenados.find(item =>
+      item.totais.totalGrupos > item.totais.totalPositivados
+    );
+
+    const kpisHtml = `
+      <div class="hit-kpi-strip">
+        <div class="hit-kpi hit-kpi-principal">
+          <span class="hit-kpi-label">Progresso geral</span>
+          <strong class="hit-kpi-valor">${progressoGeral.toFixed(0)}%</strong>
+          <span class="hit-kpi-sub">${totalAtendidos} de ${totalRequisitos} requisitos atendidos</span>
+        </div>
+        <div class="hit-kpi">
+          <span class="hit-kpi-label">Clientes completos</span>
+          <strong class="hit-kpi-valor">${clientesCompletos} / ${clientesComTotais.length}</strong>
+          <span class="hit-kpi-sub">Faltam ${clientesComTotais.length - clientesCompletos} clientes</span>
+        </div>
+        <div class="hit-kpi">
+          <span class="hit-kpi-label">Requisitos pendentes</span>
+          <strong class="hit-kpi-valor">${Math.max(0, totalRequisitos - totalAtendidos)}</strong>
+          <span class="hit-kpi-sub">Oportunidades ainda abertas na seleção</span>
+        </div>
+        <div class="hit-kpi">
+          <span class="hit-kpi-label">Mais perto de concluir</span>
+          <strong class="hit-kpi-valor" style="font-family:inherit;font-size:16px;">${maisPerto ? (maisPerto.cli.razao || '').toUpperCase() : 'Tudo concluído'}</strong>
+          <span class="hit-kpi-sub">${maisPerto ? 'Faltam ' + (maisPerto.totais.totalGrupos - maisPerto.totais.totalPositivados) + ' requisitos' : 'Nenhuma pendência'}</span>
+        </div>
+      </div>`;
+
+    const cardsHtml = ordenados.map(({ cli, totais: t }) => {
       const pct = t.totalGrupos > 0 ? (t.totalPositivados / t.totalGrupos * 100) : 0;
+      const faltam = Math.max(0, t.totalGrupos - t.totalPositivados);
       const corBarra = pct >= 70 ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
       return `
         <div class="hit-card">
@@ -525,20 +615,23 @@
               <div class="hit-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
             </div>
             <div class="hit-progress-label">
-              <span>${t.totalPositivados} de ${t.totalGrupos} itens</span>
+              <span>${t.totalPositivados} de ${t.totalGrupos} requisitos</span>
               <span style="font-weight:800; color:${corBarra};">${pct.toFixed(0)}%</span>
             </div>
+            <div>${faltam > 0
+              ? `<span class="hit-card-prioridade">Faltam ${faltam} requisitos</span>`
+              : '<span class="hit-card-concluido">✓ Cliente completo</span>'}</div>
             <div>${t.alavancasCompletas === t.totalAlavancas
               ? '<span class="hit-badge-ok">✓ Todas as alavancas completas</span>'
               : `<span class="hit-badge-nao">${t.alavancasCompletas} de ${t.totalAlavancas} alavancas completas</span>`}</div>
           </div>
           <div class="hit-card-footer">
-            <button type="button" class="hit-btn hit-btn-gold" onclick="hitVerClienteDaLista('${cli.codCliente}')">Ver alavancas →</button>
+            <button type="button" class="hit-btn hit-btn-gold" onclick="hitVerClienteDaLista('${cli.codCliente}')">${faltam > 0 ? 'Ver pendências' : 'Ver mix'} →</button>
           </div>
         </div>`;
     }).join('');
 
-    wrap.innerHTML = `<div class="hit-grid">${cardsHtml}</div>`;
+    wrap.innerHTML = `${kpisHtml}<div class="hit-grid">${cardsHtml}</div>`;
   }
 
   function hitVerClienteDaLista(codCliente) {
@@ -567,8 +660,17 @@
     const wrap = document.getElementById('hitConteudo');
     const cli = HIT_CLIENTE_ATUAL;
 
-    const cardsHtml = (cli.alavancas || []).map(al => {
+    const alavancasOrdenadas = (cli.alavancas || []).slice().sort((a, b) => {
+      const faltaA = Math.max(0, a.totalGrupos - a.gruposPositivados);
+      const faltaB = Math.max(0, b.totalGrupos - b.gruposPositivados);
+      if (faltaA === 0 && faltaB !== 0) return 1;
+      if (faltaB === 0 && faltaA !== 0) return -1;
+      return faltaA - faltaB;
+    });
+
+    const cardsHtml = alavancasOrdenadas.map(al => {
       const pct = al.totalGrupos > 0 ? (al.gruposPositivados / al.totalGrupos * 100) : 0;
+      const faltam = Math.max(0, al.totalGrupos - al.gruposPositivados);
       const corBarra = al.completa ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
       return `
         <div class="hit-alavanca-card" onclick="hitAbrirAlavanca('${al.alavanca.replace(/'/g, "\\'")}')">
@@ -580,9 +682,12 @@
             <div class="hit-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
           </div>
           <div class="hit-progress-label">
-            <span>${al.gruposPositivados} de ${al.totalGrupos} itens positivados</span>
+            <span>${al.gruposPositivados} de ${al.totalGrupos} requisitos atendidos</span>
             <span style="font-weight:800; color:${corBarra};">${pct.toFixed(0)}%</span>
           </div>
+          <div>${faltam > 0
+            ? `<span class="hit-faltam">Faltam ${faltam} requisitos · abrir pendências →</span>`
+            : '<span class="hit-card-concluido">✓ Alavanca completa</span>'}</div>
         </div>`;
     }).join('');
 
@@ -681,7 +786,7 @@
         </button>
         <div>
           <div class="disp" style="font-size:15px; font-weight:700;">${al.alavanca}</div>
-          <div style="font-size:11px; color:var(--text-secondary);">${(cli.razao || '').toUpperCase()} • ${al.gruposPositivados} de ${al.totalGrupos} itens positivados</div>
+          <div style="font-size:11px; color:var(--text-secondary);">${(cli.razao || '').toUpperCase()} • ${al.gruposPositivados} de ${al.totalGrupos} requisitos atendidos</div>
         </div>
       </div>
       <div style="display:flex; flex-direction:column; gap:10px;">${gruposHtml}</div>`;
