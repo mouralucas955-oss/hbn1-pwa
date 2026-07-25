@@ -91,6 +91,19 @@
   .camp-table tbody tr.camp-row-total td { font-weight:800; background:var(--surface-secondary); }
   .camp-table tbody tr.camp-row-total td:first-child::before { content:'∑ '; opacity:.5; }
 
+  /* Um bloco por fornecedor: separa metas sem perder a leitura da tabela. */
+  .camp-fornecedor-bloco { margin-bottom:18px; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; background:var(--surface-primary); }
+  .camp-fornecedor-cabecalho { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 14px; background:var(--surface-secondary); border-bottom:1px solid var(--border-subtle); }
+  .camp-fornecedor-nome { display:flex; align-items:center; gap:9px; font-size:12px; font-weight:800; letter-spacing:.035em; }
+  .camp-fornecedor-sub { margin-top:2px; font-size:10.5px; color:var(--text-secondary); font-weight:500; letter-spacing:0; }
+  .camp-fornecedor-qtd { font-size:10px; color:var(--text-secondary); white-space:nowrap; }
+  .camp-fornecedor-bloco.kenvue { border-color:rgba(249,115,22,.32); }
+  .camp-fornecedor-bloco.kenvue .camp-fornecedor-cabecalho { background:linear-gradient(90deg,rgba(249,115,22,.12),var(--surface-secondary)); }
+  .camp-fornecedor-bloco .camp-table-scroll { border:0; border-radius:0; margin:0; }
+  .camp-kpi-foco td { background:rgba(249,115,22,.045); }
+  .camp-kpi-foco td:first-child span { color:#c2410c; }
+  .camp-kpi-badge { display:inline-flex; margin-left:7px; padding:2px 6px; border-radius:999px; background:rgba(249,115,22,.13); color:#c2410c; font-size:9px; font-weight:800; letter-spacing:.03em; vertical-align:middle; }
+
   .camp-pct-pill { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; display:inline-block; min-width:56px; text-align:center; }
   .camp-pct-verde  { background: var(--success-soft); color: var(--success); border:1px solid var(--success-border); }
   .camp-pct-amber  { background: rgba(245,158,11,0.12); color:#b45309; border:1px solid rgba(245,158,11,0.35); }
@@ -234,6 +247,75 @@ function campProjecaoHtml(meta, projecao) {
   }
 
   // Avatar circular com a letra inicial do fornecedor (mesmo padrão do catálogo)
+  function campGrupoFornecedor(campanha) {
+    const nome = String(campanha.grupoVisual || campanha.fornecedor || '').toUpperCase();
+    if (nome.startsWith('KENVUE')) return 'KENVUE';
+    if (nome.startsWith('UNILEVER')) return 'UNILEVER';
+    if (nome.startsWith('KIMBERLY')) return 'KIMBERLY';
+    return String(campanha.fornecedor || 'OUTROS').toUpperCase();
+  }
+
+  function campLinhaHtml(c) {
+    const gap = c.meta - c.realizado;
+    const mediaNecessaria = gap > 0 ? gap / (window.CAMP_DIAS_RESTANTES || 1) : 0;
+    const nomeExibir = c._labelExibir || c.fornecedor;
+    const classesLinha = [
+      c._membro ? 'camp-row-membro' : '',
+      c._total ? 'camp-row-total' : '',
+      c.tipoKpi === 'FRANQUIA_FOCO' ? 'camp-kpi-foco' : ''
+    ].filter(Boolean).join(' ');
+    const badge = c.tipoKpi === 'FRANQUIA_FOCO'
+      ? '<span class="camp-kpi-badge">FRANQUIA FOCO · ORAL</span>'
+      : '';
+
+    return `
+      <tr class="${classesLinha}">
+        <td>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="${campGerarAvatarLetra(nomeExibir)}" class="camp-pill-avatar" style="width:26px; height:26px;" alt="">
+            <span style="font-weight:${c._total ? 800 : 700};">${nomeExibir}${badge}</span>
+          </div>
+        </td>
+        <td class="camp-num mono">${campFormatBRL(c.meta)}</td>
+        <td class="camp-num mono">${campFormatBRL(c.realizado)}</td>
+        <td class="camp-num"><div class="camp-cell-cobertura">${campPctPillHtml(c.meta, c.realizado)}${campBarraHtml(c.meta, c.realizado)}</div></td>
+        <td class="camp-num">${campProjecaoHtml(c.meta, c.projecaoFechamento || 0)}</td>
+        <td class="camp-num mono ${gap > 0 ? 'camp-gap-neg' : 'camp-gap-pos'}">${gap > 0 ? campFormatBRL(gap) : '—'}</td>
+        <td class="camp-num mono">${mediaNecessaria > 0 ? campFormatBRL(mediaNecessaria) : '—'}</td>
+      </tr>`;
+  }
+
+  function campTabelaFornecedorHtml(nomeFornecedor, campanhas) {
+    const temFranquiaFoco = campanhas.some(c => c.tipoKpi === 'FRANQUIA_FOCO');
+    const subtitulo = temFranquiaFoco
+      ? 'Meta geral e KPI Franquia Foco — Categoria Oral'
+      : 'Metas e realizado do fornecedor';
+    const classeFornecedor = nomeFornecedor === 'KENVUE' ? ' kenvue' : '';
+
+    return `
+      <section class="camp-fornecedor-bloco${classeFornecedor}">
+        <div class="camp-fornecedor-cabecalho">
+          <div class="camp-fornecedor-nome">
+            <img src="${campGerarAvatarLetra(nomeFornecedor)}" class="camp-pill-avatar" style="width:25px; height:25px;" alt="">
+            <div>${nomeFornecedor}<div class="camp-fornecedor-sub">${subtitulo}</div></div>
+          </div>
+          <span class="camp-fornecedor-qtd">${campanhas.length} KPI${campanhas.length === 1 ? '' : 's'}</span>
+        </div>
+        <div class="camp-table-scroll">
+          <table class="camp-table">
+            <thead>
+              <tr>
+                <th>Campanha</th><th class="camp-num">Meta</th><th class="camp-num">Realizado</th>
+                <th class="camp-num">Cobertura</th><th class="camp-num">Projeção Fechamento</th>
+                <th class="camp-num">Gap</th><th class="camp-num">Média Necessária/Dia</th>
+              </tr>
+            </thead>
+            <tbody>${campanhas.map(campLinhaHtml).join('')}</tbody>
+          </table>
+        </div>
+      </section>`;
+  }
+
   const CAMP_AVATAR_CACHE = {};
   function campGerarAvatarLetra(nome) {
     if (CAMP_AVATAR_CACHE[nome]) return CAMP_AVATAR_CACHE[nome];
@@ -444,7 +526,24 @@ const aproveitamentoHtml = `
         </table>
       </div>`;
 
-    wrap.innerHTML = heroHtml + aproveitamentoHtml + tabelaHtml;
+    // O KPI Oral é exibido junto da Kenvue, enquanto cada fornecedor
+    // recebe seu próprio bloco visual.
+    window.CAMP_DIAS_RESTANTES = diasRestantes;
+    const gruposPorFornecedor = {};
+    const ordemFornecedores = [];
+    campanhasOrdenadas.forEach(campanha => {
+      const grupo = campGrupoFornecedor(campanha);
+      if (!gruposPorFornecedor[grupo]) {
+        gruposPorFornecedor[grupo] = [];
+        ordemFornecedores.push(grupo);
+      }
+      gruposPorFornecedor[grupo].push(campanha);
+    });
+    const tabelasPorFornecedor = ordemFornecedores
+      .map(grupo => campTabelaFornecedorHtml(grupo, gruposPorFornecedor[grupo]))
+      .join('');
+
+    wrap.innerHTML = heroHtml + aproveitamentoHtml + tabelasPorFornecedor;
     campAnimarIndicadores();
   }
 
