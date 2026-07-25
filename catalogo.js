@@ -987,6 +987,30 @@ if (!document.getElementById('telaPortais').classList.contains('hidden')) {
 renderizarGridPortais();
 }
 }
+
+const REGRAS_GRUPO_FORNECEDOR = [
+  { fornecedor: 'DANONE',   campoCliente: 'grupoDanone',   camposProduto: ['descDanoneG1', 'descDanoneG2', 'descDanoneG3'] },
+  { fornecedor: 'KENVUE',   campoCliente: 'grupoKenvue',   camposProduto: ['descKenvueG1', 'descKenvueG2', 'descKenvueG3'] },
+  { fornecedor: 'OMRON',    campoCliente: 'grupoOmron',    camposProduto: ['descOmronG1', 'descOmronG2', 'descOmronG3'] },
+  { fornecedor: 'KIMBERLY', campoCliente: 'grupoKimberly', camposProduto: ['descKimberlyG1', 'descKimberlyG2', 'descKimberlyG3'] }
+];
+
+function obterDescontoPorGrupoFornecedor(produto, cliente, fornecedor) {
+  if (!cliente) return null;
+
+  const regra = REGRAS_GRUPO_FORNECEDOR.find(item => fornecedor.includes(item.fornecedor));
+  if (!regra) return null;
+
+  const grupo = String(cliente[regra.campoCliente] || '').toUpperCase().trim();
+  const indice = grupo === 'GRUPO1' || grupo === '1' ? 0 :
+                 grupo === 'GRUPO2' || grupo === '2' ? 1 :
+                 grupo === 'GRUPO3' || grupo === '3' ? 2 : -1;
+  if (indice < 0) return null;
+
+  const campo = regra.camposProduto[indice];
+  const percentual = converterPercentual(produto[campo]);
+  return percentual > 0 ? { percentual, campo } : null;
+}
 // CÁLCULO DE PREÇO COM DESCONTO DINÂMICO (versão genérica)
 // Aceita cliente e OL explícitos — usada tanto pelo catálogo (globais)
 // quanto pela importação de pedidos (cliente identificado pelo CNPJ)
@@ -1004,6 +1028,14 @@ const isKimberly = forn.includes('KIMBERLY');
 
 let percentual  = 0;
 let colunaAtiva = null;
+const descontoGrupo = obterDescontoPorGrupoFornecedor(p, cliente, forn);
+if (descontoGrupo) {
+  percentual = descontoGrupo.percentual;
+  colunaAtiva = descontoGrupo.campo;
+}
+
+// As regras antigas só executam se o cliente não recebeu desconto por grupo.
+if (percentual === 0) {  
 
 if (isDanone) {
 if (cliente && olAtivo > 0) {
