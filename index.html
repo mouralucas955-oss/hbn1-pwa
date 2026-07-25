@@ -264,6 +264,7 @@ localStorage.setItem('hbn1_tipo', tipo);
 localStorage.setItem('hbn1_session', resposta.sessionToken);
 localStorage.setItem('hbn1_login_ts', String(Date.now()));
 localStorage.removeItem('hbn1_oferta_token');
+localStorage.removeItem('hbn1_oferta_fornecedor');
 window.location.href = obterDestinoUsuario(tipo, uf);
       } else {
         msgErro.innerText = (resposta && resposta.mensagem)
