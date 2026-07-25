@@ -36,6 +36,7 @@
     color: #fff;
     padding: 16px 20px;
     display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    position:sticky; top:0; z-index:55; box-shadow:0 8px 22px rgba(8,9,13,.18);
   }
 
   .neg-back {
@@ -45,8 +46,12 @@
   }
   .neg-back:hover { background: rgba(255,255,255,0.16); }
 
-  .neg-ticker { display:flex; gap:22px; flex-wrap:wrap; }
-  .neg-ticker-item { min-width:110px; }
+  .neg-ticker { display:flex; gap:8px; flex-wrap:wrap; align-items:stretch; }
+  .neg-ticker-item {
+    min-width:112px; padding:8px 10px; border-radius:9px;
+    background:rgba(255,255,255,.055); border:1px solid rgba(255,255,255,.09);
+  }
+  .neg-ticker-item.primary { background:rgba(34,197,94,.13); border-color:rgba(74,222,128,.26); }
   .neg-ticker-label { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#94a3b8; margin-bottom:2px; }
   .neg-ticker-value { font-size:17px; font-weight:700; }
   .neg-ticker-value.gold { color: var(--gold); }
@@ -85,6 +90,9 @@
   .neg-table tbody td { padding:7px 10px; border-bottom:1px solid var(--border-subtle); vertical-align:middle; }
   .neg-table tbody tr:hover { background: var(--accent-soft); }
   .neg-table tbody tr:last-child td { border-bottom:none; }
+  .neg-table th:first-child, .neg-table td:first-child { position:sticky; left:0; z-index:3; background:var(--surface-card); }
+  .neg-table th:nth-child(2), .neg-table td:nth-child(2) { position:sticky; left:36px; z-index:3; background:var(--surface-card); box-shadow:8px 0 12px -12px rgba(8,9,13,.5); }
+  .neg-table thead th:first-child, .neg-table thead th:nth-child(2) { z-index:5; background:var(--surface-secondary); }
   .neg-num { text-align:right; }
   .neg-cell-input { width:76px; }
   .neg-produto-input { width:190px; }
@@ -104,6 +112,10 @@
   .neg-map-row:last-child { border-bottom:none; }
 
   .neg-save-indicator { font-size:11px; color: #4ade80; }
+  .neg-safety {
+    font-size:11px; line-height:1.45; color:#b45309; background:rgba(245,158,11,.10);
+    border:1px solid rgba(245,158,11,.28); border-radius:8px; padding:8px 9px;
+  }
   .neg-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
 
   .neg-dropdown-cliente { position:absolute; top:100%; left:0; right:0; margin-top:4px; background:var(--surface-card); border:1px solid var(--border-default); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.18); max-height:220px; overflow-y:auto; z-index:50; }
@@ -135,6 +147,9 @@
   .neg-fab-salvar:active { transform: translateY(0); }
 
   @media (max-width: 880px) {
+    .neg-topbar { position:relative; }
+    .neg-ticker { width:100%; flex-wrap:nowrap; overflow-x:auto; padding-bottom:4px; }
+    .neg-ticker-item { flex:0 0 145px; }
     .neg-fab-salvar {
       bottom: 16px;
       right: 16px;
@@ -158,26 +173,26 @@
       </a>
       <div>
         <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Central de Investimento Adicional</div>
-        <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Desconto extra hbn1</div>
+        <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Simulação de investimento adicional · HBN1</div>
         <div id="negClienteInfo" style="display:none; margin-top:4px; font-size:11.5px; font-weight:700; color:#FF9F52;"></div>
       </div>
     </div>
    <div class="neg-ticker mono">
   <div class="neg-ticker-item">
-    <div class="neg-ticker-label">Produtos</div>
+    <div class="neg-ticker-label">SKUs</div>
     <div class="neg-ticker-value" id="tkProdutos">0</div>
+  </div>
+  <div class="neg-ticker-item">
+    <div class="neg-ticker-label">Unidades</div>
+    <div class="neg-ticker-value" id="tkUnidades">0</div>
   </div>
   <div class="neg-ticker-item">
     <div class="neg-ticker-label">Valor Bruto</div>
     <div class="neg-ticker-value" id="tkPedidoCheio">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
-    <div class="neg-ticker-label">Valor Liquido c/ desconto ativo</div>
+    <div class="neg-ticker-label">Líquido atual</div>
     <div class="neg-ticker-value" id="tkComDesconto">R$ 0,00</div>
-  </div>
-  <div class="neg-ticker-item">
-    <div class="neg-ticker-label">Valor Liquido c/ adicional</div>
-    <div class="neg-ticker-value" id="tkValorAlvo" style="color: var(--green);">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
     <div class="neg-ticker-label" id="tkInvestLabel">Investimento R$</div>
@@ -185,6 +200,10 @@
       <span id="tkInvest">R$ 0,00</span>
       <span id="tkInvestPct" style="font-size:11px; font-weight:700; opacity:.75; margin-left:2px;"></span>
     </div>
+  </div>
+  <div class="neg-ticker-item primary">
+    <div class="neg-ticker-label">Valor final</div>
+    <div class="neg-ticker-value" id="tkValorAlvo" style="color: var(--green);">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item"><div class="neg-save-indicator" id="neg-save-status"></div></div>
 </div>
@@ -252,7 +271,7 @@
           </div>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
-          Preço e desconto são opcionais: se não vierem no arquivo, a buscar é feita no catálogo de acordo com o login. No arqquivo só precisa do <strong>EAN ou Código</strong> + Qtd.
+          Preço e desconto são opcionais: se não vierem no arquivo, a busca é feita no catálogo conforme o login. No arquivo, basta informar <strong>EAN ou Código</strong> + quantidade.
         </p>
       </div>
 
@@ -405,8 +424,8 @@
   </div>
 
   <!-- BOTÃO FLUTUANTE — SALVAR PEDIDO -->
-  <button type="button" id="negFabSalvar" class="neg-fab-salvar" onclick="negSalvarPedidoAtual()" title="Salvar Pedido e Iniciar Novo">
-    💾 <span>Salvar Pedido</span>
+  <button type="button" id="negFabSalvar" class="neg-fab-salvar" onclick="negSalvarPedidoAtual()" title="Salvar neste dispositivo e iniciar novo">
+    💾 <span>Salvar neste dispositivo</span>
   </button>
 
 <script>
@@ -642,10 +661,13 @@ function negRenderResumoCliente(resp) {
           ? '<span style="font-size:9px; font-weight:800; color:var(--green); background:rgba(34,197,94,0.12); padding:2px 8px; border-radius:999px;">✓ Positivado</span>'
           : '<span style="font-size:9px; font-weight:800; color:var(--text-secondary); background:var(--surface-tertiary); padding:2px 8px; border-radius:999px;">— Sem compra no mês</span>'}
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:11px;">
-        <div><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Ano Anterior</span><span class="mono" style="font-weight:700;">${negFormatBRL(f.faturadoAnoAnterior)}</span></div>
-        <div><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Trimestre</span><span class="mono" style="font-weight:700;">${negFormatBRL(f.faturadoTri)}</span></div>
-        <div><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Mês Atual</span><span class="mono" style="font-weight:700; color:var(--gold);">${negFormatBRL(f.faturadoMesAtual)}</span></div>
+      <div style="display:grid; grid-template-columns:1.25fr 1fr 1fr; gap:8px; font-size:11px;">
+        <div style="background:var(--gold-soft); border-radius:8px; padding:8px;">
+          <span style="display:block; color:var(--gold); font-size:9px; text-transform:uppercase; font-weight:800;">Mês atual</span>
+          <span class="mono" style="font-size:14px; font-weight:800; color:var(--gold);">${negFormatBRL(f.faturadoMesAtual)}</span>
+        </div>
+        <div style="padding:8px 0;"><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Média mensal · tri</span><span class="mono" style="font-weight:700;">${negFormatBRL((f.faturadoTri || 0) / 3)}</span></div>
+        <div style="padding:8px 0;"><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Base ano anterior</span><span class="mono" style="font-weight:700;">${negFormatBRL(f.faturadoAnoAnterior)}</span></div>
       </div>
     </div>`).join('');
 }
@@ -1362,7 +1384,7 @@ function negRenderizarListaPedidosSalvos() {
   if (lista.length === 0) {
     corpo.innerHTML = `<div class="neg-empty" style="padding:30px 10px;">
       <div class="disp" style="font-size:14px;">Nenhum pedido salvo ainda</div>
-      <div style="font-size:12px;">Monte a negociação e clique em "Salvar Pedido" na barra lateral ou no menu.</div>
+      <div style="font-size:12px;">Monte a negociação e clique em "Salvar neste dispositivo".</div>
     </div>`;
     return;
   }
@@ -1521,56 +1543,71 @@ function negAtualizarVisibilidadeFab() {
 function negComputeIndividual(p) {
   const preco = negParseNumberBR(p.preco) || 0;
   const qtd = negParseNumberBR(p.qtd) || 0;
-  const descontoAtual = negParseNumberBR(p.descontoAtual) || 0;
+  const descontoAtual = negClamp(negParseNumberBR(p.descontoAtual) || 0, 0, 100);
   const targetRaw = negParseNumberBR(p.targetValue);
-  let pctAdicional;
+  let pctAdicionalSolicitado;
   if (p.targetType === 'pct') {
     // Meta em "%" = quanto de desconto ADICIONAL você quer dar (não o total)
-    pctAdicional = isNaN(targetRaw) ? 0 : targetRaw;
+    pctAdicionalSolicitado = isNaN(targetRaw) ? 0 : targetRaw;
   } else {
     // Meta em "R$" = preço final desejado -> calcula o adicional necessário
     const precoAlvo = isNaN(targetRaw) ? preco : targetRaw;
     const pctTotalNecessario = preco > 0 ? ((preco - precoAlvo) / preco) * 100 : 0;
-    pctAdicional = pctTotalNecessario - descontoAtual;
+    pctAdicionalSolicitado = pctTotalNecessario - descontoAtual;
   }
-  const pctNecessario = descontoAtual + pctAdicional; // desconto TOTAL final (atual + adicional)
-  const investimento = Math.max(0, pctAdicional / 100) * preco * qtd;
+  const maxAdicional = Math.max(0, 100 - descontoAtual);
+  const pctAdicional = negClamp(pctAdicionalSolicitado, 0, maxAdicional);
+  const pctNecessario = descontoAtual + pctAdicional;
+  const investimento = (pctAdicional / 100) * preco * qtd;
   const precoFinal = preco * (1 - pctNecessario / 100);
   const totalPedido = precoFinal * qtd;
-  return { preco, qtd, descontoAtual, pctNecessario, pctAdicional, investimento, precoFinal, totalPedido };
+  return {
+    preco, qtd, descontoAtual, pctNecessario, pctAdicional, investimento, precoFinal, totalPedido,
+    ajusteNegativo: pctAdicionalSolicitado < 0,
+    ajusteLimitado: pctAdicionalSolicitado > maxAdicional,
+    pctAdicionalSolicitado,
+    maxAdicional
+  };
 }
 
 function negComputeGroup(selectedProducts, groupTargetType, groupTargetValue) {
   const somaPrecoCheio = selectedProducts.reduce((s, p) => s + (negParseNumberBR(p.preco) || 0) * (negParseNumberBR(p.qtd) || 0), 0);
   const valorAtual = selectedProducts.reduce((s, p) => {
-    const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, desc = negParseNumberBR(p.descontoAtual) || 0;
+    const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, desc = negClamp(negParseNumberBR(p.descontoAtual) || 0, 0, 100);
     return s + preco * qtd * (1 - desc / 100);
   }, 0);
   const targetRaw = negParseNumberBR(groupTargetValue);
 
-  let investimentoTotal, valorAlvo, xAdicionalPct;
+  const maxAdicionalPct = selectedProducts.length
+    ? Math.max(0, Math.min(...selectedProducts.map(p => 100 - negClamp(negParseNumberBR(p.descontoAtual) || 0, 0, 100))))
+    : 0;
+  let xAdicionalSolicitado;
 
   if (groupTargetType === 'valor') {
-    // Meta em R$: continua igual — você diz o valor final desejado do grupo
-    valorAlvo = isNaN(targetRaw) ? valorAtual : targetRaw;
-    investimentoTotal = valorAtual - valorAlvo;
-    xAdicionalPct = somaPrecoCheio > 0 ? (investimentoTotal / somaPrecoCheio) * 100 : 0;
+    // Meta em R$: valor final desejado do grupo.
+    const valorDesejado = isNaN(targetRaw) ? valorAtual : targetRaw;
+    xAdicionalSolicitado = somaPrecoCheio > 0 ? ((valorAtual - valorDesejado) / somaPrecoCheio) * 100 : 0;
   } else {
-    // Meta em %: agora é o ADICIONAL direto (somado ao desconto atual de cada item),
-    // igual ao modo "Por item" — não mais um % final sobre o preço cheio.
-    xAdicionalPct = isNaN(targetRaw) ? 0 : targetRaw;
-    investimentoTotal = Math.max(0, xAdicionalPct / 100) * somaPrecoCheio;
-    valorAlvo = valorAtual - investimentoTotal;
+    xAdicionalSolicitado = isNaN(targetRaw) ? 0 : targetRaw;
   }
+  const xAdicionalPct = negClamp(xAdicionalSolicitado, 0, maxAdicionalPct);
+  const investimentoTotal = (xAdicionalPct / 100) * somaPrecoCheio;
+  const valorAlvo = Math.max(0, valorAtual - investimentoTotal);
 
   const perItem = selectedProducts.map(p => {
-    const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, descontoAtual = negParseNumberBR(p.descontoAtual) || 0;
+    const preco = negParseNumberBR(p.preco) || 0, qtd = negParseNumberBR(p.qtd) || 0, descontoAtual = negClamp(negParseNumberBR(p.descontoAtual) || 0, 0, 100);
     const pctFinal = descontoAtual + xAdicionalPct;
     const investimentoItem = Math.max(0, xAdicionalPct / 100) * preco * qtd;
     const precoFinal = preco * (1 - pctFinal / 100);
     return { id: p.id, produto: p.produto, preco, qtd, descontoAtual, pctFinal, investimentoItem, precoFinal };
   });
-  return { somaPrecoCheio, valorAtual, valorAlvo, investimentoTotal, xAdicionalPct, perItem };
+  return {
+    somaPrecoCheio, valorAtual, valorAlvo, investimentoTotal, xAdicionalPct, perItem,
+    ajusteNegativo: xAdicionalSolicitado < 0,
+    ajusteLimitado: xAdicionalSolicitado > maxAdicionalPct,
+    xAdicionalSolicitado,
+    maxAdicionalPct
+  };
 }
 
 /* =========================================================================
@@ -1915,14 +1952,16 @@ function negRenderAll() {
 }
 
 function negRenderTicker() {
-  let somaPrecoCheio = 0, somaAtual = 0, somaInvestIndividual = 0;
+  let somaPrecoCheio = 0, somaAtual = 0, somaInvestIndividual = 0, totalUnidades = 0;
   NEG_PRODUCTS.forEach(p => {
     const c = negComputeIndividual(p);
     somaPrecoCheio += c.preco * c.qtd;
     somaAtual += c.preco * c.qtd * (1 - c.descontoAtual / 100);
     somaInvestIndividual += c.investimento;
+    totalUnidades += c.qtd;
   });
   document.getElementById('tkProdutos').innerText = NEG_PRODUCTS.length;
+  document.getElementById('tkUnidades').innerText = totalUnidades.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
   document.getElementById('tkPedidoCheio').innerText = negFormatBRL(somaPrecoCheio);
   document.getElementById('tkComDesconto').innerText = negFormatBRL(somaAtual);
 
@@ -1932,7 +1971,7 @@ function negRenderTicker() {
   const investTotal = NEG_MODE === 'individual' ? somaInvestIndividual : Math.max(0, groupResult.investimentoTotal);
   const baseComparacao = NEG_MODE === 'individual' ? somaAtual : groupResult.valorAtual;
   const pctRepresentatividade = baseComparacao > 0 ? (investTotal / baseComparacao) * 100 : 0;
-  const rotuloBase = NEG_MODE === 'individual' ? 'do pedido' : 'do pedido';
+  const rotuloBase = 'do líquido atual';
 
   // NOVO: valor final do pedido depois de aplicar o investimento adicional
   document.getElementById('tkValorAlvo').innerText = negFormatBRL(Math.max(0, somaAtual - investTotal));
@@ -1955,7 +1994,7 @@ function negRenderGroupPanel() {
       <span style="color:var(--text-secondary);">Valor com desconto atual</span><span class="mono">${negFormatBRL(gr.valorAtual)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
-      <span style="color:var(--text-secondary);">Valor liquido c/ adicional</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
+      <span style="color:var(--text-secondary);">Valor líquido final</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
       <span style="color:var(--text-secondary);">% adicional uniforme</span>
@@ -1966,6 +2005,8 @@ function negRenderGroupPanel() {
       <span class="mono" style="font-weight:800; color:var(--gold);">${negFormatBRL(Math.max(0, gr.investimentoTotal))}</span>
     </div>
     ${gr.investimentoTotal <= 0 && selected.length > 0 ? '<div style="font-size:11.5px; color:var(--green);">Meta já atingida com o desconto atual.</div>' : ''}
+    ${gr.ajusteNegativo ? '<div class="neg-safety">O valor solicitado é maior que o líquido atual. O adicional foi ajustado para 0%, evitando aumentar artificialmente o pedido.</div>' : ''}
+    ${gr.ajusteLimitado ? `<div class="neg-safety">O adicional solicitado ultrapassa o limite seguro. Aplicado o máximo de ${negFormatPct(gr.maxAdicionalPct)} para manter todos os preços finais em zero ou acima.</div>` : ''}
   `;
 }
 
@@ -2020,6 +2061,8 @@ function negRenderTable() {
             <input class="neg-input mono neg-cell-input" style="text-align:right" value="${p.targetValue}" onchange="negUpdateProduct('${p.id}','targetValue',this.value)">
             <button type="button" class="neg-btn neg-btn-sm" style="padding:5px 7px;" onclick="negToggleTargetType('${p.id}')">${p.targetType === 'pct' ? '%' : 'R$'}</button>
           </div>
+          ${c.ajusteNegativo ? '<div style="color:#b45309;font-size:9px;margin-top:3px;">Ajustado para 0%</div>' : ''}
+          ${c.ajusteLimitado ? `<div style="color:#b45309;font-size:9px;margin-top:3px;">Limite seguro: ${negFormatPct(c.maxAdicional)}</div>` : ''}
         </td>
         <td class="neg-num">
           <input class="neg-input mono neg-cell-input" style="text-align:right" placeholder="opcional" value="${p.precoFinalDesejado || ''}" onchange="negUpdatePrecoFinalDesejado('${p.id}', this.value)">
