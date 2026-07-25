@@ -2,6 +2,13 @@
 let BD_PRODUTOS         = [];
 let PRODUTOS_FILTRADOS  = [];
 let CARRINHO            = {};
+const CHAVE_CARRINHO_ATIVO = 'hbn1_carrinho_ativo_v1';
+try {
+  const carrinhoSalvo = JSON.parse(sessionStorage.getItem(CHAVE_CARRINHO_ATIVO) || '{}');
+  if (carrinhoSalvo && typeof carrinhoSalvo === 'object' && !Array.isArray(carrinhoSalvo)) CARRINHO = carrinhoSalvo;
+} catch (_) {
+  CARRINHO = {};
+}
 let filtroFornecedorAtual = "TODOS";
 let BD_CLIENTES         = [];
 let CLIENTE_SELECIONADO = null;
@@ -10,6 +17,7 @@ let FILTRO_MARCA_ATIVA = null;
 let FILTRO_DIVISAO_ATIVA = null;
 let FILTRO_APENAS_COM_DESCONTO = false;
 let ORDENACAO_ATIVA = 'padrao'; // padrao | desconto_desc | preco_asc | preco_desc | estoque_desc | alfabetica
+let CACHE_PRODUTOS_TIMESTAMP = null;
 
 const OPCOES_ORDENACAO = [
   { valor: 'padrao', label: 'Padrão' },
@@ -335,7 +343,7 @@ function _atualizarRodapeEscolhaManualHit() {
   Object.keys(HIT_MANUAL_QTDS).forEach(idProd => {
     const qtd = HIT_MANUAL_QTDS[idProd];
     if (qtd <= 0) return;
-    const p = BD_PRODUTOS.find(prod => prod.id === idProd);
+    const p = BD_PRODUTOS.find(prod => String(prod.id) === String(idProd));
     if (!p) return;
     const { precoFinal } = calcularPrecos(p);
     totalItens += qtd;
@@ -351,7 +359,7 @@ function adicionarSelecaoManualHit() {
 
   let adicionados = 0;
   chaves.forEach(idProd => {
-    const p = BD_PRODUTOS.find(prod => prod.id === idProd);
+    const p = BD_PRODUTOS.find(prod => String(prod.id) === String(idProd));
     if (!p) return;
     const estoqueMax = Number(p.estoque || 0);
     const qtdEscolhida = Math.min(HIT_MANUAL_QTDS[idProd], estoqueMax);
@@ -588,11 +596,13 @@ if (UFS_PERMITIDAS_USUARIO.length === 0) UFS_PERMITIDAS_USUARIO = [UF_USUARIO];
 // CACHE DE PRODUTOS (stale-while-revalidate) — abre o catálogo já com os
 // produtos da última visita, atualizando em segundo plano
 // =========================================================================
-const CHAVE_CACHE_PRODUTOS = 'hbn1_cache_produtos_' + UF_USUARIO;
+function _chaveCacheProdutos() {
+  return 'hbn1_cache_produtos_' + String(UF_USUARIO || 'PI').toUpperCase();
+}
 
 function _salvarCacheProdutos(produtos) {
   try {
-    localStorage.setItem(CHAVE_CACHE_PRODUTOS, JSON.stringify({
+    localStorage.setItem(_chaveCacheProdutos(), JSON.stringify({
       timestamp: Date.now(),
       produtos: produtos
     }));
@@ -604,10 +614,11 @@ function _salvarCacheProdutos(produtos) {
 
 function _carregarCacheProdutos() {
   try {
-    const bruto = localStorage.getItem(CHAVE_CACHE_PRODUTOS);
+    const bruto = localStorage.getItem(_chaveCacheProdutos());
     if (!bruto) return null;
     const obj = JSON.parse(bruto);
     if (!obj || !Array.isArray(obj.produtos) || obj.produtos.length === 0) return null;
+    CACHE_PRODUTOS_TIMESTAMP = Number(obj.timestamp) || null;
     return obj.produtos;
   } catch (e) {
     return null;
@@ -679,6 +690,9 @@ async function aguardarSessaoInicial() {
   UF_USUARIO = (params.get('uf') || localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
   TIPO_USUARIO = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
   if (TIPO_USUARIO === 'VENDEDOR') TIPO_USUARIO = 'VENDEDOR_FARMA';
+  try { UFS_PERMITIDAS_USUARIO = JSON.parse(localStorage.getItem('hbn1_ufs') || '[]'); }
+  catch (_) { UFS_PERMITIDAS_USUARIO = []; }
+  if (UFS_PERMITIDAS_USUARIO.length === 0) UFS_PERMITIDAS_USUARIO = [UF_USUARIO];
 }
 
 // Perfis autorizados a usar o Talão em branco (Excel). Pra liberar geral,
@@ -727,6 +741,11 @@ function iniciarSplashAbertura() {
 const splash    = document.getElementById('splashAbertura');
 const container = document.getElementById('splashLogosFornecedores');
 if (!splash || !container) return;
+if (sessionStorage.getItem('hbn1_splash_exibida') === '1') {
+  splash.remove();
+  return;
+}
+sessionStorage.setItem('hbn1_splash_exibida', '1');
 
 const nomesFornecedores = Object.keys(CONFIG_FORNECEDORES).filter(n => n !== 'NAZARIA');
 
@@ -1126,13 +1145,28 @@ percentual = 0;
 colunaAtiva = null;
 }
 
-const precoFinal = percentual > 0 ? precoBruto * (1 - percentual / 100) : precoBruto;
+// Segurança comercial: desconto nunca pode aumentar o preço nem gerar valor negativo.
+percentual = Math.max(0, Math.min(100, Number(percentual) || 0));
+const precoFinal = precoBruto * (1 - percentual / 100);
 return { precoFinal, precoOriginal: precoBruto, percentual, colunaAtiva };
 }
 
-// Wrapper usado em todo o catálogo
+// Centraliza o preço efetivamente exibido e utilizado pelo pedido.
+// A ST é somada à base antes da aplicação do desconto, seguindo a regra
+// comercial já mostrada nos cards. Todos os totais, histórico e exportações
+// passam por este mesmo resultado.
 function calcularPrecos(p) {
-return calcularPrecosPara(p, CLIENTE_SELECIONADO, OL_ATIVO, OMRON_OL_ATIVO);
+const calculoBase = calcularPrecosPara(p, CLIENTE_SELECIONADO, OL_ATIVO, OMRON_OL_ATIVO);
+const valorST = (ST_ATIVO && BD_ST[p.id]) ? Math.max(0, Number(BD_ST[p.id]) || 0) : 0;
+const precoOriginal = calculoBase.precoOriginal + valorST;
+const precoFinal = precoOriginal * (1 - calculoBase.percentual / 100);
+return {
+  ...calculoBase,
+  precoOriginal,
+  precoFinal,
+  valorST,
+  temST: valorST > 0
+};
 }
 
 // Converte "15%", "15", 15, "15,5%" etc. → número float
@@ -1140,7 +1174,7 @@ function converterPercentual(texto) {
 if (!texto && texto !== 0) return 0;
 let s = String(texto).replace('%', '').replace(',', '.').trim();
 const n = parseFloat(s);
-return isNaN(n) ? 0 : n;
+return isNaN(n) ? 0 : Math.max(0, Math.min(100, n));
 }
 
 function converterPrecoValido(textoMoeda) {
@@ -1152,20 +1186,52 @@ str = str.replace(/\./g, '').replace(',', '.');
 str = str.replace(',', '.');
 }
 const resultado = parseFloat(str);
-return isNaN(resultado) ? 0 : resultado;
+return isNaN(resultado) ? 0 : Math.max(0, resultado);
 }
 
 function formatarParaReal(numero) {
 return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
+function escapeHtml(valor) {
+return String(valor ?? '').replace(/[&<>"']/g, caractere => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[caractere]);
+}
+
+function escapeJsString(valor) {
+return String(valor ?? '')
+  .replace(/\\/g, '\\\\')
+  .replace(/'/g, "\\'")
+  .replace(/"/g, '\\x22')
+  .replace(/</g, '\\x3C')
+  .replace(/>/g, '\\x3E')
+  .replace(/\r/g, '\\r')
+  .replace(/\n/g, '\\n');
+}
+
+function urlImagemSegura(valor) {
+const url = String(valor || '').trim();
+if (!url) return '';
+if (/^(https?:\/\/|data:image\/|\.{0,2}\/)/i.test(url)) return escapeHtml(url);
+return '';
+}
+
 // TEXTO DE ÚLTIMA ATUALIZAÇÃO DOS DADOS (produtos/preços/estoque)
-function atualizarTextoUltimaSincronizacao() {
+function atualizarTextoUltimaSincronizacao(origem = 'rede') {
 const el = document.getElementById('textoUltimaAtualizacao');
 if (!el) return;
-const agora = new Date();
+const agora = origem === 'cache' && CACHE_PRODUTOS_TIMESTAMP
+  ? new Date(CACHE_PRODUTOS_TIMESTAMP)
+  : new Date();
 const dataFormatada = agora.toLocaleDateString('pt-BR');
 const horaFormatada  = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-el.innerText = `🕐 Dados atualizados em ${dataFormatada} às ${horaFormatada}`;
+el.innerText = origem === 'cache'
+  ? `⚠ Dados em cache de ${dataFormatada} às ${horaFormatada} — sincronizando`
+  : `✓ Dados atualizados em ${dataFormatada} às ${horaFormatada}`;
+el.className = origem === 'cache'
+  ? 'text-[10px] font-semibold text-amber-600 normal-case flex items-center gap-1'
+  : 'text-[10px] font-semibold text-emerald-600 normal-case flex items-center gap-1';
 }
 
 // =========================================================================
@@ -1300,11 +1366,11 @@ return;
 let html = '';
 filtrados.slice(0, 10).forEach(c => {
 html += `
-         <div onclick="selecionarCliente('${c.id}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b border-slate-100 last:border-none transition-colors">
-           <div class="font-bold text-xs text-slate-900">${c.razao.toUpperCase()}</div>
+         <div onclick="selecionarCliente('${escapeJsString(c.id)}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b border-slate-100 last:border-none transition-colors">
+           <div class="font-bold text-xs text-slate-900">${escapeHtml(String(c.razao || '').toUpperCase())}</div>
            <div class="text-[10px] text-slate-500 flex justify-between mt-1 font-mono">
-             <span>ID: ${c.id}</span>
-             <span>CNPJ: ${c.cnpj}</span>
+             <span>ID: ${escapeHtml(c.id)}</span>
+             <span>CNPJ: ${escapeHtml(c.cnpj || '')}</span>
            </div>
          </div>`;
 });
@@ -1515,7 +1581,7 @@ function renderizarDropdownMarca() {
   const dd = document.getElementById('dropdownFiltroMarca');
   let html = `<button onclick="selecionarFiltroMarca(null)" class="w-full text-left px-3 py-2 text-[11px] font-bold ${!FILTRO_MARCA_ATIVA ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">Todas as marcas</button>`;
   html += marcas.map(m => `
-    <button onclick="selecionarFiltroMarca('${m.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 ${FILTRO_MARCA_ATIVA === m ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${m}</button>`).join('');
+    <button onclick="selecionarFiltroMarca('${escapeJsString(m)}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 ${FILTRO_MARCA_ATIVA === m ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${escapeHtml(m)}</button>`).join('');
   dd.innerHTML = html;
 }
 
@@ -1529,7 +1595,7 @@ function renderizarDropdownDivisao() {
   }
   let html = `<button onclick="selecionarFiltroDivisao(null)" class="w-full text-left px-3 py-2 text-[11px] font-bold ${!FILTRO_DIVISAO_ATIVA ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">Todas as divisões</button>`;
   html += divisoes.map(d => `
-    <button onclick="selecionarFiltroDivisao('${d.replace(/'/g, "\\'")}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 ${FILTRO_DIVISAO_ATIVA === d ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${d}</button>`).join('');
+    <button onclick="selecionarFiltroDivisao('${escapeJsString(d)}')" class="w-full text-left px-3 py-2 text-[11px] font-semibold border-t border-slate-50 ${FILTRO_DIVISAO_ATIVA === d ? 'text-orange-600 bg-orange-50' : 'text-slate-600 hover:bg-slate-50'}">${escapeHtml(d)}</button>`).join('');
   dd.innerHTML = html;
 }
 
@@ -1677,6 +1743,8 @@ grid.appendChild(card);
 function criarCardProduto(p) {
 const card = document.createElement('div');
 card.id = `card-item-${p.id}`;
+const idJs = escapeJsString(p.id);
+const imagemSegura = urlImagemSegura(p.imagens);
 
 const qtdNoCarrinho = CARRINHO[p.id] || 0;
 const estoque       = Number(p.estoque || 0);
@@ -1690,23 +1758,14 @@ card.className = "bg-white border rounded-2xl flex flex-col overflow-hidden rela
 ? "border-orange-300 shadow-md shadow-orange-100"
 : "border-slate-100 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-100/60 hover:-translate-y-1");
 
-const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+const { precoFinal, precoOriginal, percentual, valorST, temST } = calcularPrecos(p);
 const temDesconto = percentual > 0;
 
-// ST: soma ANTES do desconto, depois aplica o percentual sobre (preço + ST)
-const valorST = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
-const temST   = ST_ATIVO && valorST > 0;
-
-const precoOriginalComST = precoOriginal + valorST;
-const precoFinalComST = temDesconto
-? precoOriginalComST * (1 - percentual / 100)
-: precoOriginalComST;
-
-const precoExibidoFinal    = temST ? precoFinalComST    : precoFinal;
-const precoExibidoOriginal = temST ? precoOriginalComST : precoOriginal;
+const precoExibidoFinal    = precoFinal;
+const precoExibidoOriginal = precoOriginal;
 
 const badgeTagHtml = p.tag && p.tag.trim() !== ''
-? `<span class="absolute top-2 left-2 z-10 bg-[#FF6B00] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider">${p.tag}</span>`
+? `<span class="absolute top-2 left-2 z-10 bg-[#FF6B00] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm tracking-wider">${escapeHtml(p.tag)}</span>`
 : '';
 
 // Indicadores no canto (carrinho + ST) — ficam num container com id próprio,
@@ -1737,8 +1796,8 @@ card.innerHTML = `
        ${badgeCantoHtml}
 
        <!-- Imagem -->
-       <div class="relative bg-slate-50 flex items-center justify-center cursor-pointer overflow-hidden" style="height:140px" onclick="abrirModalDetalhes('${p.id}')">
-         <img src="${p.imagens}" class="h-28 w-28 object-contain transition-transform duration-200 group-hover:scale-105 ${isEsgotado ? 'grayscale opacity-50' : 'mix-blend-multiply'}" loading="lazy">
+       <div class="relative bg-slate-50 flex items-center justify-center cursor-pointer overflow-hidden" style="height:140px" onclick="abrirModalDetalhes('${idJs}')">
+         <img src="${imagemSegura}" alt="${escapeHtml(p.descricao || 'Produto')}" class="h-28 w-28 object-contain transition-transform duration-200 group-hover:scale-105 ${isEsgotado ? 'grayscale opacity-50' : 'mix-blend-multiply'}" loading="lazy">
          <span class="absolute bottom-2 right-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${corPillEstoque}">
            ${isEsgotado ? 'Esgotado' : (p.estoque || 0) + ' un'}
          </span>
@@ -1750,17 +1809,17 @@ card.innerHTML = `
 
          <!-- Nome e marca -->
          <div>
-           <span class="text-[9px] font-black text-[#FF6B00] uppercase tracking-widest">${p.marca || ''}</span>
-           <h2 class="text-[11px] font-semibold text-slate-800 line-clamp-2 leading-snug mt-0.5 min-h-[28px] cursor-pointer hover:text-orange-500 transition-colors" onclick="abrirModalDetalhes('${p.id}')">
-             ${p.descricao || ''}
+           <span class="text-[9px] font-black text-[#FF6B00] uppercase tracking-widest">${escapeHtml(p.marca || '')}</span>
+           <h2 class="text-[12px] font-semibold text-slate-800 line-clamp-2 leading-snug mt-0.5 min-h-[32px] cursor-pointer hover:text-orange-500 transition-colors" onclick="abrirModalDetalhes('${idJs}')">
+             ${escapeHtml(p.descricao || '')}
            </h2>
          </div>
 
          <!-- Embalagem + ID, em uma linha compacta -->
          <p class="text-[9px] text-slate-400 font-mono">
-           Emb. <span class="text-slate-500 font-semibold">${p.embalagem ? p.embalagem + ' un' : '—'}</span>
+           Emb. <span class="text-slate-500 font-semibold">${p.embalagem ? escapeHtml(p.embalagem) + ' un' : '—'}</span>
            <span class="mx-1">·</span>
-           ID <span class="text-slate-500 font-semibold">${p.id}</span>
+           ID <span class="text-slate-500 font-semibold">${escapeHtml(p.id)}</span>
          </p>
 
          <!-- Preço — hero do card -->
@@ -1778,15 +1837,16 @@ return card;
 }
 
 function obterHtmlBotaoAcao(idProd, qtd, estoque, isEsgotado) {
+const idJs = escapeJsString(idProd);
 if (isEsgotado) return `<button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-[10px] font-semibold rounded-xl cursor-not-allowed tracking-wide">Sem estoque</button>`;
 if (qtd > 0) return `
        <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-xl p-0.5 w-full">
-         <button onclick="alterarQtd('${idProd}', -1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">−</button>
-         <input type="number" value="${qtd}" min="1" max="${estoque}" onchange="atualizarQtdDigitada('${idProd}', this.value, ${estoque})" onkeydown="if(event.key==='Enter') this.blur();"
+         <button onclick="alterarQtd('${idJs}', -1)" aria-label="Diminuir quantidade" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">−</button>
+         <input type="number" aria-label="Quantidade do produto" value="${qtd}" min="1" max="${estoque}" onchange="atualizarQtdDigitada('${idJs}', this.value, ${estoque})" onkeydown="if(event.key==='Enter') this.blur();"
            class="w-full text-center font-black text-sm text-orange-600 bg-transparent focus:outline-none min-w-0 p-0 border-0">
-         <button onclick="alterarQtd('${idProd}', 1)" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">+</button>
+         <button onclick="alterarQtd('${idJs}', 1)" aria-label="Aumentar quantidade" class="w-7 h-7 bg-white hover:bg-orange-100 rounded-lg font-bold text-sm text-orange-500 flex items-center justify-center border border-orange-100 transition-colors shrink-0">+</button>
        </div>`;
-return `<button onclick="alterarQtd('${idProd}', 1)" class="w-full py-1.5 bg-[#FF6B00] hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold rounded-xl transition-all tracking-wide flex items-center justify-center gap-1 shadow-sm shadow-orange-200">
+return `<button onclick="alterarQtd('${idJs}', 1)" class="w-full py-1.5 bg-[#FF6B00] hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold rounded-xl transition-all tracking-wide flex items-center justify-center gap-1 shadow-sm shadow-orange-200">
        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>Adicionar</button>`;
 }
 // Monta o HTML dos indicadores no canto do card (ícone de carrinho + bolinha de ST).
@@ -1822,14 +1882,12 @@ if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
 _atualizarEstadoVisualCard(idProd);
 _atualizarBotaoModalDetalhes(idProd);
 atualizarIndicadoresFinanceirosGlobais();
-_atualizarEstadoVisualCard(idProd);
-atualizarIndicadoresFinanceirosGlobais();
 atualizarIndicadorMinimosBarra();
 atualizarBotaoSugestaoHit();  
 }
 
 function alterarQtd(idProd, mudanca) {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return;
 const estoqueMax = Number(p.estoque || 0);
 let qtdAtual = CARRINHO[idProd] || 0;
@@ -1841,8 +1899,6 @@ const c = document.getElementById(`card-btn-${idProd}`);
 if (c) c.innerHTML = obterHtmlBotaoAcao(idProd, novaQtd, estoqueMax, false);
 _atualizarEstadoVisualCard(idProd);
 _atualizarBotaoModalDetalhes(idProd);
-atualizarIndicadoresFinanceirosGlobais();
-  
 atualizarIndicadoresFinanceirosGlobais();
 atualizarIndicadorMinimosBarra();
 atualizarBotaoSugestaoHit();
@@ -1864,7 +1920,7 @@ card.className = "bg-white border rounded-2xl flex flex-col overflow-hidden rela
 // não é recriado do zero ao só mudar a quantidade.
 const badgesEl = document.getElementById(`card-badges-${idProd}`);
 if (badgesEl) {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 const valorST = (ST_ATIVO && p && BD_ST[idProd]) ? Number(BD_ST[idProd]) : 0;
 const temST   = ST_ATIVO && valorST > 0;
 badgesEl.innerHTML = obterHtmlBadgesCanto(noCarrinho, temST);
@@ -1874,18 +1930,37 @@ badgesEl.innerHTML = obterHtmlBadgesCanto(noCarrinho, temST);
 function recalcularTotaisGerais() { atualizarIndicadoresFinanceirosGlobais(); }
 
 function atualizarIndicadoresFinanceirosGlobais() {
+if (typeof PEDIDO_ATUAL_ID !== 'undefined' && _idsHistoricoRegistrados().includes(PEDIDO_ATUAL_ID)) {
+  renovarPedidoAtual();
+}
 let somaLiquida = 0;
+let somaBruta   = 0;
 let totalItens  = 0;
+let variedades  = 0;
 Object.keys(CARRINHO).forEach(idProd => {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return;
 const qtd = CARRINHO[idProd];
+variedades += 1;
 totalItens += qtd;
-const { precoFinal } = calcularPrecos(p);
+const { precoFinal, precoOriginal } = calcularPrecos(p);
+somaBruta += precoOriginal * qtd;
 somaLiquida += precoFinal * qtd;
 });
-document.getElementById('totalLiquidoInferior').innerText = formatarParaReal(somaLiquida);
-document.getElementById('badgeContadorInferior').innerText = totalItens;
+const totalInferior = document.getElementById('totalLiquidoInferior');
+const badgeInferior = document.getElementById('badgeContadorInferior');
+if (totalInferior) totalInferior.innerText = formatarParaReal(somaLiquida);
+if (badgeInferior) badgeInferior.innerText = totalItens;
+const resumoDesktop = {
+  desktopPedidoVariedades: `${variedades} ${variedades === 1 ? 'produto' : 'produtos'}`,
+  desktopPedidoUnidades: `${totalItens} un`,
+  desktopPedidoBruto: formatarParaReal(somaBruta),
+  desktopPedidoLiquido: formatarParaReal(somaLiquida)
+};
+Object.entries(resumoDesktop).forEach(([id, valor]) => {
+  const el = document.getElementById(id);
+  if (el) el.innerText = valor;
+});
 const badge = document.getElementById('badgeContadorFlutuante');
 if (badge) {
 badge.innerText = totalItens;
@@ -1908,15 +1983,20 @@ if (btnFora)   btnFora.classList.add('hidden');
 if (btnMobile) btnMobile.classList.add('hidden');
 }
 
-// Botão flutuante "Salvar Pedido" — só aparece com itens no carrinho
+// Compatibilidade com versões anteriores que ainda tenham o botão flutuante de salvamento.
 const btnSalvarFlutuante = document.getElementById('btnSalvarPedidoFlutuante');
 if (btnSalvarFlutuante) {
 totalItens > 0 ? btnSalvarFlutuante.classList.remove('hidden') : btnSalvarFlutuante.classList.add('hidden');
 }
+try {
+  if (totalItens > 0) sessionStorage.setItem(CHAVE_CARRINHO_ATIVO, JSON.stringify(CARRINHO));
+  else sessionStorage.removeItem(CHAVE_CARRINHO_ATIVO);
+} catch (_) {}
 }
 
 function limparCarrinhoSemConfirmacao() {
 CARRINHO = {};
+renovarPedidoAtual();
 BD_PRODUTOS.forEach(p => {
 const c = document.getElementById(`card-btn-${p.id}`);
 const est = Number(p.estoque || 0);
@@ -1974,7 +2054,7 @@ let acumuladorUnidades= 0;
 let totaisPorFornecedor = {};
 
 chaves.forEach(idProd => {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return;
 const qtd = CARRINHO[idProd];
 acumuladorUnidades += qtd;
@@ -2030,7 +2110,7 @@ const estiloLinha = "flex justify-between items-center text-xs border-b border-b
 const estiloNome  = d.subItem ? "font-medium text-slate-500 italic text-[11px]" : d.destaque ? "font-black text-blue-900 tracking-tight" : "font-bold text-slate-700 truncate max-w-[180px] sm:max-w-[280px]";
 htmlForn += `
          <div class="${estiloLinha}">
-           <span class="${estiloNome}">${forn}</span>
+           <span class="${estiloNome}">${escapeHtml(forn)}</span>
            <div class="flex gap-4 text-right shrink-0 font-mono">
              <span class="text-slate-400 font-medium w-16">${d.unidades} un</span>
              <span class="text-slate-500 text-[11px] w-20">${formatarParaReal(d.bruto)}</span>
@@ -2048,7 +2128,7 @@ tituloItens.innerText = "Itens do Pedido";
 boxCorpo.appendChild(tituloItens);
 
 chaves.forEach(idProd => {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return;
 const qtd = CARRINHO[idProd];
 const estoqueMax = Number(p.estoque || 0);
@@ -2056,25 +2136,26 @@ const { precoFinal } = calcularPrecos(p);
 
 const itemLinha = document.createElement('div');
 itemLinha.className = "flex items-center justify-between border-b border-slate-100 pb-3 gap-4 last:border-0";
+const idJs = escapeJsString(p.id);
 itemLinha.innerHTML = `
          <div class="flex items-center gap-3 min-w-0">
-           <img src="${p.imagens}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0">
+           <img src="${urlImagemSegura(p.imagens)}" alt="${escapeHtml(p.descricao || 'Produto')}" class="w-12 h-12 object-contain bg-slate-50 rounded-lg p-1 border border-slate-100 shrink-0">
            <div class="min-w-0">
-             <h4 class="text-sm font-bold text-slate-900 truncate">${p.id}</h4>
-             <p class="text-xs text-slate-500 truncate">${p.descricao || 'Sem descrição'}</p>
+             <h4 class="text-sm font-bold text-slate-900 truncate">${escapeHtml(p.id)}</h4>
+             <p class="text-xs text-slate-500 truncate">${escapeHtml(p.descricao || 'Sem descrição')}</p>
              <div class="flex flex-wrap gap-2 text-[10px] text-slate-400 font-medium">
-               <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold text-[8px] uppercase">${p.fornecedor}</span>
-               ${p.divisao ? `<span class="bg-blue-50 text-blue-600 px-1 rounded font-bold text-[8px] uppercase">${p.divisao}</span>` : ''}
-               <span>${p.embalagem ? 'Emb: ' + p.embalagem + ' un' : ''}</span>
-               <span>EAN: ${p.ean}</span>
+               <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold text-[8px] uppercase">${escapeHtml(p.fornecedor || 'GERAL')}</span>
+               ${p.divisao ? `<span class="bg-blue-50 text-blue-600 px-1 rounded font-bold text-[8px] uppercase">${escapeHtml(p.divisao)}</span>` : ''}
+               <span>${p.embalagem ? 'Emb: ' + escapeHtml(p.embalagem) + ' un' : ''}</span>
+               <span>EAN: ${escapeHtml(p.ean || '')}</span>
                <span class="text-[9px] text-slate-400 font-bold">(${formatarParaReal(precoFinal)} und)</span>
              </div>
            </div>
          </div>
          <div class="flex items-center bg-slate-100 p-1 rounded-lg shrink-0">
-           <button onclick="alterarQtdNoModal('${p.id}', -1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">-</button>
-           <input type="number" value="${qtd}" min="1" max="${estoqueMax}" onchange="atualizarQtdNoModalDigitada('${p.id}', this.value, ${estoqueMax})" onkeydown="if(event.key==='Enter') this.blur();" class="w-10 text-center font-black text-xs text-slate-800 bg-transparent focus:outline-none p-0 border-0 focus:ring-0">
-           <button onclick="alterarQtdNoModal('${p.id}', 1)" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">+</button>
+           <button onclick="alterarQtdNoModal('${idJs}', -1)" aria-label="Diminuir quantidade" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">-</button>
+           <input type="number" aria-label="Quantidade do produto" value="${qtd}" min="1" max="${estoqueMax}" onchange="atualizarQtdNoModalDigitada('${idJs}', this.value, ${estoqueMax})" onkeydown="if(event.key==='Enter') this.blur();" class="w-10 text-center font-black text-xs text-slate-800 bg-transparent focus:outline-none p-0 border-0 focus:ring-0">
+           <button onclick="alterarQtdNoModal('${idJs}', 1)" aria-label="Aumentar quantidade" class="w-6 h-6 bg-white hover:bg-slate-200 rounded font-bold text-xs flex items-center justify-center border shadow-sm">+</button>
          </div>`;
 boxCorpo.appendChild(itemLinha);
 });
@@ -2158,7 +2239,7 @@ function galeriaProxima() {
 
 // MODAL DETALHES
 function abrirModalDetalhes(idProd) {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return;
 
 GALERIA_IMAGENS = _montarGaleriaImagens(p);
@@ -2179,7 +2260,7 @@ const badgeTag = document.getElementById('modalTagBadge');
 if (p.tag && p.tag.trim() !== '') { badgeTag.innerText = p.tag; badgeTag.classList.remove('hidden'); }
 else badgeTag.classList.add('hidden');
      
-const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+const { precoFinal, precoOriginal, percentual, valorST } = calcularPrecos(p);
 const temDesconto = percentual > 0;
 
 document.getElementById('modalPrecoFinal').innerText = precoOriginal > 0 ? formatarParaReal(precoFinal) : '-';
@@ -2199,14 +2280,12 @@ if (temDesconto) {
   textoEconomia.classList.add('hidden');
 }
 
-// Bloco ST no modal — mesma lógica: desconto sobre (preço + ST)
-const valorSTModal       = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
+// Bloco ST usa o mesmo cálculo central aplicado em cards, carrinho e exportações.
+const valorSTModal = valorST;
 const blocoST = document.getElementById('modalBlocoST');
-if (ST_ATIVO && valorSTModal > 0) {
-const precoOrigComST = precoOriginal + valorSTModal;
-const precoFimComST  = percentual > 0 ? precoOrigComST * (1 - percentual / 100) : precoOrigComST;
+if (valorSTModal > 0) {
 document.getElementById('modalValorST').innerText    = formatarParaReal(valorSTModal);
-document.getElementById('modalPrecoComST').innerText = formatarParaReal(precoFimComST);
+document.getElementById('modalPrecoComST').innerText = formatarParaReal(precoFinal);
 blocoST.classList.remove('hidden');
 } else {
 blocoST.classList.add('hidden');
@@ -2235,7 +2314,7 @@ function fecharModalDetalhesNoBackdrop(evt) { if (evt.target.id === 'modalDetalh
 
 function _atualizarBotaoModalDetalhes(idProd) {
   if (MODAL_PRODUTO_ATUAL !== idProd) return;
-  const p = BD_PRODUTOS.find(item => item.id === idProd);
+  const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
   if (!p) return;
   const estoque = Number(p.estoque || 0);
   const qtd = CARRINHO[idProd] || 0;
@@ -3774,45 +3853,96 @@ if (chaves.length === 0) return;
 mostrarAlertaMinimos(async () => { await _executarDownloadExcel(); }, 'Baixar Mesmo Assim');
 }
 
-function registrarPedidoNoHistoricoAtual() {
-  const chaves = Object.keys(CARRINHO);
-  if (chaves.length === 0) return;
+const CHAVE_HISTORICO_REGISTRADO = 'hbn1_historico_pedidos_registrados';
+let PEDIDO_ATUAL_ID = sessionStorage.getItem('hbn1_pedido_atual_id') || ('PED_' + Date.now());
+sessionStorage.setItem('hbn1_pedido_atual_id', PEDIDO_ATUAL_ID);
+
+function renovarPedidoAtual() {
+  PEDIDO_ATUAL_ID = 'PED_' + Date.now();
+  sessionStorage.setItem('hbn1_pedido_atual_id', PEDIDO_ATUAL_ID);
+}
+
+function _idsHistoricoRegistrados() {
+  try { return JSON.parse(localStorage.getItem(CHAVE_HISTORICO_REGISTRADO) || '[]'); }
+  catch { return []; }
+}
+
+function _marcarHistoricoRegistrado(pedidoId) {
+  const ids = _idsHistoricoRegistrados().filter(Boolean);
+  if (!ids.includes(pedidoId)) ids.unshift(pedidoId);
+  // Mantém apenas os registros recentes para não crescer indefinidamente.
+  localStorage.setItem(CHAVE_HISTORICO_REGISTRADO, JSON.stringify(ids.slice(0, 300)));
+}
+
+async function _registrarItensNoHistorico(pedidoId, cliente, itensOrigem, olAtivo) {
+  if (!pedidoId || !Array.isArray(itensOrigem) || itensOrigem.length === 0) return false;
+  if (_idsHistoricoRegistrados().includes(pedidoId)) return true;
 
   const itensPorFornecedor = {};
-
-  chaves.forEach(idProd => {
-    const p = BD_PRODUTOS.find(item => item.id === idProd);
-    if (!p) return;
-    const qtd = CARRINHO[idProd];
-    const { precoFinal, percentual } = calcularPrecos(p);
-    const forn = p.fornecedor ? String(p.fornecedor).trim().toUpperCase() : 'GERAL';
+  itensOrigem.forEach(item => {
+    const forn = String(item.fornecedor || 'GERAL').trim().toUpperCase();
     if (!itensPorFornecedor[forn]) itensPorFornecedor[forn] = [];
+    const quantidade = Math.max(0, Number(item.quantidade ?? item.qtd) || 0);
+    const precoUnitario = Math.max(0, Number(item.precoUnitario ?? item.precoFinal) || 0);
     itensPorFornecedor[forn].push({
-      nome: p.descricao || p.id,
-      ean: p.ean,
-      quantidade: qtd,
-      precoUnitario: precoFinal,
-      total: precoFinal * qtd,
-      desconto: percentual
+      nome: item.nome || item.descricao || item.id || 'Item',
+      codigo: item.codigo || item.id || '',
+      ean: item.ean || '',
+      quantidade,
+      precoUnitario,
+      precoOriginal: Math.max(precoUnitario, Number(item.precoOriginal) || precoUnitario),
+      total: precoUnitario * quantidade,
+      desconto: Math.max(0, Math.min(100, Number(item.desconto ?? item.percentual) || 0))
     });
   });
 
-  // Uma linha de histórico por fornecedor (o backend guarda 1 fornecedor por linha)
-  Object.keys(itensPorFornecedor).forEach(forn => {
+  const tarefas = Object.keys(itensPorFornecedor).map(forn => {
     const itens = itensPorFornecedor[forn];
-    const valorForn = itens.reduce((s, i) => s + i.total, 0);
-    chamarApi('registrarHistoricoPedido', {
+    const valorForn = itens.reduce((s, item) => s + item.total, 0);
+    return chamarApi('registrarHistoricoPedido', {
       dados: {
-        cnpj: CLIENTE_SELECIONADO ? CLIENTE_SELECIONADO.cnpj : '',
-        clienteNome: CLIENTE_SELECIONADO ? CLIENTE_SELECIONADO.razao : '',
+        pedidoId,
+        cnpj: cliente ? cliente.cnpj : '',
+        clienteNome: cliente ? cliente.razao : '',
         fornecedor: forn,
-        itens: itens,
+        itens,
         valorTotal: valorForn,
-        descontoAplicado: OL_ATIVO ? ('OL ' + OL_ATIVO) : '',
+        descontoAplicado: olAtivo ? ('OL ' + olAtivo) : '',
         observacoes: ''
       }
-    }).catch(e => console.error('Erro ao registrar histórico (' + forn + '):', e));
+    });
   });
+
+  try {
+    await Promise.all(tarefas);
+    _marcarHistoricoRegistrado(pedidoId);
+    return true;
+  } catch (erro) {
+    console.error('Erro ao registrar pedido no histórico:', erro);
+    mostrarToast('warning', 'O arquivo foi gerado, mas o histórico não pôde ser atualizado agora.');
+    return false;
+  }
+}
+
+async function registrarPedidoNoHistoricoAtual() {
+  const itens = Object.keys(CARRINHO).map(idProd => {
+    const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
+    if (!p) return null;
+    const qtd = CARRINHO[idProd];
+    const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
+    return {
+      id: p.id,
+      codigo: p.id,
+      nome: p.descricao || p.id,
+      ean: p.ean,
+      fornecedor: p.fornecedor,
+      quantidade: qtd,
+      precoUnitario: precoFinal,
+      precoOriginal,
+      desconto: percentual
+    };
+  }).filter(Boolean);
+  return _registrarItensNoHistorico(PEDIDO_ATUAL_ID, CLIENTE_SELECIONADO, itens, OL_ATIVO);
 }
 
 function escolherEscopoOferta() {
@@ -3929,7 +4059,7 @@ let acBruto = 0, acLiquido = 0, acUnidades = 0;
 const itensPorFornecedor = {};
 
 chaves.forEach(idProd => {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return;
 const qtd = CARRINHO[idProd];
 acUnidades += qtd;
@@ -3966,7 +4096,7 @@ nomeArquivo = `Pedido_HBN1_${dataHoje}.xlsx`;
 }
 
 await baixarWorkbook(workbook, nomeArquivo);
-registrarPedidoNoHistoricoAtual()       
+await registrarPedidoNoHistoricoAtual();
 mostrarToast('success', `${nomeArquivo} baixado com sucesso.`);
 } catch (erro) {
 console.error('Erro ao gerar o Excel do pedido:', erro);
@@ -4050,7 +4180,7 @@ return { pendentes: [], atingidos: [] };
 }
 const grupos = {};
 Object.keys(CARRINHO).forEach(idProd => {
-const p = BD_PRODUTOS.find(x => x.id === idProd);
+const p = BD_PRODUTOS.find(x => String(x.id) === String(idProd));
 if (!p) return;
 const { precoFinal, colunaAtiva } = calcularPrecos(p);
 if (!colunaAtiva || !BD_VALORES_MINIMOS[colunaAtiva]) return;
@@ -4215,7 +4345,7 @@ return;
 // Agrupar itens do carrinho por colunaAtiva
 const grupos = {};
 Object.keys(CARRINHO).forEach(idProd => {
-const p = BD_PRODUTOS.find(x => x.id === idProd);
+const p = BD_PRODUTOS.find(x => String(x.id) === String(idProd));
 if (!p) return;
 const qtd = CARRINHO[idProd];
 const { precoFinal, colunaAtiva } = calcularPrecos(p);
@@ -4296,7 +4426,7 @@ const itens = [];
 let acBruto = 0, acLiquido = 0, acUnidades = 0;
 
 chaves.forEach(idProd => {
-const p = BD_PRODUTOS.find(x => x.id === idProd);
+const p = BD_PRODUTOS.find(x => String(x.id) === String(idProd));
 if (!p) return;
 const qtd = CARRINHO[idProd];
 const { precoFinal, precoOriginal, percentual } = calcularPrecos(p);
@@ -4328,7 +4458,6 @@ const salvouComSucesso = persistirPedidosSalvos(lista);
 if (!salvouComSucesso) return;
 
 atualizarBadgesPedidosSalvos();
-registrarPedidoNoHistoricoAtual();       
 
 // Inicia automaticamente um novo pedido (limpa o carrinho atual)
 limparCarrinhoSemConfirmacao();
@@ -4383,7 +4512,7 @@ corpo.innerHTML = `
              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
            </svg>
            <p class="text-slate-400 font-bold text-sm">Nenhum pedido salvo ainda.</p>
-           <p class="text-slate-400 text-xs">Monte seu pedido e clique em <strong>"Salvar Pedido"</strong> no carrinho.</p>
+           <p class="text-slate-400 text-xs">Monte seu pedido e clique em <strong>"Salvar neste dispositivo"</strong> no carrinho.</p>
          </div>`;
 return;
 }
@@ -4404,15 +4533,15 @@ fornecedores[forn].push(item);
 
 const linhasPreview = Object.entries(fornecedores).map(([forn, itens]) => `
          <div class="mb-2">
-           <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">${forn}</p>
+           <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">${escapeHtml(forn)}</p>
            ${itens.map(item => {
              const precoFmt  = item.precoFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
              const totalFmt  = (item.precoFinal * item.qtd).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
              const descTag   = item.percentual > 0 ? `<span class="text-red-500 font-bold">-${item.percentual.toFixed(0)}%</span>` : '';
              return `<div class="flex items-start justify-between gap-2 py-1.5 border-b border-slate-50 last:border-0">
                <div class="flex-grow min-w-0">
-                 <p class="text-[11px] font-semibold text-slate-700 leading-snug truncate">${item.descricao || item.id}</p>
-                 <p class="text-[9px] text-slate-400 mt-0.5">${item.marca || ''} · ${item.embalagem || ''}</p>
+                 <p class="text-[11px] font-semibold text-slate-700 leading-snug truncate">${escapeHtml(item.descricao || item.id)}</p>
+                 <p class="text-[9px] text-slate-400 mt-0.5">${escapeHtml(item.marca || '')} · ${escapeHtml(item.embalagem || '')}</p>
                </div>
                <div class="text-right shrink-0">
                  <p class="text-[10px] font-black text-slate-800">${item.qtd} un × ${precoFmt} ${descTag}</p>
@@ -4428,11 +4557,11 @@ return `
            <div class="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
              <div class="flex-grow min-w-0">
                <div class="flex items-center gap-2 flex-wrap">
-                 <span class="text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">${p.uf}</span>
-                 <span class="text-[9px] text-slate-400 font-medium">${p.data}</span>
+                 <span class="text-[9px] font-black text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">${escapeHtml(p.uf)}</span>
+                 <span class="text-[9px] text-slate-400 font-medium">${escapeHtml(p.data)}</span>
                </div>
-               <p class="font-bold text-slate-800 text-sm mt-1 truncate" title="${cliente}">${cliente}</p>
-               ${cnpj ? `<p class="text-[10px] text-slate-400 font-mono">${cnpj}</p>` : ''}
+               <p class="font-bold text-slate-800 text-sm mt-1 truncate" title="${escapeHtml(cliente)}">${escapeHtml(cliente)}</p>
+               ${cnpj ? `<p class="text-[10px] text-slate-400 font-mono">${escapeHtml(cnpj)}</p>` : ''}
                <div class="flex items-center gap-3 mt-1.5 flex-wrap">
                  <span class="text-[10px] text-slate-500">${p.totais.variedades} produto${p.totais.variedades !== 1 ? 's' : ''}</span>
                  <span class="text-[10px] text-slate-400">·</span>
@@ -4549,7 +4678,7 @@ acUnidades += item.qtd;
 
 // Busca o estoque ATUAL do produto no catálogo — o pedido salvo não guarda
 // isso, então sem essa busca a coluna Status sempre saía "Sem estoque".
-const produtoAtual = BD_PRODUTOS.find(x => x.id === item.id);
+const produtoAtual = BD_PRODUTOS.find(x => String(x.id) === String(item.id));
 const pFake = {
 id: item.id, ean: item.ean, descricao: item.descricao, marca: item.marca,
 fornecedor: item.fornecedor, embalagem: item.embalagem,
@@ -4590,6 +4719,7 @@ nome = `Pedido_HBN1_${pedido.uf}_${dataStr}.xlsx`;
 }
 
 await baixarWorkbook(workbook, nome);
+await _registrarItensNoHistorico(pedido.id, pedido.cliente, pedido.itens, pedido.olAtivo || 0);
 } catch(e) {
 console.error('Erro ao gerar Excel do pedido salvo:', e);
 mostrarToast('error', 'Erro ao gerar o arquivo. Tente novamente.');
@@ -4755,6 +4885,7 @@ entrarFornecedor(fornecedorSalvo);
 mostrarTelaPortais();
 }
 recalcularTotaisGerais();
+atualizarTextoUltimaSincronizacao('cache');
 } else {
 // Sem cache ainda (primeiro acesso): mostra os portais com skeleton, como antes
 document.getElementById('telaPortais').classList.remove('hidden');
@@ -4766,6 +4897,7 @@ renderizarGridPortais();
 
 chamarApi('produtos', { uf: UF_USUARIO })
 .then(dados => {
+if (!Array.isArray(dados)) throw new Error('Resposta de produtos inválida.');
 dados.sort((a, b) => {
 let fA = String(a.franquia || '').trim().toUpperCase();
 let fB = String(b.franquia || '').trim().toUpperCase();
@@ -4773,6 +4905,7 @@ if (fA !== fB) return fA.localeCompare(fB);
 return String(a.descricao || '').localeCompare(String(b.descricao || ''));
 });
 const qtdAnt = BD_PRODUTOS.length;
+const dadosMudaram = JSON.stringify(dados) !== JSON.stringify(BD_PRODUTOS);
 BD_PRODUTOS = dados;
 _salvarCacheProdutos(dados);
 
@@ -4786,8 +4919,10 @@ PRODUTOS_FILTRADOS.length + ' produto' + (PRODUTOS_FILTRADOS.length !== 1 ? 's' 
 renderizarGridPortais();
 }
 } else {
-if (qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
-executarFiltrosGerais(false);
+if (dadosMudaram) {
+  if (qtdAnt !== BD_PRODUTOS.length) renderizarFiltrosLaterais();
+  executarFiltrosGerais(false);
+}
 }
 recalcularTotaisGerais();
 atualizarTextoUltimaSincronizacao();
@@ -4839,16 +4974,16 @@ carregarST();
 carregarValoresMinimos();
 atualizarBadgesPedidosSalvos();
 verificarEExibirAvisoCache();
-setInterval(verificarEExibirAvisoCache, 300000); // reavalia a cada 5 min, igual aos outros polls
+setInterval(() => { if (!document.hidden) verificarEExibirAvisoCache(); }, 300000); // reavalia a cada 5 min
        
-setInterval(atualizarMuralInvisivel,     60000);   // 1 min
-setInterval(() => atualizarProdutosInvisivel(false), 180000); // 3 min
-setInterval(atualizarClientesInvisivel, 300000);  // 5 min
+setInterval(() => { if (!document.hidden) atualizarMuralInvisivel(); }, 60000);   // 1 min
+setInterval(() => { if (!document.hidden) atualizarProdutosInvisivel(false); }, 180000); // 3 min
+setInterval(() => { if (!document.hidden) atualizarClientesInvisivel(); }, 300000);  // 5 min
 
 // Heartbeat — avisa o backend que a sessão ainda está ativa e detecta
 // bloqueio no meio de uma sessão já aberta.
 enviarHeartbeat();
-setInterval(enviarHeartbeat, 120000); // 2 min
+setInterval(() => { if (!document.hidden) enviarHeartbeat(); }, 120000); // 2 min
 });
 
 function enviarHeartbeat() {
@@ -4886,7 +5021,7 @@ window.location.href = 'negociacao.html';
 function enviarCarrinhoParaNegociacao() {
 const chaves = Object.keys(CARRINHO);
 const itens = chaves.map(idProd => {
-const p = BD_PRODUTOS.find(item => item.id === idProd);
+const p = BD_PRODUTOS.find(item => String(item.id) === String(idProd));
 if (!p) return null;
 const qtd = CARRINHO[idProd];
 const { precoOriginal, percentual } = calcularPrecos(p);
@@ -5534,9 +5669,6 @@ async function _construirWorkbookTalao(lista) {
     const linha = ws.getRow(r);
     const corFundo = (idx % 2 === 0) ? 'FFFFFFFF' : CINZA_CLARO;
     const { precoOriginal, percentual } = calcularPrecos(p);
-    // ST: soma ANTES do desconto — mesma regra usada no card do catálogo e no modal
-    const valorST = (ST_ATIVO && BD_ST[p.id]) ? Number(BD_ST[p.id]) : 0;
-    const precoOriginalComST = precoOriginal + valorST;
     const eanDigits = String(p.ean || '').replace(/\D/g, '');
     const grupo = _obterChaveGrupoTalao(p);
 
@@ -5546,7 +5678,7 @@ async function _construirWorkbookTalao(lista) {
       4: eanDigits ? Number(eanDigits) : (p.ean || ''),
       5: p.divisao || '',
       6: grupo,
-      7: precoOriginalComST,
+      7: precoOriginal,
       8: (percentual || 0) / 100,
       10: Number(p.estoque || 0)
     };
