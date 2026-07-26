@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Central de Investimento — HBN1</title>
+  <meta name="referrer" content="no-referrer">
+<title>Central de Investimento â€” HBN1</title>
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"> 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -169,11 +170,11 @@
       </button>
       <a href="catalogo.html" class="neg-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-        Voltar ao Catálogo
+        Voltar ao CatÃ¡logo
       </a>
       <div>
         <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Central de Investimento Adicional</div>
-        <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Simulação de investimento adicional · HBN1</div>
+        <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">SimulaÃ§Ã£o de investimento adicional Â· HBN1</div>
         <div id="negClienteInfo" style="display:none; margin-top:4px; font-size:11.5px; font-weight:700; color:#FF9F52;"></div>
       </div>
     </div>
@@ -191,7 +192,7 @@
     <div class="neg-ticker-value" id="tkPedidoCheio">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
-    <div class="neg-ticker-label">Líquido atual</div>
+    <div class="neg-ticker-label">LÃ­quido atual</div>
     <div class="neg-ticker-value" id="tkComDesconto">R$ 0,00</div>
   </div>
   <div class="neg-ticker-item">
@@ -216,7 +217,7 @@
       <div class="neg-panel">
         <div class="neg-panel-title">Cliente</div>
         <div id="negClienteBuscaWrap">
-          <input id="negBuscaCliente" class="neg-input" placeholder="🔍 Buscar cliente (Razão, CNPJ ou ID)..." oninput="negFiltrarClientes()">
+          <input id="negBuscaCliente" class="neg-input" placeholder="ðŸ” Buscar cliente (RazÃ£o, CNPJ ou ID)..." oninput="negFiltrarClientes()">
           <div id="negDropdownClientes" class="neg-dropdown-cliente" style="display:none;"></div>
         </div>
         <div id="negClienteChipWrap" style="display:none;">
@@ -225,8 +226,8 @@
               <div id="negClienteChipNome" style="font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
               <div id="negClienteChipCnpj" style="font-size:10.5px; color:var(--text-secondary);"></div>
             </div>
-            <button type="button" class="neg-btn neg-btn-sm" onclick="negAbrirResumoCliente()" title="Mais informações">ℹ️</button>
-            <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negLimparClienteNeg()">✕</button>
+            <button type="button" class="neg-btn neg-btn-sm" onclick="negAbrirResumoCliente()" title="Mais informaÃ§Ãµes">â„¹ï¸</button>
+            <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negLimparClienteNeg()">âœ•</button>
           </div>
           <div id="negClienteBadges" style="display:none; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
         </div>
@@ -251,7 +252,7 @@
         </div>
 
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
-          Ao escolher cliente e oferta, o % desconto atual dos itens sem desconto definido manualmente é recalculado automaticamente.
+          Ao escolher cliente e oferta, o % desconto atual dos itens sem desconto definido manualmente Ã© recalculado automaticamente.
         </p>
       </div>
 
@@ -264,36 +265,36 @@
           <button type="button" class="neg-btn neg-btn-sm" onclick="negAddManualRow()">+ Linha manual</button>
         </div>
         <div id="negPasteBox" style="display:none; margin-top:10px;">
-          <span class="neg-label">Cole aqui (com cabeçalho, direto do Excel)</span>
-          <textarea id="negPasteText" class="neg-input" placeholder="PRODUTO&#9;COD.&#9;PREÇO&#9;QTD&#9;DESCONTO TOTAL"></textarea>
+          <span class="neg-label">Cole aqui (com cabeÃ§alho, direto do Excel)</span>
+          <textarea id="negPasteText" class="neg-input" placeholder="PRODUTO&#9;COD.&#9;PREÃ‡O&#9;QTD&#9;DESCONTO TOTAL"></textarea>
           <div class="neg-row" style="margin-top:8px;">
             <button type="button" class="neg-btn neg-btn-gold neg-btn-sm" onclick="negProcessPaste()">Processar colagem</button>
           </div>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
-          Preço e desconto são opcionais: se não vierem no arquivo, a busca é feita no catálogo conforme o login. No arquivo, basta informar <strong>EAN ou Código</strong> + quantidade.
+          PreÃ§o e desconto sÃ£o opcionais: se nÃ£o vierem no arquivo, a busca Ã© feita no catÃ¡logo conforme o login. No arquivo, basta informar <strong>EAN ou CÃ³digo</strong> + quantidade.
         </p>
       </div>
 
       <div class="neg-panel">
-        <div class="neg-panel-title">Modo de cálculo</div>
+        <div class="neg-panel-title">Modo de cÃ¡lculo</div>
         <div class="neg-seg">
           <button type="button" id="negSegIndividual" class="neg-seg-btn neg-seg-btn-active" onclick="negSetMode('individual')">Por item</button>
           <button type="button" id="negSegGrupo" class="neg-seg-btn" onclick="negSetMode('grupo')">Por grupo</button>
         </div>
         <p style="font-size:12px; color:var(--text-secondary); margin-top:10px; line-height:1.5;" id="negModeDesc">
-          Defina uma meta (% ou R$) para cada produto. O investimento adicional é calculado linha a linha.
+          Defina uma meta (% ou R$) para cada produto. O investimento adicional Ã© calculado linha a linha.
         </p>
       </div>
 
       <div class="neg-panel">
-        <div class="neg-panel-title">ST (Substituição Tributária)</div>
+        <div class="neg-panel-title">ST (SubstituiÃ§Ã£o TributÃ¡ria)</div>
         <div class="neg-seg">
           <button type="button" id="negSegSTNao" class="neg-seg-btn neg-seg-btn-active" onclick="negSetSTAtivo(false)">Sem ST</button>
           <button type="button" id="negSegSTSim" class="neg-seg-btn" onclick="negSetSTAtivo(true)">Com ST</button>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:8px; line-height:1.5;">
-          Quando ligado, o ST é adicionado. Só afeta itens (com EAN/Código reconhecidos).
+          Quando ligado, o ST Ã© adicionado. SÃ³ afeta itens (com EAN/CÃ³digo reconhecidos).
         </p>
       </div>
 
@@ -301,7 +302,7 @@
         <div class="neg-panel-title" id="negGroupTitle">Meta do pedido</div>
         <div class="neg-seg" style="margin-bottom:10px;">
           <button type="button" id="negSegValor" class="neg-seg-btn neg-seg-btn-active" onclick="negSetGroupTargetType('valor')">Valor total (R$)</button>
-          <button type="button" id="negSegPct" class="neg-seg-btn" onclick="negSetGroupTargetType('pct')">% Desconto médio</button>
+          <button type="button" id="negSegPct" class="neg-seg-btn" onclick="negSetGroupTargetType('pct')">% Desconto mÃ©dio</button>
         </div>
         <span class="neg-label" id="negGroupInputLabel">Valor total desejado do pedido</span>
         <input id="negGroupTargetValue" class="neg-input mono" placeholder="Ex.: 21500,00" oninput="negOnGroupTargetInput(this.value)">
@@ -309,9 +310,9 @@
       </div>
 
       <div class="neg-panel">
-        <div class="neg-panel-title">Ações</div>
+        <div class="neg-panel-title">AÃ§Ãµes</div>
         <div class="neg-row">
-          <button type="button" class="neg-btn neg-btn-sm" onclick="negAtualizarPrecosCatalogo()">Atualizar preços do catálogo</button>
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negAtualizarPrecosCatalogo()">Atualizar preÃ§os do catÃ¡logo</button>
         </div>
         <div class="neg-row" style="margin-top:8px;">
           <button type="button" class="neg-btn neg-btn-sm" onclick="negExportExcel()">Exportar Excel</button>
@@ -319,12 +320,12 @@
         </div>
         <div class="neg-row" style="margin-top:8px;">
           <button type="button" class="neg-btn neg-btn-sm" style="position:relative;" onclick="negAbrirModalPedidosSalvos()">
-            📂 Pedidos Salvos
+            ðŸ“‚ Pedidos Salvos
             <span id="negBadgePedidosSalvosAcoes" style="display:none; position:absolute; top:-6px; right:-6px; background:var(--gold); color:#fff; font-size:9px; font-weight:800; min-width:16px; height:16px; padding:0 3px; border-radius:999px; align-items:center; justify-content:center;">0</span>
           </button>
         </div>
         <p style="font-size:11px; color:var(--text-secondary); margin-top:10px; line-height:1.5;">
-          A lista fica salva automaticamente neste navegador (localStorage), só nesse aparelho.
+          A lista fica salva automaticamente neste navegador (localStorage), sÃ³ nesse aparelho.
         </p>
       </div>
     </div>
@@ -332,15 +333,15 @@
     <!-- MAIN -->
     <div class="neg-main">
       <div class="neg-toolbar">
-        <input id="negSearch" class="neg-input" style="max-width:260px;" placeholder="Buscar por produto, código ou EAN..." oninput="negRenderTable()">
+        <input id="negSearch" class="neg-input" style="max-width:260px;" placeholder="Buscar por produto, cÃ³digo ou EAN..." oninput="negRenderTable()">
         <div class="neg-row" id="negBulkSelectRow" style="display:none;">
           <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(true)">Selecionar tudo</button>
-          <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(false)">Limpar seleção</button>
+          <button type="button" class="neg-btn neg-btn-sm" onclick="negToggleSelectAll(false)">Limpar seleÃ§Ã£o</button>
         </div>
       </div>
       <p id="negGroupTip" style="display:none; font-size:11px; color:var(--text-secondary); margin:-4px 0 10px 2px; line-height:1.5;">
-        💡 Para aplicar a meta só numa marca/linha (ex.: "Aptamil"): 1) <strong>Limpar seleção</strong> pra zerar,
-        2) digite o nome na busca, 3) <strong>Selecionar tudo</strong> — só os itens filtrados entram na seleção.
+        ðŸ’¡ Para aplicar a meta sÃ³ numa marca/linha (ex.: "Aptamil"): 1) <strong>Limpar seleÃ§Ã£o</strong> pra zerar,
+        2) digite o nome na busca, 3) <strong>Selecionar tudo</strong> â€” sÃ³ os itens filtrados entram na seleÃ§Ã£o.
       </p>
       <div id="negTableWrap"></div>
     </div>
@@ -353,7 +354,7 @@
       <p id="negMapSubtitle" style="font-size:12.5px; color:var(--text-secondary); margin-bottom:14px;"></p>
       <div id="negMapRows"></div>
       <div style="margin-top:16px;">
-        <span class="neg-label">Se já existem produtos na lista</span>
+        <span class="neg-label">Se jÃ¡ existem produtos na lista</span>
         <div class="neg-seg">
           <button type="button" id="negSegAdd" class="neg-seg-btn" onclick="negSetReplaceMode('add')">Adicionar aos existentes</button>
           <button type="button" id="negSegReplace" class="neg-seg-btn" onclick="negSetReplaceMode('replace')">Substituir lista atual</button>
@@ -361,7 +362,7 @@
       </div>
       <div class="neg-row" style="margin-top:18px; justify-content:flex-end;">
         <button type="button" class="neg-btn" onclick="negCancelImport()">Cancelar</button>
-        <button type="button" class="neg-btn neg-btn-gold" onclick="negConfirmImport()">Confirmar importação</button>
+        <button type="button" class="neg-btn neg-btn-gold" onclick="negConfirmImport()">Confirmar importaÃ§Ã£o</button>
       </div>
     </div>
   </div>
@@ -397,20 +398,20 @@
   <div id="negPainelMenu" style="position:fixed; top:0; right:0; height:100%; width:300px; max-width:88vw; background:var(--surface-card); box-shadow:-8px 0 24px rgba(0,0,0,0.2); z-index:91; transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column;">
     <div style="padding:16px; background:var(--surface-header); color:#fff; display:flex; align-items:center; justify-content:space-between;">
       <span style="font-weight:800; font-size:13px;">Menu</span>
-      <button onclick="negFecharMenuLateral()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:28px; height:28px; border-radius:999px; cursor:pointer;">✕</button>
+      <button onclick="negFecharMenuLateral()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:28px; height:28px; border-radius:999px; cursor:pointer;">âœ•</button>
     </div>
     <div style="padding:14px; display:flex; flex-direction:column; gap:10px;">
       <a href="carteira.html?origem=negociacao" class="neg-btn" style="text-decoration:none; justify-content:flex-start;">
-        📊 Informação de Vendas
+        ðŸ“Š InformaÃ§Ã£o de Vendas
       </a>
       <button type="button" onclick="negFecharMenuLateral(); negAbrirModalPedidosSalvos();" class="neg-btn" style="justify-content:flex-start; position:relative;">
-        📂 Pedidos Salvos
+        ðŸ“‚ Pedidos Salvos
         <span id="negBadgePedidosSalvos" style="display:none; position:absolute; top:6px; right:12px; background:var(--gold); color:#fff; font-size:9px; font-weight:800; min-width:16px; height:16px; padding:0 3px; border-radius:999px; align-items:center; justify-content:center;">0</span>
       </button>
     </div>
   </div>
 
-  <!-- PAINEL LATERAL — RESUMO DE VENDAS DO CLIENTE -->
+  <!-- PAINEL LATERAL â€” RESUMO DE VENDAS DO CLIENTE -->
 <div id="negResumoOverlay" onclick="negFecharResumoCliente()" style="display:none; position:fixed; inset:0; background:rgba(8,9,13,0.35); z-index:95;"></div>
 <div id="negResumoDrawer" style="position:fixed; top:0; right:0; height:100%; width:340px; max-width:90vw; background:var(--surface-card); box-shadow:-8px 0 24px rgba(0,0,0,0.2); z-index:96; transform:translateX(100%); transition:transform .25s ease; display:flex; flex-direction:column;">
     <div style="padding:16px; background:var(--surface-header); color:#fff; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
@@ -418,25 +419,25 @@
         <div class="disp" style="font-size:15px; font-weight:700;">Resumo de Vendas</div>
         <div id="negResumoClienteNome" style="font-size:11.5px; color:#cbd5e1; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
       </div>
-      <button onclick="negFecharResumoCliente()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:28px; height:28px; border-radius:999px; cursor:pointer; flex-shrink:0;">✕</button>
+      <button onclick="negFecharResumoCliente()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:28px; height:28px; border-radius:999px; cursor:pointer; flex-shrink:0;">âœ•</button>
     </div>
     <div id="negCorpoResumoCliente" style="padding:16px; overflow-y:auto; flex:1;"></div>
   </div>
 
-  <!-- BOTÃO FLUTUANTE — SALVAR PEDIDO -->
+  <!-- BOTÃƒO FLUTUANTE â€” SALVAR PEDIDO -->
   <button type="button" id="negFabSalvar" class="neg-fab-salvar" onclick="negSalvarPedidoAtual()" title="Salvar neste dispositivo e iniciar novo">
-    💾 <span>Salvar neste dispositivo</span>
+    ðŸ’¾ <span>Salvar neste dispositivo</span>
   </button>
 
 <script>
-  if (!localStorage.getItem('hbn1_usuario')) {
+  if (!sessionStorage.getItem('hbn1_usuario')) {
   window.location.href = 'index.html';
 }
 
 /* =========================================================================
-   UF DO USUÁRIO + ACESSO AO CATÁLOGO (via api.js, já carregado)
+   UF DO USUÃRIO + ACESSO AO CATÃLOGO (via api.js, jÃ¡ carregado)
    ========================================================================= */
-const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+const UF_USUARIO = (sessionStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 let NEG_CATALOGO_CACHE = null;
 let NEG_ST_CACHE = null;
 let NEG_BD_CLIENTES = [];
@@ -474,8 +475,21 @@ function negConverterPercentual(texto) {
   return isNaN(n) ? 0 : n;
 }
 
+function negEscHtml(valor) {
+  return String(valor == null ? '' : valor).replace(/[&<>"']/g, caractere => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[caractere]);
+}
+
+function negEscJs(valor) {
+  return String(valor == null ? '' : valor)
+    .replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+    .replace(/</g, '\\x3C').replace(/>/g, '\\x3E')
+    .replace(/\r/g, '\\r').replace(/\n/g, '\\n');
+}
+
 /* =========================================================================
-   CLIENTE + OFERTA ATIVA (busca, chip e painéis de OL)
+   CLIENTE + OFERTA ATIVA (busca, chip e painÃ©is de OL)
    ========================================================================= */
 function negFiltrarClientes() {
   const termo = document.getElementById('negBuscaCliente').value.trim().toLowerCase();
@@ -491,10 +505,10 @@ function negFiltrarClientes() {
   dd.innerHTML = filtrados.length === 0
     ? '<div class="neg-dropdown-cliente-item" style="color:var(--text-secondary); cursor:default;">Nenhum cliente encontrado</div>'
     : filtrados.map(c => `
-        <div class="neg-dropdown-cliente-item" onclick="negSelecionarCliente('${c.id}')">
-          <div style="font-size:12px; font-weight:700;">${String(c.razao).toUpperCase()}</div>
+        <div class="neg-dropdown-cliente-item" onclick="negSelecionarCliente('${negEscJs(c.id)}')">
+          <div style="font-size:12px; font-weight:700;">${negEscHtml(String(c.razao).toUpperCase())}</div>
           <div style="font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between; margin-top:2px;">
-            <span>ID: ${c.id}</span><span>CNPJ: ${c.cnpj}</span>
+            <span>ID: ${negEscHtml(c.id)}</span><span>CNPJ: ${negEscHtml(c.cnpj)}</span>
           </div>
         </div>`).join('');
   dd.style.display = 'block';
@@ -545,10 +559,10 @@ async function negAtualizarPainelOfertas() {
   buscaWrap.style.display = 'none';
   chipWrap.style.display = 'block';
   document.getElementById('negClienteChipNome').innerText = (NEG_CLIENTE.razao || '').toUpperCase();
-  document.getElementById('negClienteChipCnpj').innerText = 'CNPJ: ' + (NEG_CLIENTE.cnpj || '—');
+  document.getElementById('negClienteChipCnpj').innerText = 'CNPJ: ' + (NEG_CLIENTE.cnpj || 'â€”');
   negRenderBadgesCliente();
 
-  // Painel Danone: só aparece se o cliente tiver perfil configurado (Associativismo/PNV)
+  // Painel Danone: sÃ³ aparece se o cliente tiver perfil configurado (Associativismo/PNV)
   const perfilDanone = String(NEG_CLIENTE.perfilDanone || '').toUpperCase().trim();
   if (perfilDanone === 'ASSOCIATIVISMO' || perfilDanone === 'PNV') {
     danoneWrap.style.display = 'block';
@@ -557,8 +571,8 @@ async function negAtualizarPainelOfertas() {
     danoneWrap.style.display = 'none';
   }
 
-  // Painel Omron: só aparece se existir produto Omron com essas colunas de OL no catálogo,
-  // igual à checagem que o catálogo principal faz (atualizarBotoesOLDanone/painelOLOmron).
+  // Painel Omron: sÃ³ aparece se existir produto Omron com essas colunas de OL no catÃ¡logo,
+  // igual Ã  checagem que o catÃ¡logo principal faz (atualizarBotoesOLDanone/painelOLOmron).
   const catalogo = await negBuscarCatalogo();
   const temOL500 = catalogo.some(p => String(p.fornecedor || '').toUpperCase().includes('OMRON') && negConverterPercentual(p.omronOL500) > 0);
   const temOL1000 = catalogo.some(p => String(p.fornecedor || '').toUpperCase().includes('OMRON') && negConverterPercentual(p.omronOL1000) > 0);
@@ -583,8 +597,8 @@ function negAtualizarBotoesOL(segId, valorAtivo) {
   });
 }
 
-// Monta badges de perfil/desconto ativo do cliente selecionado — mesmo
-// visual (cores, ícones) do popover de cliente no catálogo (popCliBadges).
+// Monta badges de perfil/desconto ativo do cliente selecionado â€” mesmo
+// visual (cores, Ã­cones) do popover de cliente no catÃ¡logo (popCliBadges).
 function negRenderBadgesCliente() {
   const el = document.getElementById('negClienteBadges');
   if (!el) return;
@@ -593,13 +607,13 @@ function negRenderBadgesCliente() {
 
   const badges = [
     NEG_CLIENTE.grupoUnilever
-      ? { txt: '🔵 UNI: ' + NEG_CLIENTE.grupoUnilever, bg: '#1e3a8a', fg: '#ffffff', bd: '#1e3a8a' } : null,
+      ? { txt: 'ðŸ”µ UNI: ' + NEG_CLIENTE.grupoUnilever, bg: '#1e3a8a', fg: '#ffffff', bd: '#1e3a8a' } : null,
     NEG_CLIENTE.perfilDanone
-      ? { txt: '🟣 DAN: ' + NEG_CLIENTE.perfilDanone, bg: '#6b21a8', fg: '#ffffff', bd: '#6b21a8' } : null,
+      ? { txt: 'ðŸŸ£ DAN: ' + NEG_CLIENTE.perfilDanone, bg: '#6b21a8', fg: '#ffffff', bd: '#6b21a8' } : null,
     String(NEG_CLIENTE.painelTransfer || '').toUpperCase().trim() === 'TRANSFER KENVUE'
-      ? { txt: '🟠 KEN: TRANSFER', bg: '#c2410c', fg: '#ffffff', bd: '#c2410c' } : null,
+      ? { txt: 'ðŸŸ  KEN: TRANSFER', bg: '#c2410c', fg: '#ffffff', bd: '#c2410c' } : null,
     NEG_CLIENTE.equipe
-      ? { txt: '🟢 EQ: ' + NEG_CLIENTE.equipe, bg: '#047857', fg: '#ffffff', bd: '#047857' } : null,
+      ? { txt: 'ðŸŸ¢ EQ: ' + NEG_CLIENTE.equipe, bg: '#047857', fg: '#ffffff', bd: '#047857' } : null,
   ].filter(Boolean);
 
   if (badges.length === 0) { el.style.display = 'none'; el.innerHTML = ''; return; }
@@ -628,7 +642,7 @@ function negAbrirResumoCliente() {
   document.getElementById('negResumoDrawer').style.transform = 'translateX(0)';
   negAtualizarVisibilidadeFab();
 
-  // Se já tem no cache (prefetch já rodou), mostra na hora, sem "Carregando...".
+  // Se jÃ¡ tem no cache (prefetch jÃ¡ rodou), mostra na hora, sem "Carregando...".
   if (NEG_RESUMO_RESOLVIDO[clienteId]) {
     negRenderResumoCliente(NEG_RESUMO_RESOLVIDO[clienteId]);
     return;
@@ -650,23 +664,23 @@ function negAbrirResumoCliente() {
 function negRenderResumoCliente(resp) {
   const corpo = document.getElementById('negCorpoResumoCliente');
   if (!resp || resp.erro || !resp.fornecedores || resp.fornecedores.length === 0) {
-    corpo.innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--text-secondary); font-size:13px;">Nenhum histórico de faturamento encontrado para este cliente.</div>';
+    corpo.innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--text-secondary); font-size:13px;">Nenhum histÃ³rico de faturamento encontrado para este cliente.</div>';
     return;
   }
   corpo.innerHTML = resp.fornecedores.map(f => `
     <div style="background:var(--surface-secondary); border:1px solid var(--border-subtle); border-radius:10px; padding:10px 12px; margin-bottom:8px;">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-        <span style="font-size:12px; font-weight:800;">${f.fornecedor}</span>
+        <span style="font-size:12px; font-weight:800;">${negEscHtml(f.fornecedor)}</span>
         ${f.positivado
-          ? '<span style="font-size:9px; font-weight:800; color:var(--green); background:rgba(34,197,94,0.12); padding:2px 8px; border-radius:999px;">✓ Positivado</span>'
-          : '<span style="font-size:9px; font-weight:800; color:var(--text-secondary); background:var(--surface-tertiary); padding:2px 8px; border-radius:999px;">— Sem compra no mês</span>'}
+          ? '<span style="font-size:9px; font-weight:800; color:var(--green); background:rgba(34,197,94,0.12); padding:2px 8px; border-radius:999px;">âœ“ Positivado</span>'
+          : '<span style="font-size:9px; font-weight:800; color:var(--text-secondary); background:var(--surface-tertiary); padding:2px 8px; border-radius:999px;">â€” Sem compra no mÃªs</span>'}
       </div>
       <div style="display:grid; grid-template-columns:1.25fr 1fr 1fr; gap:8px; font-size:11px;">
         <div style="background:var(--gold-soft); border-radius:8px; padding:8px;">
-          <span style="display:block; color:var(--gold); font-size:9px; text-transform:uppercase; font-weight:800;">Mês atual</span>
+          <span style="display:block; color:var(--gold); font-size:9px; text-transform:uppercase; font-weight:800;">MÃªs atual</span>
           <span class="mono" style="font-size:14px; font-weight:800; color:var(--gold);">${negFormatBRL(f.faturadoMesAtual)}</span>
         </div>
-        <div style="padding:8px 0;"><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Média mensal · tri</span><span class="mono" style="font-weight:700;">${negFormatBRL((f.faturadoTri || 0) / 3)}</span></div>
+        <div style="padding:8px 0;"><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">MÃ©dia mensal Â· tri</span><span class="mono" style="font-weight:700;">${negFormatBRL((f.faturadoTri || 0) / 3)}</span></div>
         <div style="padding:8px 0;"><span style="display:block; color:var(--text-secondary); font-size:9px; text-transform:uppercase; font-weight:700;">Base ano anterior</span><span class="mono" style="font-weight:700;">${negFormatBRL(f.faturadoAnoAnterior)}</span></div>
       </div>
     </div>`).join('');
@@ -703,9 +717,9 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// Versão simplificada de calcularPrecosPara do catálogo, mas agora com Danone
-// (via OL escolhido no painel) e Omron OL priorizado sobre desconto de equipe —
-// igual ao comportamento do catálogo principal.
+// VersÃ£o simplificada de calcularPrecosPara do catÃ¡logo, mas agora com Danone
+// (via OL escolhido no painel) e Omron OL priorizado sobre desconto de equipe â€”
+// igual ao comportamento do catÃ¡logo principal.
 function negCalcularDescontoCatalogo(p, cliente, olDanone, olOmron) {
   const forn = String(p.fornecedor || '').toUpperCase().trim();
   let percentual = 0;
@@ -760,9 +774,9 @@ function negCalcularDescontoCatalogo(p, cliente, olDanone, olOmron) {
     percentual = negConverterPercentual(p.descontoPadrao);
   }
 
-  // Fallback: se a regra específica do fornecedor não gerou desconto
-  // (coluna vazia ou cliente não bate com nenhum critério), tenta o
-  // Desconto Padrão antes de retornar 0.
+  // Fallback: se a regra especÃ­fica do fornecedor nÃ£o gerou desconto
+  // (coluna vazia ou cliente nÃ£o bate com nenhum critÃ©rio), tenta o
+  // Desconto PadrÃ£o antes de retornar 0.
   if (percentual === 0 && cliente) {
     const padrao = negConverterPercentual(p.descontoPadrao);
     if (padrao > 0) percentual = padrao;
@@ -771,8 +785,8 @@ function negCalcularDescontoCatalogo(p, cliente, olDanone, olOmron) {
   return percentual;
 }
 
-// Recalcula o % desconto atual de todo item cujo desconto NÃO foi definido manualmente
-// (nem veio de mapeamento explícito na importação, nem editado à mão na tabela).
+// Recalcula o % desconto atual de todo item cujo desconto NÃƒO foi definido manualmente
+// (nem veio de mapeamento explÃ­cito na importaÃ§Ã£o, nem editado Ã  mÃ£o na tabela).
 // Roda sempre que o cliente ou a oferta ativa (OL Danone/Omron) mudam.
 async function negRecalcularDescontosAutomaticos() {
   const alvo = NEG_PRODUCTS.filter(p => !p.descontoManual && (p.catalogoId || p.cod || p.ean));
@@ -800,14 +814,14 @@ async function negGarantirClienteCompleto() {
   }
 }
 
-// Preenche preço e/ou % desconto de itens, buscando no catálogo da UF do usuário.
-// As duas buscas são INDEPENDENTES:
-//  - Preço só é buscado se o item não tiver preço (veio vazio/0 do import).
-//  - Desconto só é buscado se o item NÃO tiver vindo de uma coluna mapeada
-//    manualmente (descontoManual === false) — ou seja, se o usuário selecionou
-//    a coluna de desconto atual na importação, esse valor nunca é sobrescrito.
-// Guarda catalogoId/catalogoPrecoBase (só quando o preço veio do catálogo) para
-// permitir religar/desligar ST sem nova chamada à API.
+// Preenche preÃ§o e/ou % desconto de itens, buscando no catÃ¡logo da UF do usuÃ¡rio.
+// As duas buscas sÃ£o INDEPENDENTES:
+//  - PreÃ§o sÃ³ Ã© buscado se o item nÃ£o tiver preÃ§o (veio vazio/0 do import).
+//  - Desconto sÃ³ Ã© buscado se o item NÃƒO tiver vindo de uma coluna mapeada
+//    manualmente (descontoManual === false) â€” ou seja, se o usuÃ¡rio selecionou
+//    a coluna de desconto atual na importaÃ§Ã£o, esse valor nunca Ã© sobrescrito.
+// Guarda catalogoId/catalogoPrecoBase (sÃ³ quando o preÃ§o veio do catÃ¡logo) para
+// permitir religar/desligar ST sem nova chamada Ã  API.
 async function negResolverPrecosPendentes(lista) {
   const itensParaBuscar = lista.filter(p => {
     const semPreco = !p.preco || negParseNumberBR(p.preco) === 0;
@@ -832,7 +846,7 @@ async function negResolverPrecosPendentes(lista) {
       const precoBase = negParseNumberBR(prod.preco) || 0;
       item.catalogoId = prod.id;
       item.catalogoPrecoBase = precoBase;
-      item.preco = negFormatInputNumber(precoBase); // ST (se ligado) é aplicado depois via negReaplicarST()
+      item.preco = negFormatInputNumber(precoBase); // ST (se ligado) Ã© aplicado depois via negReaplicarST()
     }
     if (semDesconto) {
       const percentual = negCalcularDescontoCatalogo(prod, NEG_CLIENTE, NEG_OL_DANONE, NEG_OL_OMRON);
@@ -845,26 +859,26 @@ async function negResolverPrecosPendentes(lista) {
   return { resolvidos, naoEncontrados };
 }
 
-// Botão "Atualizar preços do catálogo" — reroda a busca para TODOS os itens
-// que vieram do catálogo (não só os pendentes), útil após trocar cliente/UF.
-// Mantém o desconto atual se ele foi definido manualmente (descontoManual).
+// BotÃ£o "Atualizar preÃ§os do catÃ¡logo" â€” reroda a busca para TODOS os itens
+// que vieram do catÃ¡logo (nÃ£o sÃ³ os pendentes), Ãºtil apÃ³s trocar cliente/UF.
+// MantÃ©m o desconto atual se ele foi definido manualmente (descontoManual).
 async function negAtualizarPrecosCatalogo() {
   const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId || p.cod || p.ean);
   if (comCatalogo.length === 0) {
-    alert('Nenhum item desta lista tem Código ou EAN para buscar no catálogo.');
+    alert('Nenhum item desta lista tem CÃ³digo ou EAN para buscar no catÃ¡logo.');
     return;
   }
-  NEG_CATALOGO_CACHE = null; // força nova busca
-  comCatalogo.forEach(p => { p.preco = ''; }); // marca como pendente para o resolver reprocessar o preço
+  NEG_CATALOGO_CACHE = null; // forÃ§a nova busca
+  comCatalogo.forEach(p => { p.preco = ''; }); // marca como pendente para o resolver reprocessar o preÃ§o
   const { resolvidos, naoEncontrados } = await negResolverPrecosPendentes(comCatalogo);
   if (NEG_ST_ATIVO) await negReaplicarST();
   negSaveState();
   negRenderAll();
-  alert(`Preços atualizados (UF ${UF_USUARIO}): ${resolvidos} atualizados${naoEncontrados > 0 ? `, ${naoEncontrados} não localizados` : ''}.`);
+  alert(`PreÃ§os atualizados (UF ${UF_USUARIO}): ${resolvidos} atualizados${naoEncontrados > 0 ? `, ${naoEncontrados} nÃ£o localizados` : ''}.`);
 }
 
 /* =========================================================================
-   ST (SUBSTITUIÇÃO TRIBUTÁRIA)
+   ST (SUBSTITUIÃ‡ÃƒO TRIBUTÃRIA)
    ========================================================================= */
 let NEG_ST_ATIVO = false;
 
@@ -876,7 +890,7 @@ function negSetSTAtivo(ativo) {
   negSaveState();
 }
 
-// Recalcula o preço cheio de todo item que veio do catálogo (tem catalogoId salvo),
+// Recalcula o preÃ§o cheio de todo item que veio do catÃ¡logo (tem catalogoId salvo),
 // somando ou removendo o ST sem precisar chamar a API de novo.
 async function negReaplicarST() {
   const comCatalogo = NEG_PRODUCTS.filter(p => p.catalogoId);
@@ -911,11 +925,11 @@ function negParseNumberBR(input) {
   return isNaN(n) ? NaN : n;
 }
 
-// Muitas planilhas guardam uma célula formatada como "10%" internamente como
-// a fração 0,10 (é assim que o Excel armazena percentuais). Quando o SheetJS lê
-// essa célula em modo "raw", devolve 0.1, não 10. Já um valor digitado como texto
-// puro "10" (sem formatação de %) chega como 10 mesmo. Essa função normaliza os
-// dois casos para a mesma escala (pontos percentuais), só na hora de IMPORTAR —
+// Muitas planilhas guardam uma cÃ©lula formatada como "10%" internamente como
+// a fraÃ§Ã£o 0,10 (Ã© assim que o Excel armazena percentuais). Quando o SheetJS lÃª
+// essa cÃ©lula em modo "raw", devolve 0.1, nÃ£o 10. JÃ¡ um valor digitado como texto
+// puro "10" (sem formataÃ§Ã£o de %) chega como 10 mesmo. Essa funÃ§Ã£o normaliza os
+// dois casos para a mesma escala (pontos percentuais), sÃ³ na hora de IMPORTAR â€”
 // nunca aplicada em campos digitados manualmente na tabela.
 function negNormalizarPercentualImportado(n) {
   if (!isFinite(n)) return 0;
@@ -952,11 +966,11 @@ let NEG_GROUP_TARGET_VALUE = '';
 let NEG_PENDING_IMPORT = null;
 let NEG_CLIENTE = null;
 let NEG_PENDING_HANDOFF_CLIENTE = null;
-  // Cache do resumo de vendas por cliente — evita recarregar toda vez que o
-// painel é aberto/fechado, e permite pré-carregar assim que o cliente é
-// selecionado (antes mesmo de clicar em "mais informações").
+  // Cache do resumo de vendas por cliente â€” evita recarregar toda vez que o
+// painel Ã© aberto/fechado, e permite prÃ©-carregar assim que o cliente Ã©
+// selecionado (antes mesmo de clicar em "mais informaÃ§Ãµes").
 let NEG_RESUMO_CACHE = {};      // codCliente -> Promise em andamento
-let NEG_RESUMO_RESOLVIDO = {};  // codCliente -> resposta já resolvida (acesso síncrono)
+let NEG_RESUMO_RESOLVIDO = {};  // codCliente -> resposta jÃ¡ resolvida (acesso sÃ­ncrono)
 
 function negPrefetchResumoCliente(clienteId) {
   if (!clienteId || NEG_RESUMO_CACHE[clienteId]) return;
@@ -969,21 +983,21 @@ const NEG_STORAGE_KEY = 'hbn1_negociacao_estado';
 
 const NEG_FIELD_DEFS = [
   { key: 'produto', label: 'Produto', required: true, patterns: ['produto', 'descricao', 'nome', 'item'] },
-  { key: 'cod', label: 'Código', required: false, patterns: ['cod.', 'cod', 'codigo'] },
+  { key: 'cod', label: 'CÃ³digo', required: false, patterns: ['cod.', 'cod', 'codigo'] },
   { key: 'ean', label: 'EAN', required: false, patterns: ['ean'] },
-  { key: 'preco', label: 'Preço cheio (opcional — se vazio, busco no catálogo)', required: false, patterns: ['preco'], exclude: ['cdesc', 'com desconto'] },
+  { key: 'preco', label: 'PreÃ§o cheio (opcional â€” se vazio, busco no catÃ¡logo)', required: false, patterns: ['preco'], exclude: ['cdesc', 'com desconto'] },
   { key: 'qtd', label: 'Quantidade', required: true, patterns: ['qtd', 'quantidade'] },
-  { key: 'descontoAtual', label: '% Desconto atual (opcional — se não mapear, busco no catálogo)', required: false, patterns: ['desconto total', 'desconto atual', 'desconto liberado', 'desconto'] },
-  { key: 'precoComDesc', label: 'Preço com desconto (opcional)', required: false, patterns: ['cdesc', 'com desconto'] },
+  { key: 'descontoAtual', label: '% Desconto atual (opcional â€” se nÃ£o mapear, busco no catÃ¡logo)', required: false, patterns: ['desconto total', 'desconto atual', 'desconto liberado', 'desconto'] },
+  { key: 'precoComDesc', label: 'PreÃ§o com desconto (opcional)', required: false, patterns: ['cdesc', 'com desconto'] },
 ];
 
 /* =========================================================================
-   PERSISTÊNCIA (localStorage)
+   PERSISTÃŠNCIA (localStorage)
    ========================================================================= */
 function negSaveState() {
   const el = document.getElementById('neg-save-status');
   try {
-    localStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
+    sessionStorage.setItem(NEG_STORAGE_KEY, JSON.stringify({
       products: NEG_PRODUCTS, mode: NEG_MODE,
       groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
       cliente: NEG_CLIENTE, stAtivo: NEG_ST_ATIVO,
@@ -991,14 +1005,14 @@ function negSaveState() {
     }));
     if (el) { el.innerText = 'Salvo'; el.style.color = ''; setTimeout(() => { el.innerText = ''; }, 1200); }
   } catch (e) {
-    console.error('Falha ao salvar rascunho da negociação:', e);
-    if (el) { el.innerText = '⚠ Não salvo'; el.style.color = 'var(--red)'; }
+    if (window.HBN1_DEBUG === true) console.error('Falha ao salvar rascunho.', e);
+    if (el) { el.innerText = 'âš  NÃ£o salvo'; el.style.color = 'var(--red)'; }
   }
 }
 
 function negLoadState() {
   try {
-    const raw = localStorage.getItem(NEG_STORAGE_KEY);
+    const raw = sessionStorage.getItem(NEG_STORAGE_KEY);
     if (!raw) return;
     const data = JSON.parse(raw);
     if (Array.isArray(data.products)) NEG_PRODUCTS = data.products;
@@ -1013,7 +1027,7 @@ function negLoadState() {
 }
 
 /* =========================================================================
-   IMPORTAÇÃO
+   IMPORTAÃ‡ÃƒO
    ========================================================================= */
 function negDetectDelimiter(line) {
   const counts = { '\t': (line.match(/\t/g) || []).length, ';': (line.match(/;/g) || []).length, ',': (line.match(/,/g) || []).length };
@@ -1057,7 +1071,7 @@ function negBuildProducts(headers, rows, mapping) {
     descontoAtual = negNormalizarPercentualImportado(descontoAtual);
     const precoOk = isNaN(preco) ? 0 : preco;
 
-    // "Preço com desconto (opcional)" = preço FINAL DESEJADO, não o preço atual
+    // "PreÃ§o com desconto (opcional)" = preÃ§o FINAL DESEJADO, nÃ£o o preÃ§o atual
     const precoComDesc = negParseNumberBR(get('precoComDesc'));
     let precoFinalDesejado = '';
     let targetValue = '0';
@@ -1073,9 +1087,9 @@ function negBuildProducts(headers, rows, mapping) {
       cod: String(get('cod') || '').trim(), ean: String(get('ean') || '').trim(),
       preco: negFormatInputNumber(precoOk), qtd: negFormatInputNumber(isNaN(qtd) ? 0 : qtd),
       descontoAtual: negFormatInputNumber(Math.round(descontoAtual * 100) / 100),
-      // Se a coluna de desconto foi mapeada, esse valor é "do usuário" e nunca
-      // será sobrescrito pela busca automática no catálogo (negResolverPrecosPendentes).
-      // Se não foi mapeada, fica false e o sistema busca o desconto certo sozinho.
+      // Se a coluna de desconto foi mapeada, esse valor Ã© "do usuÃ¡rio" e nunca
+      // serÃ¡ sobrescrito pela busca automÃ¡tica no catÃ¡logo (negResolverPrecosPendentes).
+      // Se nÃ£o foi mapeada, fica false e o sistema busca o desconto certo sozinho.
       descontoManual: temColunaDesconto,
       targetType: 'pct', targetValue, precoFinalDesejado,
       selected: true
@@ -1089,7 +1103,7 @@ function negTogglePaste() {
 }
 
 function negOpenMappingFromParsed(parsed) {
-  if (!parsed.headers.length) { alert('Não consegui identificar colunas nesse conteúdo.'); return; }
+  if (!parsed.headers.length) { alert('NÃ£o consegui identificar colunas nesse conteÃºdo.'); return; }
   const mapping = negGuessMapping(parsed.headers);
   NEG_PENDING_IMPORT = { headers: parsed.headers, rows: parsed.rows, mapping, replaceMode: NEG_PRODUCTS.length === 0 ? 'replace' : 'add' };
   negRenderMappingModal();
@@ -1115,7 +1129,7 @@ function negHandleFile(event) {
       const rows = rows2d.slice(1).map(r => r.map(c => (c == null ? '' : String(c))));
       negOpenMappingFromParsed({ headers, rows });
     } catch (err) {
-      alert('Não consegui ler esse arquivo. Confira se é um .xlsx, .xls ou .csv válido.');
+      alert('NÃ£o consegui ler esse arquivo. Confira se Ã© um .xlsx, .xls ou .csv vÃ¡lido.');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -1126,7 +1140,7 @@ function negRenderMappingModal() {
   const p = NEG_PENDING_IMPORT;
   document.getElementById('negMapSubtitle').innerText = p.rows.length + ' linha(s) encontrada(s). Confirme qual coluna do arquivo corresponde a cada campo.';
   const rowsHtml = NEG_FIELD_DEFS.map(f => {
-    const options = ['<option value="-1">— não usar —</option>'].concat(
+    const options = ['<option value="-1">â€” nÃ£o usar â€”</option>'].concat(
       p.headers.map((h, i) => `<option value="${i}" ${p.mapping[f.key] === i ? 'selected' : ''}>${h || ('Coluna ' + (i + 1))}</option>`)
     ).join('');
     return `
@@ -1162,7 +1176,7 @@ async function negConfirmImport() {
   const missing = NEG_FIELD_DEFS.filter(f => f.required && (mapping[f.key] == null || mapping[f.key] < 0));
   if (missing.length > 0) { alert('Antes de confirmar, defina a coluna de: ' + missing.map(f => f.label).join(', ')); return; }
   if ((mapping.cod == null || mapping.cod < 0) && (mapping.ean == null || mapping.ean < 0)) {
-    alert('Defina pelo menos a coluna de Código ou de EAN — preciso de um dos dois para buscar o preço no catálogo.');
+    alert('Defina pelo menos a coluna de CÃ³digo ou de EAN â€” preciso de um dos dois para buscar o preÃ§o no catÃ¡logo.');
     return;
   }
   const built = negBuildProducts(headers, rows, mapping);
@@ -1180,20 +1194,20 @@ async function negConfirmImport() {
     if (NEG_ST_ATIVO) await negReaplicarST();
     negSaveState();
     negRenderAll();
-    alert(`Preços/descontos buscados no catálogo (UF ${UF_USUARIO}): ${resolvidos} encontrados${naoEncontrados > 0 ? `, ${naoEncontrados} não localizados (preencha manualmente nesses)` : ''}.`);
+    alert(`PreÃ§os/descontos buscados no catÃ¡logo (UF ${UF_USUARIO}): ${resolvidos} encontrados${naoEncontrados > 0 ? `, ${naoEncontrados} nÃ£o localizados (preencha manualmente nesses)` : ''}.`);
   }
 }
 
 /* =========================================================================
-   RECEBIMENTO VINDO DE OUTRAS TELAS (catálogo)
+   RECEBIMENTO VINDO DE OUTRAS TELAS (catÃ¡logo)
    ========================================================================= */
 let NEG_PENDING_HANDOFF = null;
 
 function negCheckHandoff() {
   let raw;
-  try { raw = localStorage.getItem('hbn1_negociacao_handoff'); } catch (e) { raw = null; }
+  try { raw = sessionStorage.getItem('hbn1_negociacao_handoff'); } catch (e) { raw = null; }
   if (!raw) return;
-  localStorage.removeItem('hbn1_negociacao_handoff');
+  sessionStorage.removeItem('hbn1_negociacao_handoff');
 
   let payload;
   try { payload = JSON.parse(raw); } catch (e) { return; }
@@ -1202,12 +1216,12 @@ function negCheckHandoff() {
   const clienteRecebido = Array.isArray(payload) ? null : (payload.cliente || null);
   if (!Array.isArray(itensBrutos) || itensBrutos.length === 0) return;
 
-  // "cod" que chega do catálogo é o ID interno do produto — o mesmo usado na
-  // tabela de ST (chamarApi('st', ...)). Guardando aqui, o botão de ST
-  // (negReaplicarST) passa a funcionar também para esses itens.
-  // descontoManual: true porque esse desconto já veio calculado pelo perfil
-  // completo do cliente no catálogo (com OL Danone/Omron etc.) — não deve ser
-  // recalculado por uma versão simplificada aqui na Central de Investimento.
+  // "cod" que chega do catÃ¡logo Ã© o ID interno do produto â€” o mesmo usado na
+  // tabela de ST (chamarApi('st', ...)). Guardando aqui, o botÃ£o de ST
+  // (negReaplicarST) passa a funcionar tambÃ©m para esses itens.
+  // descontoManual: true porque esse desconto jÃ¡ veio calculado pelo perfil
+  // completo do cliente no catÃ¡logo (com OL Danone/Omron etc.) â€” nÃ£o deve ser
+  // recalculado por uma versÃ£o simplificada aqui na Central de Investimento.
   const built = itensBrutos.map(it => ({
     id: negUid(),
     produto: it.produto || 'Produto sem nome',
@@ -1234,7 +1248,7 @@ function negCheckHandoff() {
   NEG_PENDING_HANDOFF = built;
   NEG_PENDING_HANDOFF_CLIENTE = clienteRecebido;
   document.getElementById('negHandoffSubtitle').innerText =
-    built.length + ' produto(s) chegaram de outra tela. Já existem itens na lista atual — o que você quer fazer?';
+    built.length + ' produto(s) chegaram de outra tela. JÃ¡ existem itens na lista atual â€” o que vocÃª quer fazer?';
   document.getElementById('negHandoffModalOverlay').style.display = 'flex';
   negAtualizarVisibilidadeFab();
 }
@@ -1262,24 +1276,24 @@ function negCancelHandoff() {
 }
 
 /* =========================================================================
-   PEDIDOS SALVOS — mesmo padrão do catálogo (salvar já inicia lista nova),
-   mas guardando o estado completo da negociação (cliente, modo, ST, OL).
+   PEDIDOS SALVOS â€” mesmo padrÃ£o do catÃ¡logo (salvar jÃ¡ inicia lista nova),
+   mas guardando o estado completo da negociaÃ§Ã£o (cliente, modo, ST, OL).
    ========================================================================= */
 const NEG_CHAVE_PEDIDOS_SALVOS = 'hbn1_negociacao_pedidos_salvos';
 
 function negCarregarPedidosSalvos() {
-  try { return JSON.parse(localStorage.getItem(NEG_CHAVE_PEDIDOS_SALVOS) || '[]'); }
+  try { return JSON.parse(sessionStorage.getItem(NEG_CHAVE_PEDIDOS_SALVOS) || '[]'); }
   catch (e) { return []; }
 }
 
 function negPersistirPedidosSalvos(lista) {
   try {
-    localStorage.setItem(NEG_CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista));
+    sessionStorage.setItem(NEG_CHAVE_PEDIDOS_SALVOS, JSON.stringify(lista));
     negAtualizarBadgePedidosSalvos();
     return true;
   } catch (e) {
-    console.error('Falha ao salvar pedido (negociação):', e);
-    alert('Não foi possível salvar o pedido — o armazenamento local está cheio.\n\nVá até o Catálogo e limpe o cache de imagens do PDF (Configurações), depois tente salvar novamente.');
+    if (window.HBN1_DEBUG === true) console.error('Falha ao salvar pedido.', e);
+    alert('NÃ£o foi possÃ­vel salvar o pedido â€” o armazenamento local estÃ¡ cheio.\n\nVÃ¡ atÃ© o CatÃ¡logo e limpe o cache de imagens do PDF (ConfiguraÃ§Ãµes), depois tente salvar novamente.');
     return false;
   }
 }
@@ -1295,10 +1309,10 @@ function negAtualizarBadgePedidosSalvos() {
   });
 }
 
-// Salva o pedido atual (com nome informado pelo usuário) e já inicia uma
-// lista nova em branco — mesmo comportamento do "Salvar Pedido" do catálogo.
+// Salva o pedido atual (com nome informado pelo usuÃ¡rio) e jÃ¡ inicia uma
+// lista nova em branco â€” mesmo comportamento do "Salvar Pedido" do catÃ¡logo.
 function negSalvarPedidoAtual() {
-  if (NEG_PRODUCTS.length === 0) { alert('Não há produtos na lista para salvar.'); return; }
+  if (NEG_PRODUCTS.length === 0) { alert('NÃ£o hÃ¡ produtos na lista para salvar.'); return; }
 
   const nomeSugerido = NEG_CLIENTE && NEG_CLIENTE.razao
     ? NEG_CLIENTE.razao.toUpperCase()
@@ -1331,7 +1345,7 @@ function negSalvarPedidoAtual() {
     valorCheio: somaPrecoCheio,
     valorComDescontoAtual: somaAtual,
     investimentoTotal: investTotal,
-    // Snapshot completo — permite carregar de volta na tela ou reexportar o Excel depois
+    // Snapshot completo â€” permite carregar de volta na tela ou reexportar o Excel depois
     estado: {
       products: NEG_PRODUCTS, mode: NEG_MODE,
       groupTargetType: NEG_GROUP_TARGET_TYPE, groupTargetValue: NEG_GROUP_TARGET_VALUE,
@@ -1343,13 +1357,13 @@ function negSalvarPedidoAtual() {
   const lista = negCarregarPedidosSalvos();
   lista.unshift(pedido); // mais recente primeiro
 
-  // NOVO: só limpa a lista atual se o pedido realmente foi persistido.
-  // Se a cota do localStorage estourou, negPersistirPedidosSalvos já mostrou
-  // o alerta explicando o motivo — aqui a gente só evita perder o trabalho do usuário.
+  // NOVO: sÃ³ limpa a lista atual se o pedido realmente foi persistido.
+  // Se a cota do localStorage estourou, negPersistirPedidosSalvos jÃ¡ mostrou
+  // o alerta explicando o motivo â€” aqui a gente sÃ³ evita perder o trabalho do usuÃ¡rio.
   const salvouComSucesso = negPersistirPedidosSalvos(lista);
   if (!salvouComSucesso) return;
 
-  // Igual ao catálogo: salva e já inicia um pedido novo em branco
+  // Igual ao catÃ¡logo: salva e jÃ¡ inicia um pedido novo em branco
   NEG_PRODUCTS = [];
   NEG_CLIENTE = null;
   NEG_OL_DANONE = 0;
@@ -1384,7 +1398,7 @@ function negRenderizarListaPedidosSalvos() {
   if (lista.length === 0) {
     corpo.innerHTML = `<div class="neg-empty" style="padding:30px 10px;">
       <div class="disp" style="font-size:14px;">Nenhum pedido salvo ainda</div>
-      <div style="font-size:12px;">Monte a negociação e clique em "Salvar neste dispositivo".</div>
+      <div style="font-size:12px;">Monte a negociaÃ§Ã£o e clique em "Salvar neste dispositivo".</div>
     </div>`;
     return;
   }
@@ -1395,28 +1409,28 @@ function negRenderizarListaPedidosSalvos() {
     <div style="border:1px solid var(--border-subtle); border-radius:10px; overflow:hidden;">
       <div style="padding:12px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
         <div style="min-width:0;">
-          <div style="font-weight:700; font-size:13px;">${(p.nome || 'Pedido').replace(/</g,'&lt;')}</div>
+          <div style="font-weight:700; font-size:13px;">${negEscHtml(p.nome || 'Pedido')}</div>
           <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
-            ${p.clienteNome ? p.clienteNome.toUpperCase() + (p.clienteCnpj ? ' • ' + p.clienteCnpj : '') : 'Sem cliente vinculado'}
+            ${p.clienteNome ? negEscHtml(p.clienteNome.toUpperCase()) + (p.clienteCnpj ? ' â€¢ ' + negEscHtml(p.clienteCnpj) : '') : 'Sem cliente vinculado'}
           </div>
           <div style="font-size:10.5px; color:var(--text-secondary); margin-top:2px;">
-            ${p.data} • ${p.totalProdutos} produto(s) • Modo: ${p.modo === 'individual' ? 'Por item' : 'Por grupo'}
+            ${negEscHtml(p.data)} â€¢ ${Number(p.totalProdutos) || 0} produto(s) â€¢ Modo: ${p.modo === 'individual' ? 'Por item' : 'Por grupo'}
           </div>
         </div>
         <div style="text-align:right; flex-shrink:0;">
           <div class="mono" style="font-size:12.5px; font-weight:800; color:var(--gold);">${negFormatBRL(p.investimentoTotal)}</div>
           <div style="font-size:9.5px; color:var(--text-secondary); text-transform:uppercase;">Investimento</div>
           <div class="mono" style="font-size:11px; font-weight:700; color:var(--green); margin-top:2px;">${liquido}</div>
-          <div style="font-size:9.5px; color:var(--text-secondary); text-transform:uppercase;">Valor líquido final</div>
+          <div style="font-size:9.5px; color:var(--text-secondary); text-transform:uppercase;">Valor lÃ­quido final</div>
         </div>
       </div>
       <div style="padding:0 12px 12px;" class="neg-row">
-        <button type="button" class="neg-btn neg-btn-sm" onclick="negTogglePreviewPedidoSalvo('${p.id}')">Ver Itens</button>
-        <button type="button" class="neg-btn neg-btn-sm neg-btn-gold" onclick="negCarregarPedidoSalvo('${p.id}')">Carregar na Tela</button>
-        <button type="button" class="neg-btn neg-btn-sm" onclick="negBaixarPedidoSalvo('${p.id}')">Baixar Excel</button>
-        <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negExcluirPedidoSalvo('${p.id}')">Excluir</button>
+        <button type="button" class="neg-btn neg-btn-sm" onclick="negTogglePreviewPedidoSalvo('${negEscJs(p.id)}')">Ver Itens</button>
+        <button type="button" class="neg-btn neg-btn-sm neg-btn-gold" onclick="negCarregarPedidoSalvo('${negEscJs(p.id)}')">Carregar na Tela</button>
+        <button type="button" class="neg-btn neg-btn-sm" onclick="negBaixarPedidoSalvo('${negEscJs(p.id)}')">Baixar Excel</button>
+        <button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negExcluirPedidoSalvo('${negEscJs(p.id)}')">Excluir</button>
       </div>
-      <div id="negPreview_${p.id}" style="display:none; border-top:1px solid var(--border-subtle); background:var(--surface-secondary); padding:10px 12px; max-height:220px; overflow-y:auto;"></div>
+      <div id="negPreview_${negEscHtml(p.id)}" style="display:none; border-top:1px solid var(--border-subtle); background:var(--surface-secondary); padding:10px 12px; max-height:220px; overflow-y:auto;"></div>
     </div>`;
   }).join('');
 }
@@ -1430,13 +1444,13 @@ function negTogglePreviewPedidoSalvo(id) {
 
   const pedido = negCarregarPedidosSalvos().find(p => p.id === id);
   if (!pedido) return;
-  const itens = (pedido.estado.products || []).slice(0, 200); // trava de segurança visual
+  const itens = (pedido.estado.products || []).slice(0, 200); // trava de seguranÃ§a visual
   el.innerHTML = itens.map(item => {
     const preco = negParseNumberBR(item.preco) || 0;
     const qtd = negParseNumberBR(item.qtd) || 0;
     return `<div style="display:flex; justify-content:space-between; gap:8px; padding:4px 0; border-bottom:1px solid var(--border-subtle); font-size:11.5px;">
-      <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${(item.produto || '').replace(/</g,'&lt;')}</span>
-      <span class="mono" style="flex-shrink:0; color:var(--text-secondary);">${qtd} un × ${negFormatBRL(preco)}</span>
+      <span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${negEscHtml(item.produto || '')}</span>
+      <span class="mono" style="flex-shrink:0; color:var(--text-secondary);">${qtd} un Ã— ${negFormatBRL(preco)}</span>
     </div>`;
   }).join('') || '<div style="font-size:11.5px; color:var(--text-secondary);">Sem itens.</div>';
 }
@@ -1469,20 +1483,20 @@ function negCarregarPedidoSalvo(id) {
 }
 
 function negExcluirPedidoSalvo(id) {
-  if (!confirm('Excluir este pedido salvo? Essa ação não pode ser desfeita.')) return;
+  if (!confirm('Excluir este pedido salvo? Essa aÃ§Ã£o nÃ£o pode ser desfeita.')) return;
   negPersistirPedidosSalvos(negCarregarPedidosSalvos().filter(p => p.id !== id));
   negRenderizarListaPedidosSalvos();
 }
 
 function negLimparTodosPedidosSalvos() {
-  if (!confirm('Remover TODOS os pedidos salvos? Essa ação não pode ser desfeita.')) return;
+  if (!confirm('Remover TODOS os pedidos salvos? Essa aÃ§Ã£o nÃ£o pode ser desfeita.')) return;
   negPersistirPedidosSalvos([]);
   negRenderizarListaPedidosSalvos();
 }
 
 // Reexporta o Excel de um pedido salvo, reaproveitando negExportExcel():
 // troca os globais temporariamente pelo snapshot salvo, gera o arquivo,
-// e restaura o estado em edição em seguida (sem afetar a tela atual).
+// e restaura o estado em ediÃ§Ã£o em seguida (sem afetar a tela atual).
 async function negBaixarPedidoSalvo(id) {
   const pedido = negCarregarPedidosSalvos().find(p => p.id === id);
   if (!pedido) return;
@@ -1519,7 +1533,7 @@ async function negBaixarPedidoSalvo(id) {
 }
 
 /* =========================================================================
-   FAB — SALVAR PEDIDO (visibilidade automática conforme modais abertos)
+   FAB â€” SALVAR PEDIDO (visibilidade automÃ¡tica conforme modais abertos)
    ========================================================================= */
 function negAtualizarVisibilidadeFab() {
   const overlays = [
@@ -1538,7 +1552,7 @@ function negAtualizarVisibilidadeFab() {
 }
 
 /* =========================================================================
-   CÁLCULOS
+   CÃLCULOS
    ========================================================================= */
 function negComputeIndividual(p) {
   const preco = negParseNumberBR(p.preco) || 0;
@@ -1547,10 +1561,10 @@ function negComputeIndividual(p) {
   const targetRaw = negParseNumberBR(p.targetValue);
   let pctAdicionalSolicitado;
   if (p.targetType === 'pct') {
-    // Meta em "%" = quanto de desconto ADICIONAL você quer dar (não o total)
+    // Meta em "%" = quanto de desconto ADICIONAL vocÃª quer dar (nÃ£o o total)
     pctAdicionalSolicitado = isNaN(targetRaw) ? 0 : targetRaw;
   } else {
-    // Meta em "R$" = preço final desejado -> calcula o adicional necessário
+    // Meta em "R$" = preÃ§o final desejado -> calcula o adicional necessÃ¡rio
     const precoAlvo = isNaN(targetRaw) ? preco : targetRaw;
     const pctTotalNecessario = preco > 0 ? ((preco - precoAlvo) / preco) * 100 : 0;
     pctAdicionalSolicitado = pctTotalNecessario - descontoAtual;
@@ -1611,14 +1625,14 @@ function negComputeGroup(selectedProducts, groupTargetType, groupTargetValue) {
 }
 
 /* =========================================================================
-   MUTAÇÕES
+   MUTAÃ‡Ã•ES
    ========================================================================= */
 function negUpdateProduct(id, key, value) {
   const p = NEG_PRODUCTS.find(x => x.id === id);
   if (!p) return;
   p[key] = value;
-  // Se o usuário editou o desconto atual na mão, isso vira "manual": passa a
-  // ser preservado e nunca mais sobrescrito por buscas automáticas no catálogo.
+  // Se o usuÃ¡rio editou o desconto atual na mÃ£o, isso vira "manual": passa a
+  // ser preservado e nunca mais sobrescrito por buscas automÃ¡ticas no catÃ¡logo.
   if (key === 'descontoAtual') p.descontoManual = true;
   negSaveState();
   negRenderAll();
@@ -1674,15 +1688,15 @@ function negClearAll() {
   NEG_CLIENTE = null;
   NEG_OL_DANONE = 0;
   NEG_OL_OMRON = 0;
-  try { localStorage.removeItem(NEG_STORAGE_KEY); } catch (e) {}
+  try { sessionStorage.removeItem(NEG_STORAGE_KEY); } catch (e) {}
   negAtualizarPainelOfertas();
   negRenderAll();
 }
 
 function negToggleSelectAll(value) {
-  // Respeita a busca atual: só mexe na seleção dos itens visíveis no momento.
-  // É assim que dá pra aplicar a meta de grupo só numa marca/linha de produto:
-  // busca "aptamil", clica Selecionar tudo, e só esses entram no cálculo.
+  // Respeita a busca atual: sÃ³ mexe na seleÃ§Ã£o dos itens visÃ­veis no momento.
+  // Ã‰ assim que dÃ¡ pra aplicar a meta de grupo sÃ³ numa marca/linha de produto:
+  // busca "aptamil", clica Selecionar tudo, e sÃ³ esses entram no cÃ¡lculo.
   const visiveisIds = new Set(negFilteredProducts().map(p => p.id));
   NEG_PRODUCTS.forEach(p => { if (visiveisIds.has(p.id)) p.selected = value; });
   negSaveState();
@@ -1700,8 +1714,8 @@ function negSetMode(mode) {
   document.getElementById('negBulkSelectRow').style.display = mode === 'grupo' ? 'flex' : 'none';
   document.getElementById('negGroupTip').style.display = mode === 'grupo' ? 'block' : 'none';
   document.getElementById('negModeDesc').innerText = mode === 'individual'
-    ? 'Defina uma meta (% ou R$) para cada produto. O investimento adicional é calculado linha a linha.'
-    : 'Selecione os produtos na tabela e defina uma única meta para o conjunto — em valor total ou em % de desconto médio.';
+    ? 'Defina uma meta (% ou R$) para cada produto. O investimento adicional Ã© calculado linha a linha.'
+    : 'Selecione os produtos na tabela e defina uma Ãºnica meta para o conjunto â€” em valor total ou em % de desconto mÃ©dio.';
   document.getElementById('tkInvestLabel').innerText = mode === 'individual' ? 'Investimento R$' : 'Investimento R$';
   negSaveState();
   negRenderAll();
@@ -1724,7 +1738,7 @@ function negOnGroupTargetInput(value) {
 }
 
 /* =========================================================================
-   EXPORTAÇÃO EXCEL (formatado, mesma linha visual dos outros arquivos)
+   EXPORTAÃ‡ÃƒO EXCEL (formatado, mesma linha visual dos outros arquivos)
    ========================================================================= */
 async function negExportExcel() {
   const LARANJA      = 'FFFF6B00';
@@ -1737,7 +1751,7 @@ async function negExportExcel() {
   const colLetra = n => String.fromCharCode(64 + n);
 
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'HBN1 - Nazária Distribuidora Farmacêutica';
+  workbook.creator = 'HBN1 - NazÃ¡ria Distribuidora FarmacÃªutica';
   workbook.created = new Date();
   const ws = workbook.addWorksheet('Central de Investimento', { views: [{ showGridLines: false }] });
 
@@ -1767,8 +1781,8 @@ async function negExportExcel() {
   cabecalho.value = {
     richText: [
       { font: { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Calibri' }, text: 'CENTRAL DE INVESTIMENTO\n' },
-      { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: 'INVESTIMENTO ADICIONAL NA NEGOCIAÇÃO — HBN1\n' },
-      { font: { size: 9, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: `${dataHoraAgora} • Modo: ${NEG_MODE === 'individual' ? 'Por item' : 'Por grupo'}${NEG_ST_ATIVO ? ' • Com ST' : ''}` }
+      { font: { bold: true, size: 10, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: 'INVESTIMENTO ADICIONAL NA NEGOCIAÃ‡ÃƒO â€” HBN1\n' },
+      { font: { size: 9, color: { argb: 'FFFFE8D6' }, name: 'Calibri' }, text: `${dataHoraAgora} â€¢ Modo: ${NEG_MODE === 'individual' ? 'Por item' : 'Por grupo'}${NEG_ST_ATIVO ? ' â€¢ Com ST' : ''}` }
     ]
   };
   cabecalho.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
@@ -1827,11 +1841,11 @@ async function negExportExcel() {
   linhaAtual++;
 
   const cabecalhosColunas = [
-    'PRODUTO', 'COD.', 'EAN', 'PREÇO CHEIO', 'QTD', '% DESC. ATUAL',
+    'PRODUTO', 'COD.', 'EAN', 'PREÃ‡O CHEIO', 'QTD', '% DESC. ATUAL',
     NEG_MODE === 'individual' ? 'META (% ADIC.)' : '% ADIC. UNIFORME',
-    '% DESC. FINAL', 'INVESTIMENTO', 'PREÇO FINAL'
+    '% DESC. FINAL', 'INVESTIMENTO', 'PREÃ‡O FINAL'
   ];
-  if (temColunaPrecoDesejado) cabecalhosColunas.push('PREÇO FINAL DESEJADO');
+  if (temColunaPrecoDesejado) cabecalhosColunas.push('PREÃ‡O FINAL DESEJADO');
 
   const linhaCab = ws.getRow(linhaAtual);
   cabecalhosColunas.forEach((titulo, i) => {
@@ -1877,7 +1891,7 @@ async function negExportExcel() {
 
     valores.forEach((val, i) => {
       const cel = linha.getCell(i + 1);
-      cel.value = (val === null || val === undefined || val === '') ? '—' : val;
+      cel.value = (val === null || val === undefined || val === '') ? 'â€”' : val;
       cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corFundoLinha } };
       cel.border = { top: BORDA_CINZA, bottom: BORDA_CINZA, left: BORDA_CINZA, right: BORDA_CINZA };
       cel.font = { size: 9.5, color: { argb: 'FF1E1E1E' } };
@@ -1892,7 +1906,7 @@ async function negExportExcel() {
   linhaAtual++;
   const rodapeCel = ws.getCell(`A${linhaAtual}`);
   ws.mergeCells(`A${linhaAtual}:${colLetra(totalCols)}${linhaAtual}`);
-  rodapeCel.value = `HBN1 - Nazária Distribuidora Farmacêutica  •  Gerado em ${dataHoraAgora}`;
+  rodapeCel.value = `HBN1 - NazÃ¡ria Distribuidora FarmacÃªutica  â€¢  Gerado em ${dataHoraAgora}`;
   rodapeCel.font = { italic: true, size: 8, color: { argb: 'FF9CA3AF' } };
   rodapeCel.alignment = { horizontal: 'center' };
 
@@ -1937,7 +1951,7 @@ function negRenderClienteInfo() {
   if (!el) return;
   if (NEG_CLIENTE && (NEG_CLIENTE.razao || NEG_CLIENTE.cnpj)) {
     el.style.display = 'block';
-    el.innerText = 'Cliente: ' + (NEG_CLIENTE.razao || '—') + (NEG_CLIENTE.cnpj ? ' • CNPJ ' + NEG_CLIENTE.cnpj : '');
+    el.innerText = 'Cliente: ' + (NEG_CLIENTE.razao || 'â€”') + (NEG_CLIENTE.cnpj ? ' â€¢ CNPJ ' + NEG_CLIENTE.cnpj : '');
   } else {
     el.style.display = 'none';
     el.innerText = '';
@@ -1971,7 +1985,7 @@ function negRenderTicker() {
   const investTotal = NEG_MODE === 'individual' ? somaInvestIndividual : Math.max(0, groupResult.investimentoTotal);
   const baseComparacao = NEG_MODE === 'individual' ? somaAtual : groupResult.valorAtual;
   const pctRepresentatividade = baseComparacao > 0 ? (investTotal / baseComparacao) * 100 : 0;
-  const rotuloBase = 'do líquido atual';
+  const rotuloBase = 'do lÃ­quido atual';
 
   // NOVO: valor final do pedido depois de aplicar o investimento adicional
   document.getElementById('tkValorAlvo').innerText = negFormatBRL(Math.max(0, somaAtual - investTotal));
@@ -1994,19 +2008,19 @@ function negRenderGroupPanel() {
       <span style="color:var(--text-secondary);">Valor com desconto atual</span><span class="mono">${negFormatBRL(gr.valorAtual)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
-      <span style="color:var(--text-secondary);">Valor líquido final</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
+      <span style="color:var(--text-secondary);">Valor lÃ­quido final</span><span class="mono">${negFormatBRL(gr.valorAlvo)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:12.5px;">
       <span style="color:var(--text-secondary);">% adicional uniforme</span>
       <span class="mono" style="color:${gr.xAdicionalPct > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatPct(gr.xAdicionalPct)}</span>
     </div>
     <div style="display:flex; justify-content:space-between; font-size:13.5px; border-top:1px solid var(--border-subtle); padding-top:8px; margin-top:2px;">
-      <span style="font-weight:700;">Investimento necessário</span>
+      <span style="font-weight:700;">Investimento necessÃ¡rio</span>
       <span class="mono" style="font-weight:800; color:var(--gold);">${negFormatBRL(Math.max(0, gr.investimentoTotal))}</span>
     </div>
-    ${gr.investimentoTotal <= 0 && selected.length > 0 ? '<div style="font-size:11.5px; color:var(--green);">Meta já atingida com o desconto atual.</div>' : ''}
-    ${gr.ajusteNegativo ? '<div class="neg-safety">O valor solicitado é maior que o líquido atual. O adicional foi ajustado para 0%, evitando aumentar artificialmente o pedido.</div>' : ''}
-    ${gr.ajusteLimitado ? `<div class="neg-safety">O adicional solicitado ultrapassa o limite seguro. Aplicado o máximo de ${negFormatPct(gr.maxAdicionalPct)} para manter todos os preços finais em zero ou acima.</div>` : ''}
+    ${gr.investimentoTotal <= 0 && selected.length > 0 ? '<div style="font-size:11.5px; color:var(--green);">Meta jÃ¡ atingida com o desconto atual.</div>' : ''}
+    ${gr.ajusteNegativo ? '<div class="neg-safety">O valor solicitado Ã© maior que o lÃ­quido atual. O adicional foi ajustado para 0%, evitando aumentar artificialmente o pedido.</div>' : ''}
+    ${gr.ajusteLimitado ? `<div class="neg-safety">O adicional solicitado ultrapassa o limite seguro. Aplicado o mÃ¡ximo de ${negFormatPct(gr.maxAdicionalPct)} para manter todos os preÃ§os finais em zero ou acima.</div>` : ''}
   `;
 }
 
@@ -2014,7 +2028,7 @@ function negGaugeSvg(currentPct, targetPct) {
   const cur = negClamp(currentPct || 0, 0, 100), tgt = negClamp(targetPct || 0, 0, 100);
   const gapStart = Math.min(cur, tgt), gapWidth = Math.abs(tgt - cur), atingida = tgt <= cur;
   return `
-    <div class="neg-gauge" title="Atual ${negFormatPct(currentPct)} · Meta ${negFormatPct(targetPct)}">
+    <div class="neg-gauge" title="Atual ${negFormatPct(currentPct)} Â· Meta ${negFormatPct(targetPct)}">
       <div class="neg-gauge-track">
         <div class="neg-gauge-current" style="width:${cur}%"></div>
         ${!atingida ? `<div class="neg-gauge-gap" style="left:${gapStart}%; width:${gapWidth}%"></div>` : ''}
@@ -2028,7 +2042,7 @@ function negRenderTable() {
   const list = negFilteredProducts();
 
   if (NEG_PRODUCTS.length === 0) {
-    wrap.innerHTML = `<div class="neg-panel neg-empty"><div class="disp">Nenhum produto ainda</div><div>Cole uma lista do Excel, importe um arquivo ou adicione uma linha manual para começar.</div></div>`;
+    wrap.innerHTML = `<div class="neg-panel neg-empty"><div class="disp">Nenhum produto ainda</div><div>Cole uma lista do Excel, importe um arquivo ou adicione uma linha manual para comeÃ§ar.</div></div>`;
     return;
   }
 
@@ -2038,8 +2052,8 @@ function negRenderTable() {
   if (grupoResult) grupoResult.perItem.forEach(it => { grupoMap[it.id] = it; });
 
   const headCols = NEG_MODE === 'individual'
-    ? `<th></th><th>Produto</th><th>Cód.</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">Preço final desejado</th><th class="neg-num">Progresso</th><th class="neg-num">% Desc. final</th><th class="neg-num">Investimento</th><th class="neg-num">Preço final</th><th></th>`
-    : `<th></th><th>Produto</th><th>Cód.Interno</th><th class="neg-num">Preço cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">% Desc. final</th><th class="neg-num">Investimento no item</th><th class="neg-num">Preço final</th><th></th>`;
+    ? `<th></th><th>Produto</th><th>CÃ³d.</th><th class="neg-num">PreÃ§o cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">PreÃ§o final desejado</th><th class="neg-num">Progresso</th><th class="neg-num">% Desc. final</th><th class="neg-num">Investimento</th><th class="neg-num">PreÃ§o final</th><th></th>`
+    : `<th></th><th>Produto</th><th>CÃ³d.Interno</th><th class="neg-num">PreÃ§o cheio</th><th class="neg-num">Qtd</th><th class="neg-num">% Desc. atual</th><th class="neg-num">% Desconto Adicional</th><th class="neg-num">% Desc. final</th><th class="neg-num">Investimento no item</th><th class="neg-num">PreÃ§o final</th><th></th>`;
   const rows = list.map(p => {
     const c = negComputeIndividual(p);
     const selCell = NEG_MODE === 'grupo'
@@ -2078,13 +2092,13 @@ function negRenderTable() {
     <td class="neg-num mono">${negFormatPct(gc.pctFinal)}</td>
     <td class="neg-num mono" style="font-weight:700; color:${gc.investimentoItem > 0 ? 'var(--gold)' : 'var(--green)'}">${negFormatBRL(gc.investimentoItem)}</td>
     <td class="neg-num mono">${negFormatBRL(gc.precoFinal)}</td>` : `
-    <td class="neg-num" style="color:var(--text-secondary)">—</td>
-    <td class="neg-num" style="color:var(--text-secondary)">—</td>
-    <td class="neg-num" style="color:var(--text-secondary)">—</td>
-    <td class="neg-num" style="color:var(--text-secondary)">—</td>`;
+    <td class="neg-num" style="color:var(--text-secondary)">â€”</td>
+    <td class="neg-num" style="color:var(--text-secondary)">â€”</td>
+    <td class="neg-num" style="color:var(--text-secondary)">â€”</td>
+    <td class="neg-num" style="color:var(--text-secondary)">â€”</td>`;
 }
 
-    return `<tr>${selCell}${commonCols}${modeCols}<td><button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negRemoveProduct('${p.id}')">✕</button></td></tr>`;
+    return `<tr>${selCell}${commonCols}${modeCols}<td><button type="button" class="neg-btn neg-btn-sm neg-btn-danger" onclick="negRemoveProduct('${p.id}')">âœ•</button></td></tr>`;
   }).join('');
 
   wrap.innerHTML = `
@@ -2100,7 +2114,7 @@ function negRenderTable() {
    INIT
    ========================================================================= */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Aplica o mesmo tema salvo pelo catálogo (light/dark)
+  // Aplica o mesmo tema salvo pelo catÃ¡logo (light/dark)
   const tema = localStorage.getItem('hbn1_tema') || 'light';
   document.documentElement.setAttribute('data-theme', tema);
 
@@ -2108,9 +2122,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('negGroupTargetValue').value = NEG_GROUP_TARGET_VALUE || '';
   negSetMode(NEG_MODE);
   negSetGroupTargetType(NEG_GROUP_TARGET_TYPE);
-  negSetSTAtivo(NEG_ST_ATIVO); // atualiza botões e reaplica ST se já estava ligado
+  negSetSTAtivo(NEG_ST_ATIVO); // atualiza botÃµes e reaplica ST se jÃ¡ estava ligado
   await negBuscarClientes();
-  await negAtualizarPainelOfertas(); // reflete cliente/oferta já salvos, se houver
+  await negAtualizarPainelOfertas(); // reflete cliente/oferta jÃ¡ salvos, se houver
   if (NEG_CLIENTE && NEG_CLIENTE.id) negPrefetchResumoCliente(NEG_CLIENTE.id);
   negRenderAll();
   negCheckHandoff();
@@ -2120,3 +2134,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
+
+
+
