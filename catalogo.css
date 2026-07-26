@@ -271,21 +271,22 @@ nav.sticky {
   border-color: #E55300 !important;
 }
 
-/* Barra de busca dentro do header */
+/* Barra de busca dentro da faixa compacta do catálogo */
 #barraPesquisa {
-  background-color: rgba(15, 23, 42, 0.30);
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  color: #FFFFFF;
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
   border-radius: var(--radius-lg);
   transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 #barraPesquisa:focus {
-  background-color: rgba(15, 23, 42, 0.45);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+  background-color: var(--surface-card);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.16);
   outline: none;
 }
 #barraPesquisa::placeholder {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-tertiary);
 }
 
 /* Barra de cliente (dark slate) */
