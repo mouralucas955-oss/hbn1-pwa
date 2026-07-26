@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Catálogo Pedidos HBN1</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FF6B00">
@@ -40,41 +42,46 @@
   
 <script>
   window.HBN1_SESSAO_PRONTA = (async function () {
-    const params = new URLSearchParams(window.location.search);
-    const tokenOferta = params.get('oferta');
+    const paramsUrl = new URLSearchParams(window.location.search);
+    const paramsHash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const tokenOferta = paramsHash.get('oferta') || paramsUrl.get('oferta');
 
     // Abertura normal por login: não há trabalho assíncrono a fazer.
     if (!tokenOferta) return;
+
+    // Remove o token da barra, histórico e cabeçalho Referer antes de chamar a API.
+    window.history.replaceState({}, document.title, window.location.pathname);
 
     // Um link de oferta não deve aproveitar a identidade de quem abriu o link.
     [
       'hbn1_session', 'hbn1_usuario', 'hbn1_uf', 'hbn1_ufs',
       'hbn1_nome', 'hbn1_tipo', 'hbn1_login_ts'
-    ].forEach(chave => localStorage.removeItem(chave));
+    ].forEach(chave => {
+      sessionStorage.removeItem(chave);
+      localStorage.removeItem(chave);
+    });
 
     const resposta = await chamarApi('abrirOferta', { token: tokenOferta });
-    if (!resposta || !resposta.sucesso || !resposta.sessionToken) {
+    if (!resposta || !resposta.sucesso) {
       throw new Error((resposta && resposta.mensagem) || 'Não foi possível abrir esta oferta.');
     }
 
-    localStorage.setItem('hbn1_session', resposta.sessionToken);
-localStorage.setItem('hbn1_usuario', 'oferta_' + tokenOferta.slice(0, 8));
-localStorage.setItem('hbn1_nome', resposta.nome || 'Cliente');
-localStorage.setItem('hbn1_uf', resposta.uf);
-localStorage.setItem('hbn1_ufs', JSON.stringify(resposta.ufs || [resposta.uf]));
-localStorage.setItem('hbn1_tipo', resposta.tipo || 'CLIENTE_OFERTA');
-localStorage.setItem('hbn1_oferta_token', tokenOferta);
+sessionStorage.setItem('hbn1_usuario', 'oferta');
+sessionStorage.setItem('hbn1_nome', resposta.nome || 'Cliente');
+sessionStorage.setItem('hbn1_uf', resposta.uf);
+sessionStorage.setItem('hbn1_ufs', JSON.stringify(resposta.ufs || [resposta.uf]));
+sessionStorage.setItem('hbn1_tipo', resposta.tipo || 'CLIENTE_OFERTA');
 
 const fornecedorOferta = String(resposta.fornecedor || '').toUpperCase().trim();
-localStorage.setItem('hbn1_oferta_fornecedor', fornecedorOferta);
+sessionStorage.setItem('hbn1_oferta_fornecedor', fornecedorOferta);
 
 if (fornecedorOferta) {
-  localStorage.setItem('hbn1_fornecedor_ativo', fornecedorOferta);
+  sessionStorage.setItem('hbn1_fornecedor_ativo', fornecedorOferta);
 } else {
-  localStorage.removeItem('hbn1_fornecedor_ativo');
+  sessionStorage.removeItem('hbn1_fornecedor_ativo');
 }
 
-localStorage.setItem('hbn1_login_ts', String(Date.now()));
+sessionStorage.setItem('hbn1_login_ts', String(Date.now()));
   })();
 </script>
   
