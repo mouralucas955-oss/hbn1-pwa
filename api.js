@@ -1,70 +1,160 @@
-const API_URL = 'https://script.google.com/macros/s/AKfycbzuDKL1ML4oQk1-qDVadToviO1nsEG47_KMhNco2ZL53n5_BvDKY2Udzj0qWnUxACNMEQ/exec';
+/*
+ * HBN1 — cliente seguro da API.
+ *
+ * O navegador conversa somente com /api no mesmo domínio.
+ * O gateway guarda o token real em cookie HttpOnly criptografado e injeta
+ * a credencial do Apps Script. Nenhum segredo deve ser colocado neste arquivo.
+ */
+const API_URL = (
+  window.HBN1_CONFIG &&
+  typeof window.HBN1_CONFIG.apiUrl === 'string' &&
+  window.HBN1_CONFIG.apiUrl.trim()
+) || '/api';
 
 const ACOES_SEM_SESSAO = new Set(['login', 'ping', 'abrirOferta']);
-const JANELA_SESSAO_RECENTE_MS = 15000;
-const MAX_TENTATIVAS_SESSAO_RECENTE = 4;
+const CHAVES_CONTEXTO_SESSAO = [
+  'hbn1_usuario', 'hbn1_uf', 'hbn1_ufs', 'hbn1_nome',
+  'hbn1_tipo', 'hbn1_login_ts', 'hbn1_oferta_fornecedor',
+  'hbn1_fornecedor_ativo'
+];
+const CHAVES_LEGADAS_SENSIVEIS = [
+  'hbn1_session', 'hbn1_oferta_token', 'hbn1_pedidos_salvos',
+  'hbn1_negociacao_handoff', 'hbn1_historico_registrado'
+];
 let redirecionamentoDeSessaoEmAndamento = false;
 
-const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+function salvarContextoSessao(dados) {
+  if (!dados || !dados.sucesso) return;
+  const agora = String(Date.now());
+  const contexto = {
+    hbn1_usuario: dados.usuario || '',
+    hbn1_nome: dados.nome || dados.usuario || '',
+    hbn1_uf: dados.uf || '',
+    hbn1_ufs: JSON.stringify(dados.ufs || (dados.uf ? [dados.uf] : [])),
+    hbn1_tipo: dados.tipo || '',
+    hbn1_login_ts: agora
+  };
+  Object.keys(contexto).forEach(chave => {
+    sessionStorage.setItem(chave, String(contexto[chave]));
+  });
+}
 
-function limparDadosDaSessao(preservarTokenOferta = false) {
-  [
-    'hbn1_session', 'hbn1_usuario', 'hbn1_uf', 'hbn1_ufs',
-    'hbn1_nome', 'hbn1_tipo', 'hbn1_login_ts'
-  ].forEach(chave => localStorage.removeItem(chave));
+function lerDadoSessao(chave, padrao = '') {
+  return sessionStorage.getItem(chave) ?? padrao;
+}
 
-  if (!preservarTokenOferta) {
-    localStorage.removeItem('hbn1_oferta_token');
+function salvarDadoSessao(chave, valor) {
+  if (!CHAVES_CONTEXTO_SESSAO.includes(chave)) {
+    throw new Error('Chave de sessão não permitida.');
   }
+  sessionStorage.setItem(chave, String(valor));
+}
+
+function removerDadoSessao(chave) {
+  sessionStorage.removeItem(chave);
+  localStorage.removeItem(chave);
+}
+
+function limparDadosDaSessao() {
+  CHAVES_CONTEXTO_SESSAO.forEach(chave => sessionStorage.removeItem(chave));
+  CHAVES_LEGADAS_SENSIVEIS.forEach(chave => {
+    sessionStorage.removeItem(chave);
+    localStorage.removeItem(chave);
+  });
+  localStorage.removeItem('hbn1_session');
+}
+
+function limparArmazenamentoLegado() {
+  CHAVES_LEGADAS_SENSIVEIS.forEach(chave => localStorage.removeItem(chave));
+
+  // Migra apenas contexto visual legado; o token real nunca é migrado.
+  CHAVES_CONTEXTO_SESSAO.forEach(chave => {
+    const legado = localStorage.getItem(chave);
+    if (legado !== null && sessionStorage.getItem(chave) === null) {
+      sessionStorage.setItem(chave, legado);
+    }
+    localStorage.removeItem(chave);
+  });
 }
 
 function redirecionarPorSessaoExpirada() {
   if (redirecionamentoDeSessaoEmAndamento) return;
   redirecionamentoDeSessaoEmAndamento = true;
-
-  // Capture antes de limpar: a oferta ainda pode estar válida e será reaberta.
-  const tokenOferta = localStorage.getItem('hbn1_oferta_token');
-  limparDadosDaSessao(true);
-
-  if (tokenOferta) {
-    window.location.replace('catalogo.html?oferta=' + encodeURIComponent(tokenOferta));
-  } else {
-    window.location.replace('index.html');
-  }
+  limparDadosDaSessao();
+  window.location.replace('index.html');
 }
 
-async function chamarApi(action, params = {}, tentativa = 0) {
-  const corpo = Object.assign({ action }, params);
-  if (!ACOES_SEM_SESSAO.has(action)) {
-    corpo._session = localStorage.getItem('hbn1_session');
+function obterTimeoutDaAcao(action) {
+  return action === 'extrairPedidoPdfComIA' ? 120000 : 30000;
+}
+
+async function chamarApi(action, params = {}) {
+  if (typeof action !== 'string' || !/^[A-Za-z][A-Za-z0-9]{0,79}$/.test(action)) {
+    throw new Error('Ação inválida.');
   }
 
-  const resposta = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(corpo)
-  });
+  const corpo = Object.assign({}, params, { action });
+  delete corpo._session;
+  delete corpo._gateway;
 
-  if (!resposta.ok) {
-    throw new Error('Falha na API (' + resposta.status + ')');
+  const controlador = new AbortController();
+  const timer = window.setTimeout(
+    () => controlador.abort(),
+    obterTimeoutDaAcao(action)
+  );
+
+  let resposta;
+  try {
+    resposta = await fetch(API_URL, {
+      method: 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      redirect: 'error',
+      referrerPolicy: 'no-referrer',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'HBN1'
+      },
+      body: JSON.stringify(corpo),
+      signal: controlador.signal
+    });
+  } catch (erro) {
+    if (erro && erro.name === 'AbortError') {
+      throw new Error('A operação demorou mais que o esperado.');
+    }
+    throw new Error('Não foi possível conectar ao serviço.');
+  } finally {
+    window.clearTimeout(timer);
   }
 
-  const dados = await resposta.json();
+  let dados;
+  try {
+    dados = await resposta.json();
+  } catch (erro) {
+    throw new Error('O serviço retornou uma resposta inválida.');
+  }
 
   if (dados && dados.sessaoExpirada) {
-    const criadaEm = Number(localStorage.getItem('hbn1_login_ts') || 0);
-    const sessaoRecente = criadaEm > 0 &&
-      (Date.now() - criadaEm) < JANELA_SESSAO_RECENTE_MS;
-
-    if (sessaoRecente && tentativa < MAX_TENTATIVAS_SESSAO_RECENTE) {
-      // 250, 500, 1000 e 2000 ms: só protege a abertura de sessão.
-      await esperar(250 * Math.pow(2, tentativa));
-      return chamarApi(action, params, tentativa + 1);
-    }
-
     redirecionarPorSessaoExpirada();
     throw new Error('Sessão expirada. Redirecionando...');
   }
 
+  if (!resposta.ok) {
+    throw new Error((dados && dados.mensagem) || 'Não foi possível concluir a operação.');
+  }
+
+  if ((action === 'login' || action === 'abrirOferta') && dados && dados.sucesso) {
+    salvarContextoSessao(dados);
+    delete dados.sessionToken;
+  }
+
+  if (action === 'logout') {
+    limparDadosDaSessao();
+  }
+
   return dados;
 }
+
+limparArmazenamentoLegado();
+
