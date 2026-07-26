@@ -561,10 +561,18 @@ function toggleDarkMode() {
     localStorage.setItem('hbn1_tema', novoTema);
   } catch (e) {}
 
-  window.clearTimeout(window.HBN1_THEME_TIMER);
-  window.HBN1_THEME_TIMER = window.setTimeout(() => {
-    raiz.classList.remove('theme-switching');
-  }, 110);
+  const icon = document.getElementById('iconDarkMode');
+  if (icon) {
+    icon.classList.remove('theme-icon-pop');
+    void icon.offsetWidth;
+    icon.classList.add('theme-icon-pop');
+    window.setTimeout(() => icon.classList.remove('theme-icon-pop'), 180);
+  }
+
+  // Mantém as transições desligadas até o novo tema ter sido pintado.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => raiz.classList.remove('theme-switching'));
+  });
 }
 
 function atualizarControleTema(tema) {
