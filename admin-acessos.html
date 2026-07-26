@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>HBN1 – Controle de Acessos</title>
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,6 +84,20 @@
   <script>
     let USUARIOS_TODOS = [];
 
+    function escaparHtml(valor) {
+      return String(valor == null ? '' : valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function bloquearPainel() {
+      document.getElementById('conteudoPrincipal').classList.add('hidden');
+      document.getElementById('estadoBloqueado').classList.remove('hidden');
+    }
+
     function mostrarToast(tipo, mensagem) {
       const container = document.getElementById('toastContainer');
       const cores = tipo === 'success'
@@ -96,7 +112,9 @@
 
     function formatarTempoRelativo(isoStr) {
       if (!isoStr) return 'nunca';
-      const diffMs = Date.now() - new Date(isoStr).getTime();
+      const instante = new Date(isoStr).getTime();
+      if (!Number.isFinite(instante)) return 'nunca';
+      const diffMs = Math.max(0, Date.now() - instante);
       const min = Math.floor(diffMs / 60000);
       if (min < 1) return 'agora mesmo';
       if (min < 60) return `há ${min} min`;
@@ -108,24 +126,29 @@
 
     async function carregarPainel() {
       try {
-        const tipo = localStorage.getItem('hbn1_tipo');
+        const tipo = sessionStorage.getItem('hbn1_tipo');
         if (String(tipo).toUpperCase() !== 'ADMIN') {
-          document.getElementById('estadoBloqueado').classList.remove('hidden');
+          bloquearPainel();
           return;
         }
-
-        document.getElementById('conteudoPrincipal').classList.remove('hidden');
 
         const [respOnline, respTodos] = await Promise.all([
           chamarApi('usuariosOnline', {}),
           chamarApi('listarUsuarios', {})
         ]);
 
+        if (!respTodos || respTodos.erro || !Array.isArray(respTodos.usuarios)) {
+          bloquearPainel();
+          return;
+        }
+
+        document.getElementById('estadoBloqueado').classList.add('hidden');
+        document.getElementById('conteudoPrincipal').classList.remove('hidden');
         renderizarOnline(respOnline);
-        USUARIOS_TODOS = (respTodos && respTodos.usuarios) ? respTodos.usuarios : [];
+        USUARIOS_TODOS = respTodos.usuarios;
         renderizarListaUsuarios(USUARIOS_TODOS);
       } catch (erro) {
-        console.error('Erro ao carregar painel:', erro);
+        bloquearPainel();
         mostrarToast('error', 'Erro ao carregar dados do painel.');
       }
     }
@@ -147,8 +170,8 @@
           <div class="flex items-center gap-3 min-w-0">
             <span class="w-2 h-2 rounded-full bg-emerald-500 dot-online shrink-0"></span>
             <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 truncate">${u.nome}</p>
-              <p class="text-[10px] text-slate-400 font-mono">${u.usuario} • UF ${u.uf || '-'}</p>
+              <p class="text-xs font-bold text-slate-800 truncate">${escaparHtml(u.nome)}</p>
+              <p class="text-[10px] text-slate-400 font-mono">${escaparHtml(u.usuario)} • UF ${escaparHtml(u.uf || '-')}</p>
             </div>
           </div>
           <span class="text-[10px] text-emerald-600 font-semibold shrink-0">${formatarTempoRelativo(u.ultimoAcesso)}</span>
@@ -165,13 +188,14 @@
 
       container.innerHTML = lista.map(u => {
         const bloqueado = u.status === 'BLOQUEADO';
+        const proximoStatus = bloqueado ? 'ATIVO' : 'BLOQUEADO';
         return `
         <div class="flex items-center justify-between gap-3 px-5 py-3 flex-wrap">
           <div class="flex items-center gap-3 min-w-0">
             <span class="w-2 h-2 rounded-full shrink-0 ${u.online ? 'bg-emerald-500 dot-online' : 'bg-slate-300'}"></span>
             <div class="min-w-0">
-              <p class="text-sm font-bold text-slate-800 truncate">${u.nome}</p>
-              <p class="text-[10px] text-slate-400 font-mono">${u.usuario} • UF ${u.uf || '-'} • ${u.tipo}</p>
+              <p class="text-sm font-bold text-slate-800 truncate">${escaparHtml(u.nome)}</p>
+              <p class="text-[10px] text-slate-400 font-mono">${escaparHtml(u.usuario)} • UF ${escaparHtml(u.uf || '-')} • ${escaparHtml(u.tipo)}</p>
             </div>
           </div>
           <div class="flex items-center gap-3 shrink-0">
@@ -179,20 +203,29 @@
             <span class="text-[9px] font-black px-2 py-1 rounded-full ${bloqueado ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
               ${bloqueado ? 'BLOQUEADO' : 'ATIVO'}
             </span>
-            <button onclick="alternarStatus('${u.usuario}', '${bloqueado ? 'ATIVO' : 'BLOQUEADO'}', this)"
+            <button type="button" data-usuario="${escaparHtml(u.usuario)}" data-novo-status="${proximoStatus}"
               class="text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all ${bloqueado ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'}">
               ${bloqueado ? 'Liberar' : 'Bloquear'}
             </button>
           </div>
         </div>`;
       }).join('');
+
+      container.querySelectorAll('button[data-usuario][data-novo-status]').forEach(botao => {
+        botao.addEventListener('click', () => alternarStatus(
+          botao.dataset.usuario || '',
+          botao.dataset.novoStatus || '',
+          botao
+        ));
+      });
     }
 
     function filtrarListaUsuarios() {
       const termo = document.getElementById('buscaUsuario').value.toLowerCase().trim();
       if (!termo) { renderizarListaUsuarios(USUARIOS_TODOS); return; }
       const filtrados = USUARIOS_TODOS.filter(u =>
-        u.nome.toLowerCase().includes(termo) || u.usuario.toLowerCase().includes(termo)
+        String(u.nome || '').toLowerCase().includes(termo) ||
+        String(u.usuario || '').toLowerCase().includes(termo)
       );
       renderizarListaUsuarios(filtrados);
     }
