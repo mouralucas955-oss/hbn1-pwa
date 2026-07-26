@@ -316,6 +316,27 @@ nav.sticky {
   color: var(--text-tertiary);
 }
 
+/* Resumo fixo do pedido: bg-white/95 é uma classe Tailwind distinta de
+   bg-white e precisa de tratamento próprio no tema escuro. */
+[data-theme="dark"] #desktopPedidoResumo {
+  background-color: rgba(16, 28, 46, 0.96) !important;
+  border-color: var(--border-default) !important;
+  box-shadow: var(--shadow-md);
+}
+[data-theme="dark"] #desktopPedidoResumo > div > div > p:first-child {
+  color: var(--text-muted) !important;
+}
+[data-theme="dark"] #desktopPedidoVariedades,
+[data-theme="dark"] #desktopPedidoUnidades {
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] #desktopPedidoBruto {
+  color: var(--text-secondary) !important;
+}
+[data-theme="dark"] #desktopPedidoLiquido {
+  color: var(--success) !important;
+}
+
 /* Barra de cliente (dark slate) */
 .bg-slate-900 {
   background-color: var(--surface-header) !important;
