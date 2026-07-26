@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HIT — Alavancas | HBN1</title>
+  <meta name="referrer" content="no-referrer">
+<title>HIT â€” Alavancas | HBN1</title>
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,7 +99,7 @@
   .hit-uf-pill:hover { border-color:var(--accent); }
   .hit-uf-pill-ativa { background:var(--accent); color:#fff; border-color:var(--accent); }
 
-  /* Nova visão executiva e operacional */
+  /* Nova visÃ£o executiva e operacional */
   .hit-kpi-strip {
     display:grid; grid-template-columns:repeat(4, minmax(0,1fr));
     gap:12px; margin-bottom:16px;
@@ -149,11 +150,11 @@
     <div style="display:flex; align-items:center; gap:12px;">
       <a href="catalogo.html" class="hit-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-        <span>Voltar ao Catálogo</span>
+        <span>Voltar ao CatÃ¡logo</span>
       </a>
       <div>
-        <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">HIT — Alavancas</div>
-        <div class="hit-topbar-info">Positivação da campanha • Clientes Dedicado</div>
+        <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">HIT â€” Alavancas</div>
+        <div class="hit-topbar-info">PositivaÃ§Ã£o da campanha â€¢ Clientes Dedicado</div>
       </div>
     </div>
     <div id="hitPeriodoWrap"></div>
@@ -164,20 +165,20 @@
     <div class="hit-filtros-row">
       <div class="hit-panel" style="position:relative;">
         <div class="hit-panel-title">Buscar cliente diretamente</div>
-        <input id="hitBuscaClienteTopo" class="hit-select" style="max-width:100%;" placeholder="🔍 Nome, CNPJ ou código do cliente..." oninput="hitFiltrarClientesTopo()" autocomplete="off">
+        <input id="hitBuscaClienteTopo" class="hit-select" style="max-width:100%;" placeholder="ðŸ” Nome, CNPJ ou cÃ³digo do cliente..." oninput="hitFiltrarClientesTopo()" autocomplete="off">
         <div id="hitDropdownClientesTopo" class="hit-dropdown" style="display:none;"></div>
       </div>
 
    
       <div class="hit-panel" style="position:relative;">
         <div class="hit-panel-title">Ver por vendedor</div>
-        <input id="hitBuscaVendedor" class="hit-select" style="max-width:100%;" placeholder="🔍 Digite o nome do vendedor..." oninput="hitFiltrarVendedores()" onfocus="hitFiltrarVendedores()" autocomplete="off">
+        <input id="hitBuscaVendedor" class="hit-select" style="max-width:100%;" placeholder="ðŸ” Digite o nome do vendedor..." oninput="hitFiltrarVendedores()" onfocus="hitFiltrarVendedores()" autocomplete="off">
         <div id="hitDropdownVendedores" class="hit-dropdown" style="display:none;"></div>
       </div>
 
       <div class="hit-panel" style="position:relative;">
         <div class="hit-panel-title">Ver por rede</div>
-        <input id="hitBuscaRede" class="hit-select" style="max-width:100%;" placeholder="🔍 Digite o nome da rede..." oninput="hitFiltrarRedes()" onfocus="hitFiltrarRedes()" autocomplete="off">
+        <input id="hitBuscaRede" class="hit-select" style="max-width:100%;" placeholder="ðŸ” Digite o nome da rede..." oninput="hitFiltrarRedes()" onfocus="hitFiltrarRedes()" autocomplete="off">
         <div id="hitDropdownRedes" class="hit-dropdown" style="display:none;"></div>
       </div>
     </div>
@@ -189,12 +190,12 @@
   </div>
 
 <script>
-  if (!localStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
+  if (!sessionStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
 
-  // Bloqueia acesso direto por URL para quem não é Dedicado (nem Admin).
-  // Cadastros antigos com "VENDEDOR" puro contam como Farma → bloqueados.
+  // Bloqueia acesso direto por URL para quem nÃ£o Ã© Dedicado (nem Admin).
+  // Cadastros antigos com "VENDEDOR" puro contam como Farma â†’ bloqueados.
   (function() {
-    let tipo = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
+    let tipo = (sessionStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
     if (tipo === 'VENDEDOR') tipo = 'VENDEDOR_FARMA';
     if (tipo !== 'VENDEDOR_DEDICADO' && tipo !== 'ADMIN') {
       window.location.href = 'catalogo.html';
@@ -206,12 +207,12 @@
     document.documentElement.setAttribute('data-theme', tema);
   })();
 
-  const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+  const UF_USUARIO = (sessionStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 
-  // ── ESTADO GLOBAL ─────────────────────────────────────────────────────
+  // â”€â”€ ESTADO GLOBAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let HIT_CLIENTES     = [];  // clientes Dedicado da UF (pra busca direta)
-  let HIT_VENDEDORES   = [];  // vendedores únicos derivados de HIT_CLIENTES
-  let HIT_PRODUTOS     = [];  // catálogo completo (pra estoque/preço/imagem)
+  let HIT_VENDEDORES   = [];  // vendedores Ãºnicos derivados de HIT_CLIENTES
+  let HIT_PRODUTOS     = [];  // catÃ¡logo completo (pra estoque/preÃ§o/imagem)
   let HIT_PERIODO      = null;
 
 
@@ -233,17 +234,32 @@
 
   function hitFormatarCNPJ(digits) {
     const d = String(digits || '').replace(/\D/g, '');
-    if (d.length !== 14) return digits || '—';
+    if (d.length !== 14) return digits || 'â€”';
     return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
 
   function hitFormatarData(iso) {
-    if (!iso) return '—';
+    if (!iso) return 'â€”';
     const d = new Date(iso);
     return d.toLocaleDateString('pt-BR');
   }
 
   function hitSoDigitos(v) { return String(v || '').replace(/[^0-9]/g, ''); }
+  function hitEscHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+  function hitEscJs(v) {
+    return String(v == null ? '' : v)
+      .replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+      .replace(/</g, '\\x3C').replace(/>/g, '\\x3E')
+      .replace(/\r/g, '\\r').replace(/\n/g, '\\n');
+  }
+  function hitUrlImagem(v) {
+    const url = String(v || '').trim();
+    return /^https:\/\//i.test(url) ? hitEscHtml(url) : '';
+  }
 
   function hitBuscarProduto(item) {
     // item = { cod, ean, descricao, marca, categoria }
@@ -260,7 +276,7 @@
     return `<span class="hit-estoque-pill ${classe}">${texto}</span>`;
   }
 
-  // ── CARREGAMENTO INICIAL ──────────────────────────────────────────────
+  // â”€â”€ CARREGAMENTO INICIAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function hitCarregarClientesDedicados() {
     return chamarApi('clientes', { uf: UF_USUARIO }).then(lista => {
       HIT_CLIENTES = (lista || []).filter(c => String(c.equipe || '').toUpperCase().trim() === 'DEDICADO');
@@ -282,10 +298,10 @@
   function hitRenderPeriodo() {
     const wrap = document.getElementById('hitPeriodoWrap');
     if (!HIT_PERIODO || (!HIT_PERIODO.dataInicio && !HIT_PERIODO.dataFim)) { wrap.innerHTML = ''; return; }
-    wrap.innerHTML = `<span class="hit-periodo-badge">🗓 Campanha: ${hitFormatarData(HIT_PERIODO.dataInicio)} – ${hitFormatarData(HIT_PERIODO.dataFim)}</span>`;
+    wrap.innerHTML = `<span class="hit-periodo-badge">ðŸ—“ Campanha: ${hitFormatarData(HIT_PERIODO.dataInicio)} â€“ ${hitFormatarData(HIT_PERIODO.dataFim)}</span>`;
   }
 
-  // ── BUSCA DIRETA DE CLIENTE ───────────────────────────────────────────
+  // â”€â”€ BUSCA DIRETA DE CLIENTE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function hitFiltrarClientesTopo() {
     const termo = document.getElementById('hitBuscaClienteTopo').value.trim().toLowerCase();
     const dropdown = document.getElementById('hitDropdownClientesTopo');
@@ -304,9 +320,9 @@
     }
 
     dropdown.innerHTML = filtrados.map(c => `
-      <div class="hit-dropdown-item" onclick="hitSelecionarClienteTopo('${String(c.id).replace(/'/g, "\\'")}')">
-        <div class="nome">${(c.razao || '').toUpperCase()}</div>
-        <div class="meta"><span>ID: ${c.id}</span><span>${c.cnpj || ''}</span></div>
+      <div class="hit-dropdown-item" onclick="hitSelecionarClienteTopo('${hitEscJs(c.id)}')">
+        <div class="nome">${hitEscHtml((c.razao || '').toUpperCase())}</div>
+        <div class="meta"><span>ID: ${hitEscHtml(c.id)}</span><span>${hitEscHtml(c.cnpj || '')}</span></div>
       </div>`).join('');
     dropdown.style.display = 'block';
   }
@@ -333,7 +349,7 @@
     HIT_ALAVANCA_ATUAL = null;
     HIT_CLIENTE_ATUAL = null;
     document.getElementById('hitConteudo').innerHTML =
-      '<div class="hit-panel"><div class="hit-loading">Calculando positivação de ' + (cliente.razao || cliente.id) + '...</div></div>';
+      '<div class="hit-panel"><div class="hit-loading">Calculando positivaÃ§Ã£o de ' + hitEscHtml(cliente.razao || cliente.id) + '...</div></div>';
 
     chamarApi('carteiraHit', { uf: UF_USUARIO, codCliente: cliente.id })
       .then(resp => {
@@ -345,7 +361,7 @@
       .catch(() => hitMostrarErro(null));
   }
 
-  // ── BUSCA POR VENDEDOR ────────────────────────────────────────────────
+  // â”€â”€ BUSCA POR VENDEDOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function hitFiltrarVendedores() {
     const termo = document.getElementById('hitBuscaVendedor').value.trim().toLowerCase();
     const dropdown = document.getElementById('hitDropdownVendedores');
@@ -355,8 +371,8 @@
       dropdown.innerHTML = '<div class="hit-dropdown-item" style="cursor:default; color:var(--text-secondary);">Nenhum vendedor com clientes Dedicado</div>';
     } else {
       dropdown.innerHTML = filtrados.slice(0, 20).map(v => `
-        <div class="hit-dropdown-item" onclick="hitSelecionarVendedor('${v.replace(/'/g, "\\'")}')">
-          <div class="nome">${v}</div>
+        <div class="hit-dropdown-item" onclick="hitSelecionarVendedor('${hitEscJs(v)}')">
+          <div class="nome">${hitEscHtml(v)}</div>
         </div>`).join('');
     }
     dropdown.style.display = 'block';
@@ -380,7 +396,7 @@
     hitRenderFiltroUfsRede();
 
     document.getElementById('hitConteudo').innerHTML =
-      '<div class="hit-panel"><div class="hit-loading">Calculando positivação da carteira de ' + nome + '...</div></div>';
+      '<div class="hit-panel"><div class="hit-loading">Calculando positivaÃ§Ã£o da carteira de ' + hitEscHtml(nome) + '...</div></div>';
 
     chamarApi('carteiraHit', { uf: UF_USUARIO, vendedor: nome })
       .then(resp => {
@@ -393,7 +409,7 @@
   }
 
   
-  // ── BUSCA POR REDE ────────────────────────────────────────────────────
+  // â”€â”€ BUSCA POR REDE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function hitFiltrarRedes() {
     const termo = document.getElementById('hitBuscaRede').value.trim().toLowerCase();
     const dropdown = document.getElementById('hitDropdownRedes');
@@ -403,8 +419,8 @@
       dropdown.innerHTML = '<div class="hit-dropdown-item" style="cursor:default; color:var(--text-secondary);">Nenhuma rede encontrada</div>';
     } else {
       dropdown.innerHTML = filtrados.slice(0, 20).map(r => `
-        <div class="hit-dropdown-item" onclick="hitSelecionarRede('${r.replace(/'/g, "\\'")}')">
-          <div class="nome">${r}</div>
+        <div class="hit-dropdown-item" onclick="hitSelecionarRede('${hitEscJs(r)}')">
+          <div class="nome">${hitEscHtml(r)}</div>
         </div>`).join('');
     }
     dropdown.style.display = 'block';
@@ -463,7 +479,7 @@
 
     const pillsHtml = HIT_REDE_UFS_TODAS.map(uf => {
       const ativa = HIT_REDE_UFS_ATIVAS.has(uf);
-      return `<button type="button" class="hit-uf-pill ${ativa ? 'hit-uf-pill-ativa' : ''}" onclick="hitToggleUfRede('${uf.replace(/'/g, "\\'")}')">${ativa ? '✓ ' : ''}${uf}</button>`;
+      return `<button type="button" class="hit-uf-pill ${ativa ? 'hit-uf-pill-ativa' : ''}" onclick="hitToggleUfRede('${uf.replace(/'/g, "\\'")}')">${ativa ? 'âœ“ ' : ''}${uf}</button>`;
     }).join('');
 
     wrap.style.display = 'block';
@@ -486,7 +502,7 @@
     }
 
     document.getElementById('hitConteudo').innerHTML =
-      '<div class="hit-panel"><div class="hit-loading">Calculando positivação da rede ' + nome + '...</div></div>';
+      '<div class="hit-panel"><div class="hit-loading">Calculando positivaÃ§Ã£o da rede ' + nome + '...</div></div>';
 
     const params = { uf: UF_USUARIO, rede: nome };
     if (HIT_REDE_UFS_TODAS.length > 0) params.ufs = Array.from(HIT_REDE_UFS_ATIVAS);
@@ -503,8 +519,8 @@
 
   function hitMostrarErro(resp) {
     document.getElementById('hitConteudo').innerHTML =
-      '<div class="hit-panel"><div class="hit-empty"><div class="disp">Não foi possível carregar</div><div>' +
-      (resp && resp.mensagem ? resp.mensagem : 'Verifique a conexão e tente novamente.') + '</div></div></div>';
+      '<div class="hit-panel"><div class="hit-empty"><div class="disp">NÃ£o foi possÃ­vel carregar</div><div>' +
+      (resp && resp.mensagem ? resp.mensagem : 'Verifique a conexÃ£o e tente novamente.') + '</div></div></div>';
   }
 
   document.addEventListener('click', function(e) {
@@ -522,7 +538,7 @@
     if (dRede && iRede && !dRede.contains(e.target) && e.target !== iRede) dRede.style.display = 'none';
   });
 
-  // ── DISPATCH PRINCIPAL ────────────────────────────────────────────────
+  // â”€â”€ DISPATCH PRINCIPAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  
   function hitRenderConteudo() {
     if (HIT_ALAVANCA_ATUAL) { hitRenderDrilldownAlavanca(); return; }
@@ -536,7 +552,7 @@
       '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum filtro selecionado</div><div>Busque um cliente Dedicado diretamente, escolha um vendedor ou uma rede para ver a carteira.</div></div></div>';
   }
 
-  // ── LISTA DE CLIENTES DE UM VENDEDOR ──────────────────────────────────
+  // â”€â”€ LISTA DE CLIENTES DE UM VENDEDOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function hitCalcularTotais(cliente) {
     let totalGrupos = 0, totalPositivados = 0, alavancasCompletas = 0;
     (cliente.alavancas || []).forEach(al => {
@@ -550,7 +566,7 @@
   function hitRenderListaClientesVendedor() {
     const wrap = document.getElementById('hitConteudo');
     if (HIT_LISTA_CLIENTES_VEND.length === 0) {
-      wrap.innerHTML = '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum cliente Dedicado</div><div>Este vendedor não possui clientes com equipe Dedicado nesta UF.</div></div></div>';
+      wrap.innerHTML = '<div class="hit-panel"><div class="hit-empty"><div class="disp">Nenhum cliente Dedicado</div><div>Este vendedor nÃ£o possui clientes com equipe Dedicado nesta UF.</div></div></div>';
       return;
     }
 
@@ -591,12 +607,12 @@
         <div class="hit-kpi">
           <span class="hit-kpi-label">Requisitos pendentes</span>
           <strong class="hit-kpi-valor">${Math.max(0, totalRequisitos - totalAtendidos)}</strong>
-          <span class="hit-kpi-sub">Oportunidades ainda abertas na seleção</span>
+          <span class="hit-kpi-sub">Oportunidades ainda abertas na seleÃ§Ã£o</span>
         </div>
         <div class="hit-kpi">
           <span class="hit-kpi-label">Mais perto de concluir</span>
-          <strong class="hit-kpi-valor" style="font-family:inherit;font-size:16px;">${maisPerto ? (maisPerto.cli.razao || '').toUpperCase() : 'Tudo concluído'}</strong>
-          <span class="hit-kpi-sub">${maisPerto ? 'Faltam ' + (maisPerto.totais.totalGrupos - maisPerto.totais.totalPositivados) + ' requisitos' : 'Nenhuma pendência'}</span>
+          <strong class="hit-kpi-valor" style="font-family:inherit;font-size:16px;">${maisPerto ? hitEscHtml((maisPerto.cli.razao || '').toUpperCase()) : 'Tudo concluÃ­do'}</strong>
+          <span class="hit-kpi-sub">${maisPerto ? 'Faltam ' + (maisPerto.totais.totalGrupos - maisPerto.totais.totalPositivados) + ' requisitos' : 'Nenhuma pendÃªncia'}</span>
         </div>
       </div>`;
 
@@ -608,8 +624,8 @@
         <div class="hit-card">
           <div class="hit-card-body">
             <div>
-              <div class="hit-card-nome">${(cli.razao || '').toUpperCase()}</div>
-              <div class="hit-card-cnpj mono">${hitFormatarCNPJ(cli.cnpj)}</div>
+              <div class="hit-card-nome">${hitEscHtml((cli.razao || '').toUpperCase())}</div>
+              <div class="hit-card-cnpj mono">${hitEscHtml(hitFormatarCNPJ(cli.cnpj))}</div>
             </div>
             <div class="hit-progress-track">
               <div class="hit-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
@@ -620,13 +636,13 @@
             </div>
             <div>${faltam > 0
               ? `<span class="hit-card-prioridade">Faltam ${faltam} requisitos</span>`
-              : '<span class="hit-card-concluido">✓ Cliente completo</span>'}</div>
+              : '<span class="hit-card-concluido">âœ“ Cliente completo</span>'}</div>
             <div>${t.alavancasCompletas === t.totalAlavancas
-              ? '<span class="hit-badge-ok">✓ Todas as alavancas completas</span>'
+              ? '<span class="hit-badge-ok">âœ“ Todas as alavancas completas</span>'
               : `<span class="hit-badge-nao">${t.alavancasCompletas} de ${t.totalAlavancas} alavancas completas</span>`}</div>
           </div>
           <div class="hit-card-footer">
-            <button type="button" class="hit-btn hit-btn-gold" onclick="hitVerClienteDaLista('${cli.codCliente}')">${faltam > 0 ? 'Ver pendências' : 'Ver mix'} →</button>
+            <button type="button" class="hit-btn hit-btn-gold" onclick="hitVerClienteDaLista('${hitEscJs(cli.codCliente)}')">${faltam > 0 ? 'Ver pendÃªncias' : 'Ver mix'} â†’</button>
           </div>
         </div>`;
     }).join('');
@@ -642,7 +658,7 @@
     hitRenderConteudo();
   }
 
-  // ── CARDS POR ALAVANCA (detalhe do cliente) ───────────────────────────
+  // â”€â”€ CARDS POR ALAVANCA (detalhe do cliente) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   function hitVoltar() {
     if (HIT_MODO_ORIGEM === 'vendedor' || HIT_MODO_ORIGEM === 'rede') {
@@ -673,10 +689,10 @@
       const faltam = Math.max(0, al.totalGrupos - al.gruposPositivados);
       const corBarra = al.completa ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
       return `
-        <div class="hit-alavanca-card" onclick="hitAbrirAlavanca('${al.alavanca.replace(/'/g, "\\'")}')">
+        <div class="hit-alavanca-card" onclick="hitAbrirAlavanca('${hitEscJs(al.alavanca)}')">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span class="hit-alavanca-nome">${al.alavanca}</span>
-            ${al.completa ? '<span class="hit-badge-ok">✓ Completa</span>' : ''}
+            <span class="hit-alavanca-nome">${hitEscHtml(al.alavanca)}</span>
+            ${al.completa ? '<span class="hit-badge-ok">âœ“ Completa</span>' : ''}
           </div>
           <div class="hit-progress-track">
             <div class="hit-progress-fill" style="width:${pct}%; background:${corBarra};"></div>
@@ -686,8 +702,8 @@
             <span style="font-weight:800; color:${corBarra};">${pct.toFixed(0)}%</span>
           </div>
           <div>${faltam > 0
-            ? `<span class="hit-faltam">Faltam ${faltam} requisitos · abrir pendências →</span>`
-            : '<span class="hit-card-concluido">✓ Alavanca completa</span>'}</div>
+            ? `<span class="hit-faltam">Faltam ${faltam} requisitos Â· abrir pendÃªncias â†’</span>`
+            : '<span class="hit-card-concluido">âœ“ Alavanca completa</span>'}</div>
         </div>`;
     }).join('');
 
@@ -699,15 +715,15 @@
             Voltar
           </button>
           <div>
-            <div class="disp" style="font-size:15px; font-weight:700;">${(cli.razao || '').toUpperCase()}</div>
-            <div class="mono" style="font-size:11px; color:var(--text-secondary);">${hitFormatarCNPJ(cli.cnpj)} • Vendedor: ${cli.vendedor || '—'}</div>
+            <div class="disp" style="font-size:15px; font-weight:700;">${hitEscHtml((cli.razao || '').toUpperCase())}</div>
+            <div class="mono" style="font-size:11px; color:var(--text-secondary);">${hitEscHtml(hitFormatarCNPJ(cli.cnpj))} â€¢ Vendedor: ${hitEscHtml(cli.vendedor || 'â€”')}</div>
           </div>
         </div>
       </div>
       <div class="hit-grid">${cardsHtml}</div>`;
   }
 
-  // ── DRILLDOWN — GRUPOS DE UMA ALAVANCA ────────────────────────────────
+  // â”€â”€ DRILLDOWN â€” GRUPOS DE UMA ALAVANCA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function hitAbrirAlavanca(nomeAlavanca) {
     const al = (HIT_CLIENTE_ATUAL.alavancas || []).find(a => a.alavanca === nomeAlavanca);
     if (!al) return;
@@ -726,7 +742,7 @@
     const cli = HIT_CLIENTE_ATUAL;
 
     const gruposHtml = al.grupos.map(g => {
-      const tagOu = g.itens.length > 1 ? '<span class="hit-grupo-tag">OU — qualquer um destes</span>' : '<span class="hit-grupo-tag">SKU único</span>';
+      const tagOu = g.itens.length > 1 ? '<span class="hit-grupo-tag">OU â€” qualquer um destes</span>' : '<span class="hit-grupo-tag">SKU Ãºnico</span>';
 
       if (g.positivado) {
         const itemComprado = g.itemPositivado || g.itens[0];
@@ -734,18 +750,18 @@
           <div class="hit-grupo-card positivado">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
               ${tagOu}
-              <span class="hit-badge-ok">✓ Positivado</span>
+              <span class="hit-badge-ok">âœ“ Positivado</span>
             </div>
             <div class="hit-item-mini" style="background:transparent; border:none;">
               <div style="min-width:0;">
-                <div class="hit-item-mini-desc">${itemComprado.descricao || itemComprado.cod}</div>
-                <div class="hit-item-mini-meta">Comprado: EAN ${itemComprado.ean} • Cód ${itemComprado.cod}</div>
+                <div class="hit-item-mini-desc">${hitEscHtml(itemComprado.descricao || itemComprado.cod)}</div>
+                <div class="hit-item-mini-meta">Comprado: EAN ${hitEscHtml(itemComprado.ean)} â€¢ CÃ³d ${hitEscHtml(itemComprado.cod)}</div>
               </div>
             </div>
           </div>`;
       }
 
-      // Pendente — monta lista de alternativas com estoque/preço/imagem, ordenadas por estoque desc
+      // Pendente â€” monta lista de alternativas com estoque/preÃ§o/imagem, ordenadas por estoque desc
       const itensComEstoque = g.itens.map(item => {
         const p = hitBuscarProduto(item);
         return { item, produto: p, estoque: p ? Number(p.estoque || 0) : 0 };
@@ -756,10 +772,10 @@
         const preco = produto ? (Number(produto.preco) || 0) : 0;
         return `
           <div class="hit-item-mini">
-            <img src="${imagem}" onerror="this.style.opacity=0.3">
+            <img src="${hitUrlImagem(imagem)}" alt="" onerror="this.style.opacity=0.3">
             <div style="min-width:0; flex-grow:1;">
-              <div class="hit-item-mini-desc">${item.descricao || produto?.descricao || item.cod}</div>
-              <div class="hit-item-mini-meta">EAN ${item.ean} • Cód ${item.cod}${preco > 0 ? ' • ' + hitFormatBRL(preco) : ''}</div>
+              <div class="hit-item-mini-desc">${hitEscHtml(item.descricao || produto?.descricao || item.cod)}</div>
+              <div class="hit-item-mini-meta">EAN ${hitEscHtml(item.ean)} â€¢ CÃ³d ${hitEscHtml(item.cod)}${preco > 0 ? ' â€¢ ' + hitFormatBRL(preco) : ''}</div>
             </div>
             ${hitEstoquePillHtml(estoque)}
           </div>`;
@@ -769,10 +785,10 @@
         <div class="hit-grupo-card pendente">
           <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
             ${tagOu}
-            <span class="hit-badge-nao">— Pendente</span>
+            <span class="hit-badge-nao">â€” Pendente</span>
           </div>
           <div class="hit-aviso-sugestao">
-            ⚠ Sugestão: ofereça ${g.itens.length > 1 ? 'um destes itens' : 'este item'} para fechar essa alavanca com ${(cli.razao || '').toUpperCase()}.
+            âš  SugestÃ£o: ofereÃ§a ${g.itens.length > 1 ? 'um destes itens' : 'este item'} para fechar essa alavanca com ${hitEscHtml((cli.razao || '').toUpperCase())}.
           </div>
           <div style="display:flex; flex-direction:column; gap:6px;">${itensHtml}</div>
         </div>`;
@@ -782,17 +798,17 @@
       <div class="hit-panel" style="margin-bottom:14px; display:flex; align-items:center; gap:10px;">
         <button type="button" class="hit-btn" onclick="hitVoltarParaCards()">
           <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-          Voltar às alavancas
+          Voltar Ã s alavancas
         </button>
         <div>
-          <div class="disp" style="font-size:15px; font-weight:700;">${al.alavanca}</div>
-          <div style="font-size:11px; color:var(--text-secondary);">${(cli.razao || '').toUpperCase()} • ${al.gruposPositivados} de ${al.totalGrupos} requisitos atendidos</div>
+          <div class="disp" style="font-size:15px; font-weight:700;">${hitEscHtml(al.alavanca)}</div>
+          <div style="font-size:11px; color:var(--text-secondary);">${hitEscHtml((cli.razao || '').toUpperCase())} â€¢ ${al.gruposPositivados} de ${al.totalGrupos} requisitos atendidos</div>
         </div>
       </div>
       <div style="display:flex; flex-direction:column; gap:10px;">${gruposHtml}</div>`;
   }
 
-  // ── INIT ──────────────────────────────────────────────────────────────
+  // â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   document.addEventListener('DOMContentLoaded', () => {
     Promise.all([hitCarregarClientesDedicados(), hitCarregarProdutos(), hitCarregarRedes()]).then(() => {
@@ -802,3 +818,5 @@
 </script>
 </body>
 </html>
+
+
