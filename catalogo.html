@@ -6,6 +6,17 @@
   <title>Catálogo Pedidos HBN1</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FF6B00">
+  <script>
+    // Aplica o tema salvo antes dos estilos, evitando clarão na abertura.
+    (function () {
+      var tema = 'light';
+      try {
+        tema = localStorage.getItem('hbn1_tema') === 'dark' ? 'dark' : 'light';
+      } catch (e) {}
+      document.documentElement.setAttribute('data-theme', tema);
+      document.documentElement.setAttribute('data-theme-ready', 'true');
+    })();
+  </script>
   <link rel="apple-touch-icon" href="icons/icon-192.png"> 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -127,7 +138,8 @@ localStorage.setItem('hbn1_login_ts', String(Date.now()));
             <p class="text-[10px] text-orange-100 font-medium mt-0.5">Qualquer dúvida tratar com Lucas Adm HBN1 NZR</p>
           </div>
         </div>
-        <button id="btnDarkMode" onclick="toggleDarkMode()" title="Alternar tema claro/escuro"
+        <button id="btnDarkMode" onclick="toggleDarkMode()" title="Ativar modo escuro"
+          aria-label="Ativar modo escuro" aria-pressed="false"
           class="shrink-0 w-9 h-9 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all text-base">
           <span id="iconDarkMode">🌙</span>
         </button>
