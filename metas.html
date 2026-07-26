@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campanhas Mensais — HBN1</title>
+  <meta name="referrer" content="no-referrer">
+<title>Campanhas Mensais â€” HBN1</title>
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,7 +67,7 @@
   .camp-hero-stats .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; opacity:.6; margin-bottom:3px; }
   .camp-hero-stats .val { font-size:16px; font-weight:800; }
 
-  /* Tabela de campanhas do vendedor selecionado (sem cabeçalho de equipe acima) */
+  /* Tabela de campanhas do vendedor selecionado (sem cabeÃ§alho de equipe acima) */
   .camp-table-scroll.solo { border-top:1px solid var(--border-subtle); border-radius:10px; }
 
   .camp-empty { text-align:center; padding:56px 20px; color:var(--text-secondary); }
@@ -89,7 +90,7 @@
   .camp-table tbody tr.camp-row-membro td:first-child { padding-left:32px; color:var(--text-secondary); }
   .camp-table tbody tr.camp-row-membro td:first-child span { font-weight:600 !important; }
   .camp-table tbody tr.camp-row-total td { font-weight:800; background:var(--surface-secondary); }
-  .camp-table tbody tr.camp-row-total td:first-child::before { content:'∑ '; opacity:.5; }
+  .camp-table tbody tr.camp-row-total td:first-child::before { content:'âˆ‘ '; opacity:.5; }
 
   /* Um bloco por fornecedor: separa metas sem perder a leitura da tabela. */
   .camp-fornecedor-bloco { margin-bottom:18px; border:1px solid var(--border-subtle); border-radius:12px; overflow:hidden; background:var(--surface-primary); }
@@ -216,7 +217,7 @@
     <div style="display:flex; align-items:center; gap:12px;">
       <a href="catalogo.html" class="camp-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-        <span>Voltar ao Catálogo</span>
+        <span>Voltar ao CatÃ¡logo</span>
       </a>
       <div>
         <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Campanhas Mensais</div>
@@ -239,11 +240,11 @@
   </div>
 
 <script>
-  if (!localStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
+  if (!sessionStorage.getItem('hbn1_usuario')) window.location.href = 'index.html';
 
-  // Bloqueia acesso direto por URL para quem não é Dedicado (nem Admin).
+  // Bloqueia acesso direto por URL para quem nÃ£o Ã© Dedicado (nem Admin).
   (function() {
-    let tipo = (localStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
+    let tipo = (sessionStorage.getItem('hbn1_tipo') || 'VENDEDOR_FARMA').toUpperCase();
     if (tipo === 'VENDEDOR') tipo = 'VENDEDOR_FARMA';
     if (tipo !== 'VENDEDOR_DEDICADO' && tipo !== 'ADMIN') {
       window.location.href = 'catalogo.html';
@@ -255,9 +256,9 @@
     document.documentElement.setAttribute('data-theme', tema);
   })();
 
-  const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+  const UF_USUARIO = (sessionStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 
-  const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const MESES_PT = ['Janeiro','Fevereiro','MarÃ§o','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   document.getElementById('campMesAtualLabel').innerText =
     'Campanha de ' + MESES_PT[new Date().getMonth()] + '/' + new Date().getFullYear();
 
@@ -287,7 +288,7 @@
 
   function campPctPillHtml(meta, realizado) {
     const pct = campCalcPct(meta, realizado);
-    const pctExibir = meta > 0 ? pct.toFixed(1) + '%' : '—';
+    const pctExibir = meta > 0 ? pct.toFixed(1) + '%' : 'â€”';
     return `<span class="camp-pct-pill ${campClassePct(pct)}">${pctExibir}</span>`;
   }
 
@@ -299,15 +300,15 @@
   
 function campProjecaoHtml(meta, projecao) {
     const pct = campCalcPct(meta, projecao);
-    const pctExibir = meta > 0 ? pct.toFixed(1) + '%' : '—';
+    const pctExibir = meta > 0 ? pct.toFixed(1) + '%' : 'â€”';
     return `<div class="camp-cell-cobertura">
       <span class="camp-pct-pill ${campClassePct(pct)}">${pctExibir}</span>
       <span class="mono" style="font-size:10px; color:var(--text-secondary);">${campFormatBRL(projecao)}</span>
     </div>`;
   }
   // Prefixos que devem ser agrupados visualmente na tabela (membros + linha TOTAL).
-  // Qualquer campanha cujo fornecedor comece com "PREFIXO " é tratada como membro do grupo,
-  // e a linha "PREFIXO" ou "PREFIXO TOTAL" é tratada como o total do grupo.
+  // Qualquer campanha cujo fornecedor comece com "PREFIXO " Ã© tratada como membro do grupo,
+  // e a linha "PREFIXO" ou "PREFIXO TOTAL" Ã© tratada como o total do grupo.
   const CAMP_GRUPOS_AGREGADOS = ['UNILEVER', 'KIMBERLY'];
 
   function campOrganizarGrupos(campanhas) {
@@ -324,13 +325,13 @@ function campProjecaoHtml(meta, projecao) {
       });
 
       // Membros: qualquer campanha que comece com "PREFIXO " (independente do sufixo:
-      // FEMININOS, ADULTOS, INFANTIL, PC, BW, OUTROS, etc.), exceto a própria linha total.
+      // FEMININOS, ADULTOS, INFANTIL, PC, BW, OUTROS, etc.), exceto a prÃ³pria linha total.
       const membros = campanhas.filter(c => {
         const nome = c.fornecedor.toUpperCase();
         return nome.startsWith(prefixoUpper + ' ') && (!total || nome !== total.fornecedor.toUpperCase());
       });
 
-      if (membros.length === 0 && !total) return; // esse vendedor não tem esse grupo
+      if (membros.length === 0 && !total) return; // esse vendedor nÃ£o tem esse grupo
 
       membros.forEach(m => { agrupadas.push({ ...m, _membro: true }); usados.add(m.fornecedor); });
       if (total) {
@@ -343,13 +344,26 @@ function campProjecaoHtml(meta, projecao) {
     return [...restante, ...agrupadas];
   }
 
-  // Avatar circular com a letra inicial do fornecedor (mesmo padrão do catálogo)
+  // Avatar circular com a letra inicial do fornecedor (mesmo padrÃ£o do catÃ¡logo)
   function campGrupoFornecedor(campanha) {
     const nome = String(campanha.grupoVisual || campanha.fornecedor || '').toUpperCase();
     if (nome.startsWith('KENVUE')) return 'KENVUE';
     if (nome.startsWith('UNILEVER')) return 'UNILEVER';
     if (nome.startsWith('KIMBERLY')) return 'KIMBERLY';
     return String(campanha.fornecedor || 'OUTROS').toUpperCase();
+  }
+
+  function campEscHtml(valor) {
+    return String(valor == null ? '' : valor).replace(/[&<>"']/g, caractere => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[caractere]);
+  }
+
+  function campEscJs(valor) {
+    return String(valor == null ? '' : valor)
+      .replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+      .replace(/</g, '\\x3C').replace(/>/g, '\\x3E')
+      .replace(/\r/g, '\\r').replace(/\n/g, '\\n');
   }
 
   function campLinhaHtml(c) {
@@ -362,7 +376,7 @@ function campProjecaoHtml(meta, projecao) {
       c.tipoKpi === 'FRANQUIA_FOCO' ? 'camp-kpi-foco' : ''
     ].filter(Boolean).join(' ');
     const badge = c.tipoKpi === 'FRANQUIA_FOCO'
-      ? '<span class="camp-kpi-badge">FRANQUIA FOCO · ORAL</span>'
+      ? '<span class="camp-kpi-badge">FRANQUIA FOCO Â· ORAL</span>'
       : '';
 
     return `
@@ -370,22 +384,22 @@ function campProjecaoHtml(meta, projecao) {
         <td>
           <div style="display:flex; align-items:center; gap:8px;">
             <img src="${campGerarAvatarLetra(nomeExibir)}" class="camp-pill-avatar" style="width:26px; height:26px;" alt="">
-            <span style="font-weight:${c._total ? 800 : 700};">${nomeExibir}${badge}</span>
+            <span style="font-weight:${c._total ? 800 : 700};">${campEscHtml(nomeExibir)}${badge}</span>
           </div>
         </td>
         <td class="camp-num mono">${campFormatBRL(c.meta)}</td>
         <td class="camp-num mono">${campFormatBRL(c.realizado)}</td>
         <td class="camp-num"><div class="camp-cell-cobertura">${campPctPillHtml(c.meta, c.realizado)}${campBarraHtml(c.meta, c.realizado)}</div></td>
         <td class="camp-num">${campProjecaoHtml(c.meta, c.projecaoFechamento || 0)}</td>
-        <td class="camp-num mono ${gap > 0 ? 'camp-gap-neg' : 'camp-gap-pos'}">${gap > 0 ? campFormatBRL(gap) : '—'}</td>
-        <td class="camp-num mono">${mediaNecessaria > 0 ? campFormatBRL(mediaNecessaria) : '—'}</td>
+        <td class="camp-num mono ${gap > 0 ? 'camp-gap-neg' : 'camp-gap-pos'}">${gap > 0 ? campFormatBRL(gap) : 'â€”'}</td>
+        <td class="camp-num mono">${mediaNecessaria > 0 ? campFormatBRL(mediaNecessaria) : 'â€”'}</td>
       </tr>`;
   }
 
   function campTabelaFornecedorHtml(nomeFornecedor, campanhas) {
     const temFranquiaFoco = campanhas.some(c => c.tipoKpi === 'FRANQUIA_FOCO');
     const subtitulo = temFranquiaFoco
-      ? 'Meta geral e KPI Franquia Foco — Categoria Oral'
+      ? 'Meta geral e KPI Franquia Foco â€” Categoria Oral'
       : 'Metas e realizado do fornecedor';
     const classeFornecedor = nomeFornecedor === 'KENVUE' ? ' kenvue' : '';
 
@@ -394,7 +408,7 @@ function campProjecaoHtml(meta, projecao) {
         <div class="camp-fornecedor-cabecalho">
           <div class="camp-fornecedor-nome">
             <img src="${campGerarAvatarLetra(nomeFornecedor)}" class="camp-pill-avatar" style="width:25px; height:25px;" alt="">
-            <div>${nomeFornecedor}<div class="camp-fornecedor-sub">${subtitulo}</div></div>
+            <div>${campEscHtml(nomeFornecedor)}<div class="camp-fornecedor-sub">${subtitulo}</div></div>
           </div>
           <span class="camp-fornecedor-qtd">${campanhas.length} KPI${campanhas.length === 1 ? '' : 's'}</span>
         </div>
@@ -403,8 +417,8 @@ function campProjecaoHtml(meta, projecao) {
             <thead>
               <tr>
                 <th>Campanha</th><th class="camp-num">Meta</th><th class="camp-num">Realizado</th>
-                <th class="camp-num">Cobertura</th><th class="camp-num">Projeção Fechamento</th>
-                <th class="camp-num">Gap</th><th class="camp-num">Média Necessária/Dia</th>
+                <th class="camp-num">Cobertura</th><th class="camp-num">ProjeÃ§Ã£o Fechamento</th>
+                <th class="camp-num">Gap</th><th class="camp-num">MÃ©dia NecessÃ¡ria/Dia</th>
               </tr>
             </thead>
             <tbody>${campanhas.map(campLinhaHtml).join('')}</tbody>
@@ -440,9 +454,9 @@ function campProjecaoHtml(meta, projecao) {
   }
 
   function campPillHtml(vendedor) {
-    return `<button type="button" class="camp-filtro-pill" data-vendedor="${vendedor}" onclick="campSelecionarVendedor('${vendedor.replace(/'/g, "\\'")}')">
+    return `<button type="button" class="camp-filtro-pill" data-vendedor="${campEscHtml(vendedor)}" onclick="campSelecionarVendedor('${campEscJs(vendedor)}')">
       <img class="camp-pill-avatar" src="${campGerarAvatarLetra(vendedor)}" alt="">
-      <span class="camp-pill-label">${vendedor}</span>
+      <span class="camp-pill-label">${campEscHtml(vendedor)}</span>
     </button>`;
   }
 
@@ -453,7 +467,7 @@ function campProjecaoHtml(meta, projecao) {
     const pctClamp = Math.max(0, Math.min(pct, 100));
     const centro = tamanho / 2;
     const cor = pct >= 100 ? '#4ade80' : (pct >= 70 ? '#fbbf24' : '#f87171');
-    const texto = pct >= 999 ? '—' : Math.round(pct) + '%';
+    const texto = pct >= 999 ? 'â€”' : Math.round(pct) + '%';
     return `<div class="camp-hero-ring">
       <svg width="${tamanho}" height="${tamanho}" viewBox="0 0 ${tamanho} ${tamanho}">
         <circle cx="${centro}" cy="${centro}" r="${raio}" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="7"></circle>
@@ -467,7 +481,7 @@ function campProjecaoHtml(meta, projecao) {
     </div>`;
   }
 
-  // Dispara as animações de preenchimento (barras e anel) após o HTML entrar no DOM
+  // Dispara as animaÃ§Ãµes de preenchimento (barras e anel) apÃ³s o HTML entrar no DOM
   function campAnimarIndicadores() {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -488,7 +502,7 @@ function campProjecaoHtml(meta, projecao) {
       .then(lista => {
         const wrap = document.getElementById('campVendedorPills');
         if (!lista || lista.length === 0) {
-          wrap.innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Nenhum vendedor com campanha este mês</span>';
+          wrap.innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Nenhum vendedor com campanha este mÃªs</span>';
           return;
         }
         wrap.innerHTML = lista.map(campPillHtml).join('');
@@ -510,23 +524,23 @@ function campProjecaoHtml(meta, projecao) {
     const vendedor = CAMP_VENDEDOR_ATUAL;
     const wrap = document.getElementById('campConteudo');
     if (!vendedor) {
-      wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Selecione um vendedor</div><div>Escolha acima de quem você quer ver o desempenho nas campanhas do mês.</div></div></div>';
+      wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Selecione um vendedor</div><div>Escolha acima de quem vocÃª quer ver o desempenho nas campanhas do mÃªs.</div></div></div>';
       return;
     }
 
-    wrap.innerHTML = '<div class="camp-panel"><div class="camp-loading">Calculando desempenho de ' + vendedor + '...</div></div>';
+    wrap.innerHTML = '<div class="camp-panel"><div class="camp-loading">Calculando desempenho de ' + campEscHtml(vendedor) + '...</div></div>';
 
     chamarApi('campanhaPorVendedor', { vendedor })
       .then(resp => {
         if (!resp || resp.erro) {
-          wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Não foi possível carregar</div><div>' +
-            (resp && resp.mensagem ? resp.mensagem : 'Tente novamente.') + '</div></div></div>';
+          wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">NÃ£o foi possÃ­vel carregar</div><div>' +
+            campEscHtml(resp && resp.mensagem ? resp.mensagem : 'Tente novamente.') + '</div></div></div>';
           return;
         }
         campRenderizar(resp);
       })
       .catch(() => {
-        wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Erro de conexão</div><div>Não foi possível buscar os dados. Tente novamente.</div></div></div>';
+        wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Erro de conexÃ£o</div><div>NÃ£o foi possÃ­vel buscar os dados. Tente novamente.</div></div></div>';
       });
   }
 
@@ -534,7 +548,7 @@ function campProjecaoHtml(meta, projecao) {
     const wrap = document.getElementById('campConteudo');
 
     if (!resp.campanhas || resp.campanhas.length === 0) {
-      wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Nenhuma campanha ativa</div><div>Não há metas cadastradas para este vendedor neste mês.</div></div></div>';
+      wrap.innerHTML = '<div class="camp-panel"><div class="camp-empty"><div class="disp">Nenhuma campanha ativa</div><div>NÃ£o hÃ¡ metas cadastradas para este vendedor neste mÃªs.</div></div></div>';
       return;
     }
 
@@ -542,11 +556,11 @@ function campProjecaoHtml(meta, projecao) {
     const gapGeral = resp.totalGeral.meta - resp.totalGeral.realizado;
     const pctGeral = campCalcPct(resp.totalGeral.meta, resp.totalGeral.realizado);
     const campanhasOrdenadas = campOrganizarGrupos(resp.campanhas);
-    // Linhas agregadas não contam novamente como campanhas individuais.
+    // Linhas agregadas nÃ£o contam novamente como campanhas individuais.
     const campanhasValidas = campanhasOrdenadas.filter(c => !c._total);
     const qtdCampanhas = campanhasValidas.length;
 
-    // aproveitamento (quantidade de campanhas batidas, não R$)
+    // aproveitamento (quantidade de campanhas batidas, nÃ£o R$)
     const campanhasBatidas = campanhasValidas.filter(c => c.meta > 0 && c.realizado >= c.meta).length;
     const pctAproveitamento = qtdCampanhas > 0 ? (campanhasBatidas / qtdCampanhas * 100) : 0;
     const faltamCampanhas = qtdCampanhas - campanhasBatidas;
@@ -566,20 +580,20 @@ function campProjecaoHtml(meta, projecao) {
             ${campAnelSvg(pctGeral, 84)}
             <div>
               <div class="camp-hero-eyebrow">Vendedor</div>
-              <div class="camp-hero-title">${resp.vendedor}</div>
-              <div class="camp-hero-sub">${resp.equipe ? resp.equipe + ' · ' : ''}${qtdCampanhas} campanha${qtdCampanhas === 1 ? '' : 's'} ativa${qtdCampanhas === 1 ? '' : 's'}</div>
+              <div class="camp-hero-title">${campEscHtml(resp.vendedor)}</div>
+              <div class="camp-hero-sub">${resp.equipe ? campEscHtml(resp.equipe) + ' Â· ' : ''}${qtdCampanhas} campanha${qtdCampanhas === 1 ? '' : 's'} ativa${qtdCampanhas === 1 ? '' : 's'}</div>
             </div>
           </div>
           <div class="camp-resumo-stat"><div class="lbl">Meta total</div><div class="val mono">${campFormatBRL(resp.totalGeral.meta)}</div></div>
           <div class="camp-resumo-stat"><div class="lbl">Realizado</div><div class="val mono">${campFormatBRL(resp.totalGeral.realizado)}</div></div>
           <div class="camp-resumo-stat"><div class="lbl">Gap atual</div><div class="val mono">${campFormatBRL(Math.max(0, gapGeral))}</div></div>
           <div class="camp-resumo-stat">
-            <div class="lbl">Projeção de fechamento</div>
+            <div class="lbl">ProjeÃ§Ã£o de fechamento</div>
             <div class="val mono">${campFormatBRL(projecaoGeral)}</div>
             <span class="camp-status ${projecaoOk ? 'camp-status-ok' : 'camp-status-risco'}">${projecaoOk ? 'Dentro da meta' : 'Abaixo da meta'}</span>
           </div>
-          <div class="camp-resumo-stat"><div class="lbl">Campanhas batidas</div><div class="val mono">${campanhasBatidas} de ${qtdCampanhas} · ${pctAproveitamento.toFixed(0)}%</div></div>
-          <div class="camp-resumo-stat"><div class="lbl">Necessário por dia</div><div class="val mono">${mediaGeralNecessaria > 0 ? campFormatBRL(mediaGeralNecessaria) : 'Meta atingida'}</div></div>
+          <div class="camp-resumo-stat"><div class="lbl">Campanhas batidas</div><div class="val mono">${campanhasBatidas} de ${qtdCampanhas} Â· ${pctAproveitamento.toFixed(0)}%</div></div>
+          <div class="camp-resumo-stat"><div class="lbl">NecessÃ¡rio por dia</div><div class="val mono">${mediaGeralNecessaria > 0 ? campFormatBRL(mediaGeralNecessaria) : 'Meta atingida'}</div></div>
         </div>
       </section>`;
 
@@ -588,11 +602,11 @@ function campProjecaoHtml(meta, projecao) {
         <div class="camp-prioridades-head">
           <div>
             <div class="camp-hero-eyebrow">Prioridade sugerida</div>
-            <div class="camp-prioridades-title">${campanhasEmRisco.length ? 'Top 3 campanhas em risco' : 'Todas as projeções estão dentro da meta'}</div>
+            <div class="camp-prioridades-title">${campanhasEmRisco.length ? 'Top 3 campanhas em risco' : 'Todas as projeÃ§Ãµes estÃ£o dentro da meta'}</div>
           </div>
           <div class="camp-legenda">
-            <span><i style="background:#4ade80"></i> ≥ 100%</span>
-            <span><i style="background:#fbbf24"></i> 70–99%</span>
+            <span><i style="background:#4ade80"></i> â‰¥ 100%</span>
+            <span><i style="background:#fbbf24"></i> 70â€“99%</span>
             <span><i style="background:#f87171"></i> &lt; 70%</span>
           </div>
         </div>
@@ -603,20 +617,20 @@ function campProjecaoHtml(meta, projecao) {
                 const gapAtual = Math.max(0, c.meta - c.realizado);
                 return `<article class="camp-prioridade-card">
                   <span class="camp-prioridade-rank">#${indice + 1}</span>
-                  <div class="camp-prioridade-nome">${c._labelExibir || c.fornecedor}</div>
+                  <div class="camp-prioridade-nome">${campEscHtml(c._labelExibir || c.fornecedor)}</div>
                   <div class="camp-prioridade-metricas">
                     <span>Gap projetado <b class="mono">${campFormatBRL(gapProjetado)}</b></span>
-                    <span>Necessário/dia <b class="mono">${campFormatBRL(gapAtual / diasRestantes)}</b></span>
+                    <span>NecessÃ¡rio/dia <b class="mono">${campFormatBRL(gapAtual / diasRestantes)}</b></span>
                   </div>
                 </article>`;
               }).join('')
-            : '<div class="camp-prioridade-ok">Excelente: nenhuma campanha apresenta risco na projeção de fechamento.</div>'}
+            : '<div class="camp-prioridade-ok">Excelente: nenhuma campanha apresenta risco na projeÃ§Ã£o de fechamento.</div>'}
         </div>
         ${faltamCampanhas > 0 ? `<div class="camp-prioridade-foot">Faltam ${faltamCampanhas} campanha${faltamCampanhas === 1 ? '' : 's'} para 100% de aproveitamento.</div>` : ''}
       </section>`;
 
-    // O KPI Oral é exibido junto da Kenvue, enquanto cada fornecedor
-    // recebe seu próprio bloco visual.
+    // O KPI Oral Ã© exibido junto da Kenvue, enquanto cada fornecedor
+    // recebe seu prÃ³prio bloco visual.
     window.CAMP_DIAS_RESTANTES = diasRestantes;
     const gruposPorFornecedor = {};
     const ordemFornecedores = [];
@@ -648,7 +662,7 @@ function campProjecaoHtml(meta, projecao) {
       .then(lista => {
         const wrap = document.getElementById('campVendedorPills');
         if (!lista || lista.length === 0) {
-          wrap.innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Nenhum vendedor com campanha este mês</span>';
+          wrap.innerHTML = '<span style="font-size:12.5px; color:var(--text-secondary);">Nenhum vendedor com campanha este mÃªs</span>';
           return;
         }
         wrap.innerHTML = lista.map(campPillHtml).join('');
@@ -661,3 +675,5 @@ function campProjecaoHtml(meta, projecao) {
 </script>
 </body>
 </html>
+
+
