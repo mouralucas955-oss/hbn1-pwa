@@ -4,7 +4,8 @@
 <script src="api.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Histórico de Pedidos — HBN1</title>
+  <meta name="referrer" content="no-referrer">
+<title>HistÃ³rico de Pedidos â€” HBN1</title>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -261,9 +262,9 @@
     align-items: center;
   }
   .filters summary::-webkit-details-marker { display: none; }
-  .filters summary::after { content: "⌄"; color: var(--text-muted); }
+  .filters summary::after { content: "âŒ„"; color: var(--text-muted); }
   .filters[open] summary { margin-bottom: 14px; }
-  .filters[open] summary::after { content: "⌃"; }
+  .filters[open] summary::after { content: "âŒƒ"; }
   .toolbar {
     display: flex;
     align-items: center;
@@ -491,34 +492,34 @@
 
 <div class="topbar">
   <div style="display:flex; align-items:center; gap:12px;">
-    <a href="catalogo.html" class="back-btn" title="Voltar ao catálogo">←</a>
+    <a href="catalogo.html" class="back-btn" title="Voltar ao catÃ¡logo">â†</a>
     <div>
-      <h1>Histórico de Pedidos</h1>
-      <div class="subtitle">Consulta de pedidos e negociações confirmadas</div>
+      <h1>HistÃ³rico de Pedidos</h1>
+      <div class="subtitle">Consulta de pedidos e negociaÃ§Ãµes confirmadas</div>
     </div>
   </div>
-  <button class="theme-toggle" id="themeToggle" title="Alternar tema">🌙</button>
+  <button class="theme-toggle" id="themeToggle" title="Alternar tema">ðŸŒ™</button>
 </div>
 
 <main>
-  <nav class="quick-periods" aria-label="Períodos rápidos">
-    <span class="label">Período:</span>
+  <nav class="quick-periods" aria-label="PerÃ­odos rÃ¡pidos">
+    <span class="label">PerÃ­odo:</span>
     <button type="button" class="period-btn" data-periodo="hoje">Hoje</button>
     <button type="button" class="period-btn" data-periodo="7dias">7 dias</button>
-    <button type="button" class="period-btn" data-periodo="mes">Este mês</button>
+    <button type="button" class="period-btn" data-periodo="mes">Este mÃªs</button>
     <button type="button" class="period-btn" data-periodo="trimestre">Este trimestre</button>
-    <button type="button" class="period-btn active" data-periodo="todos">Todo o período</button>
+    <button type="button" class="period-btn active" data-periodo="todos">Todo o perÃ­odo</button>
   </nav>
 
-  <section class="kpi-grid" aria-label="Resumo do período">
-    <article class="kpi-card"><span class="kpi-label">Pedidos</span><strong id="kpiPedidos" class="kpi-value">0</strong><small class="kpi-note">no período filtrado</small></article>
+  <section class="kpi-grid" aria-label="Resumo do perÃ­odo">
+    <article class="kpi-card"><span class="kpi-label">Pedidos</span><strong id="kpiPedidos" class="kpi-value">0</strong><small class="kpi-note">no perÃ­odo filtrado</small></article>
     <article class="kpi-card"><span class="kpi-label">Faturamento</span><strong id="kpiFaturamento" class="kpi-value">R$ 0,00</strong><small class="kpi-note">valor confirmado</small></article>
-    <article class="kpi-card"><span class="kpi-label">Ticket médio</span><strong id="kpiTicket" class="kpi-value">R$ 0,00</strong><small class="kpi-note">por pedido</small></article>
-    <article class="kpi-card"><span class="kpi-label">Clientes únicos</span><strong id="kpiClientes" class="kpi-value">0</strong><small class="kpi-note">CNPJs atendidos</small></article>
+    <article class="kpi-card"><span class="kpi-label">Ticket mÃ©dio</span><strong id="kpiTicket" class="kpi-value">R$ 0,00</strong><small class="kpi-note">por pedido</small></article>
+    <article class="kpi-card"><span class="kpi-label">Clientes Ãºnicos</span><strong id="kpiClientes" class="kpi-value">0</strong><small class="kpi-note">CNPJs atendidos</small></article>
   </section>
 
   <details class="filters">
-    <summary>Filtros avançados</summary>
+    <summary>Filtros avanÃ§ados</summary>
     <div class="filters-grid">
       <div class="field">
         <label for="fVendedor">Vendedor</label>
@@ -541,7 +542,7 @@
         <input type="date" id="fDataInicio">
       </div>
       <div class="field">
-        <label for="fDataFim">Até</label>
+        <label for="fDataFim">AtÃ©</label>
         <input type="date" id="fDataFim">
       </div>
     </div>
@@ -560,31 +561,31 @@
   </div>
 
   <div class="table-wrap">
-    <div id="loadingState" class="loading-state">Carregando histórico...</div>
+    <div id="loadingState" class="loading-state">Carregando histÃ³rico...</div>
     <table id="resultTable" style="display:none;">
       <thead>
         <tr>
           <th>Pedido</th>
-          <th><button class="sort-button" data-sort="data">Data ↕</button></th>
+          <th><button class="sort-button" data-sort="data">Data â†•</button></th>
           <th>Cliente</th>
           <th>Fornecedor</th>
           <th>Status</th>
           <th>Volumes</th>
-          <th><button class="sort-button" data-sort="valor">Valor ↕</button></th>
+          <th><button class="sort-button" data-sort="valor">Valor â†•</button></th>
           <th></th>
         </tr>
       </thead>
       <tbody id="resultBody"></tbody>
     </table>
     <div id="emptyState" class="empty-state" style="display:none;">
-      <span class="icon">📋</span>
+      <span class="icon">ðŸ“‹</span>
       Nenhum pedido encontrado para os filtros selecionados.
     </div>
     <div class="pagination" id="pagination">
-      <span id="paginationInfo">Página 1 de 1</span>
+      <span id="paginationInfo">PÃ¡gina 1 de 1</span>
       <div class="pagination-actions">
         <button type="button" class="ghost" id="btnAnterior">Anterior</button>
-        <button type="button" class="ghost" id="btnProxima">Próxima</button>
+        <button type="button" class="ghost" id="btnProxima">PrÃ³xima</button>
       </div>
     </div>
   </div>
@@ -594,10 +595,10 @@
 <aside class="drawer" id="drawer">
   <div class="drawer-header">
     <div>
-      <h2 id="drawerCliente">—</h2>
-      <div class="meta" id="drawerMeta">—</div>
+      <h2 id="drawerCliente">â€”</h2>
+      <div class="meta" id="drawerMeta">â€”</div>
     </div>
-    <button class="drawer-close" id="drawerClose" aria-label="Fechar detalhes">✕</button>
+    <button class="drawer-close" id="drawerClose" aria-label="Fechar detalhes">âœ•</button>
   </div>
   <div class="drawer-body" id="drawerItems"></div>
   <div class="drawer-summary">
@@ -612,29 +613,29 @@
 </aside>
 
 <script>
-  if (!localStorage.getItem('hbn1_usuario')) {
+  if (!sessionStorage.getItem('hbn1_usuario')) {
   window.location.href = 'index.html';
 }
   // ---------- Tema ----------
   const themeToggle = document.getElementById('themeToggle');
-  const savedTheme = localStorage.getItem('hbn1_tema_historico') || 'light';
+  const savedTheme = sessionStorage.getItem('hbn1_tema_historico') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
-  themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+  themeToggle.textContent = savedTheme === 'dark' ? 'â˜€ï¸' : 'ðŸŒ™';
   themeToggle.addEventListener('click', () => {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('hbn1_tema_historico', next);
-    themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+    sessionStorage.setItem('hbn1_tema_historico', next);
+    themeToggle.textContent = next === 'dark' ? 'â˜€ï¸' : 'ðŸŒ™';
   });
 
-  // ---------- Utilitários ----------
+  // ---------- UtilitÃ¡rios ----------
   const formatMoeda = valor => (Number(valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const escapeHtml = valor => String(valor ?? '').replace(/[&<>"']/g, caractere => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[caractere]
   ));
   const formatData = valor => {
     const data = new Date(valor);
-    if (Number.isNaN(data.getTime())) return valor || '—';
+    if (Number.isNaN(data.getTime())) return valor || 'â€”';
     return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
   const dataDoFiltro = (valor, fimDoDia = false) =>
@@ -706,8 +707,8 @@
     estado.textContent = '';
     const icone = document.createElement('span');
     icone.className = 'icon';
-    icone.textContent = '⚠️';
-    estado.append(icone, document.createTextNode(`Erro ao carregar histórico: ${mensagem}`));
+    icone.textContent = 'âš ï¸';
+    estado.append(icone, document.createTextNode(`Erro ao carregar histÃ³rico: ${mensagem}`));
   }
 
   function popularFiltrosDinamicos(dados) {
@@ -725,7 +726,7 @@
     select.value = atual;
   }
 
-  // ---------- Filtros e períodos ----------
+  // ---------- Filtros e perÃ­odos ----------
   function aplicarFiltros() {
     const vendedor = document.getElementById('fVendedor').value;
     const uf = document.getElementById('fUF').value;
@@ -785,7 +786,7 @@
     aplicarFiltros();
   }
 
-  // ---------- KPIs, ordenação e tabela ----------
+  // ---------- KPIs, ordenaÃ§Ã£o e tabela ----------
   function atualizarKpis(lista) {
     const total = lista.reduce((soma, pedido) => soma + pedido.Valor_Total, 0);
     const clientes = new Set(lista.map(pedido => pedido.Cliente_CNPJ || pedido.Cliente_Nome).filter(Boolean));
@@ -816,7 +817,7 @@
     if (!historicoFiltrado.length) {
       table.style.display = 'none';
       empty.style.display = 'block';
-      empty.innerHTML = '<span class="icon">📋</span>Nenhum pedido encontrado para os filtros selecionados.';
+      empty.innerHTML = '<span class="icon">ðŸ“‹</span>Nenhum pedido encontrado para os filtros selecionados.';
       summary.style.display = 'none';
       pagination.classList.remove('visible');
       return;
@@ -836,7 +837,7 @@
     document.getElementById('sumCount').textContent = ordenada.length;
     document.getElementById('sumTotal').textContent = formatMoeda(totalGeral);
     document.getElementById('paginationInfo').textContent =
-      `Página ${paginaAtual} de ${totalPaginas} · ${inicio + 1}–${Math.min(inicio + TAMANHO_PAGINA, ordenada.length)} de ${ordenada.length}`;
+      `PÃ¡gina ${paginaAtual} de ${totalPaginas} Â· ${inicio + 1}â€“${Math.min(inicio + TAMANHO_PAGINA, ordenada.length)} de ${ordenada.length}`;
     document.getElementById('btnAnterior').disabled = paginaAtual === 1;
     document.getElementById('btnProxima').disabled = paginaAtual === totalPaginas;
 
@@ -844,12 +845,12 @@
       <tr data-idx="${idx}" tabindex="0" role="button" aria-label="Abrir pedido ${escapeHtml(item.Pedido_ID)}">
         <td data-label="Pedido"><span class="order-id">${escapeHtml(item.Pedido_ID)}</span></td>
         <td data-label="Data" class="cell-data">${escapeHtml(formatData(item.DataHora))}</td>
-        <td data-label="Cliente" class="cell-cliente">${escapeHtml(item.Cliente_Nome || '—')}<span class="cnpj">${escapeHtml(item.Cliente_CNPJ || '')}</span></td>
-        <td data-label="Fornecedor"><span class="badge">${escapeHtml(item.Fornecedor || '—')}</span></td>
+        <td data-label="Cliente" class="cell-cliente">${escapeHtml(item.Cliente_Nome || 'â€”')}<span class="cnpj">${escapeHtml(item.Cliente_CNPJ || '')}</span></td>
+        <td data-label="Fornecedor"><span class="badge">${escapeHtml(item.Fornecedor || 'â€”')}</span></td>
         <td data-label="Status"><span class="status-badge">${escapeHtml(item.Status)}</span></td>
         <td data-label="Volumes">${volumesDoPedido(item).toLocaleString('pt-BR')}</td>
         <td data-label="Valor" class="cell-valor">${formatMoeda(item.Valor_Total)}</td>
-        <td class="chevron" aria-hidden="true">›</td>
+        <td class="chevron" aria-hidden="true">â€º</td>
       </tr>
     `).join('');
 
@@ -874,7 +875,7 @@
     focoAnterior = document.activeElement;
     document.getElementById('drawerCliente').textContent = item.Cliente_Nome || 'Cliente';
     document.getElementById('drawerMeta').textContent =
-      `${item.Pedido_ID} · ${item.Fornecedor || '—'} · ${item.Vendedor || '—'} · ${formatData(item.DataHora)}`;
+      `${item.Pedido_ID} Â· ${item.Fornecedor || 'â€”'} Â· ${item.Vendedor || 'â€”'} Â· ${formatData(item.DataHora)}`;
 
     const itens = itensDoPedido(item);
     const body = document.getElementById('drawerItems');
@@ -891,7 +892,7 @@
         const nome = itemPedido.nome || itemPedido.descricao || itemPedido.produto || itemPedido.ean || 'Item';
         return `
           <div class="item-row">
-            <span class="item-name">${escapeHtml(nome)}<span class="item-code">${escapeHtml(codigo)} · ${formatMoeda(unitario)}/un</span></span>
+            <span class="item-name">${escapeHtml(nome)}<span class="item-code">${escapeHtml(codigo)} Â· ${formatMoeda(unitario)}/un</span></span>
             <span class="item-qty">x${qtd.toLocaleString('pt-BR')}</span>
             <span class="item-total">${formatMoeda(totalItem(itemPedido))}</span>
           </div>`;
@@ -915,7 +916,7 @@
     if (focoAnterior && typeof focoAnterior.focus === 'function') focoAnterior.focus();
   }
 
-  // ---------- Exportação ----------
+  // ---------- ExportaÃ§Ã£o ----------
   function exportarCsv() {
     if (!historicoFiltrado.length) return;
     const cabecalho = ['Pedido', 'Data', 'Cliente', 'CNPJ', 'Fornecedor', 'Vendedor', 'UF', 'Status', 'Volumes', 'Valor'];
@@ -970,3 +971,5 @@
 
 </body>
 </html>
+
+
