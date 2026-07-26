@@ -1722,7 +1722,7 @@ function renderizarInterfaceGrafica(lista, comAnimacao = true) {
 const grid     = document.getElementById('gridProdutos');
 const contador = document.getElementById('contadorProdutos');
 grid.innerHTML = '';
-contador.innerText = lista.length;
+if (contador) contador.innerText = lista.length;
 if (lista.length === 0) {
 grid.innerHTML = `<div class="col-span-full text-center py-16 text-slate-400 font-medium bg-white rounded-2xl border border-dashed p-8">Nenhum produto localizado para os filtros informados.</div>`;
 return;
