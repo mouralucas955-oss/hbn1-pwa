@@ -549,12 +549,36 @@ function adicionarItensSugestaoPedido() {
 // DARK MODE — aplicado antes de qualquer render
 // -----------------------------------------------------------------------
 function toggleDarkMode() {
-const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-const novoTema = isDark ? 'light' : 'dark';
-document.documentElement.setAttribute('data-theme', novoTema);
-const icon = document.getElementById('iconDarkMode');
-if (icon) icon.innerText = novoTema === 'dark' ? '☀️' : '🌙';
-localStorage.setItem('hbn1_tema', novoTema);
+  const raiz = document.documentElement;
+  const isDark = raiz.getAttribute('data-theme') === 'dark';
+  const novoTema = isDark ? 'light' : 'dark';
+
+  raiz.classList.add('theme-switching');
+  raiz.setAttribute('data-theme', novoTema);
+  atualizarControleTema(novoTema);
+
+  try {
+    localStorage.setItem('hbn1_tema', novoTema);
+  } catch (e) {}
+
+  window.clearTimeout(window.HBN1_THEME_TIMER);
+  window.HBN1_THEME_TIMER = window.setTimeout(() => {
+    raiz.classList.remove('theme-switching');
+  }, 110);
+}
+
+function atualizarControleTema(tema) {
+  const escuro = tema === 'dark';
+  const icon = document.getElementById('iconDarkMode');
+  const botao = document.getElementById('btnDarkMode');
+
+  if (icon) icon.innerText = escuro ? '☀️' : '🌙';
+  if (botao) {
+    const acao = escuro ? 'Ativar modo claro' : 'Ativar modo escuro';
+    botao.setAttribute('title', acao);
+    botao.setAttribute('aria-label', acao);
+    botao.setAttribute('aria-pressed', String(escuro));
+  }
 }
 function encerrarSessao() {
 mostrarConfirm(
@@ -573,10 +597,12 @@ window.location.href = 'index.html';
 );
 }
 
-// Aplica tema salvo imediatamente (antes do DOMContentLoaded)
+// Fallback para instalações antigas; o HTML já aplica o tema no <head>.
 (function() {
-const t = localStorage.getItem('hbn1_tema') || 'light';
-document.documentElement.setAttribute('data-theme', t);
+  if (document.documentElement.hasAttribute('data-theme')) return;
+  let t = 'light';
+  try { t = localStorage.getItem('hbn1_tema') === 'dark' ? 'dark' : 'light'; } catch (e) {}
+  document.documentElement.setAttribute('data-theme', t);
 })();
 
 // UF do usuário logado: vem da URL (?uf=...) ou do localStorage (login feito em index.html)
@@ -4736,9 +4762,8 @@ return e.returnValue;
 window.addEventListener('DOMContentLoaded', async () => {
   await aguardarSessaoInicial();
 // Sincroniza ícone do dark mode
-const icon = document.getElementById('iconDarkMode');
 renderizarSeletorUF();
-if (icon) icon.innerText = (localStorage.getItem('hbn1_tema') || 'light') === 'dark' ? '☀️' : '🌙';
+atualizarControleTema(document.documentElement.getAttribute('data-theme') || 'light');
 
 // Cliente (Independente, Rede ou Oferta Compartilhada) só vê o próprio pedido — nada de gestão/vendas
 if (TIPO_USUARIO === 'CLIENTE_INDEPENDENTE' || TIPO_USUARIO === 'CLIENTE_REDE' || TIPO_USUARIO === 'CLIENTE_OFERTA') {
