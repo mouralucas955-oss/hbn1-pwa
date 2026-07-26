@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>Catalogo Promotores HBN1</title>
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#FF6B00">
@@ -1073,15 +1075,16 @@
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch(erro => {
-          console.warn("Falha ao registrar o service worker:", erro);
+          logDiagnostico("warn", "Falha ao registrar o service worker:", erro);
         });
       });
     }
 
     const ACESSO_PROMOTORES = [];
     const params = new URLSearchParams(window.location.search);
-    const UF_USUARIO = (params.get("uf") || localStorage.getItem("hbn1_uf") || "PI").toUpperCase();
-    const USUARIO_ATUAL = localStorage.getItem("hbn1_usuario") || "";
+    const UF_USUARIO = (params.get("uf") || sessionStorage.getItem("hbn1_uf") || "PI").toUpperCase();
+    const USUARIO_ATUAL = sessionStorage.getItem("hbn1_usuario") || "";
+    const TIPO_USUARIO = String(sessionStorage.getItem("hbn1_tipo") || "").toUpperCase();
 
     let BD_PRODUTOS = [];
     let BD_CLIENTES = [];
@@ -1115,19 +1118,20 @@
 
     document.getElementById("ufTitulo").innerText = "(" + UF_USUARIO + ")";
 
-    function sairParaLogin() {
-      localStorage.removeItem("hbn1_usuario");
-      localStorage.removeItem("hbn1_uf");
-      localStorage.removeItem("hbn1_nome");
-      localStorage.removeItem("hbn1_tipo");
-      localStorage.removeItem("hbn1_login_ts");
-      localStorage.removeItem("hbn1_session");
-      window.location.href = "index.html";
+    async function sairParaLogin() {
+      try { await chamarApi("logout", {}); } catch (_) {}
+      if (typeof limparDadosDaSessao === "function") limparDadosDaSessao();
+      window.location.replace("index.html");
     }
 
     function validarAcesso() {
       if (!USUARIO_ATUAL) {
         window.location.href = "index.html";
+        return false;
+      }
+
+      if (!["PROMOTOR", "ADMIN"].includes(TIPO_USUARIO)) {
+        elGrid.innerHTML = '<div class="erro">Usuario sem permissao para acessar o catalogo de promotores.</div>';
         return false;
       }
 
@@ -1166,8 +1170,36 @@
         .replace(/'/g, "&#039;");
     }
 
+    function logDiagnostico(nivel, ...args) {
+      if (window.HBN1_DEBUG !== true) return;
+      const metodo = ["log", "warn", "error"].includes(nivel) ? nivel : "log";
+      console[metodo](...args);
+    }
+
+    function urlImagemSegura(valor) {
+      const entrada = String(valor || "").trim();
+      if (!entrada) return "";
+      if (/^data:image\/(?:png|jpe?g|gif|webp|avif);base64,/i.test(entrada)) {
+        return entrada;
+      }
+      try {
+        const url = new URL(entrada, window.location.origin);
+        if (url.protocol !== "https:" && url.origin !== window.location.origin) return "";
+        return url.href;
+      } catch (_) {
+        return "";
+      }
+    }
+
     function escaparJs(valor) {
-      return String(valor || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+      const seguroJs = String(valor || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/\r/g, "\\r")
+        .replace(/\n/g, "\\n")
+        .replace(/\u2028/g, "\\u2028")
+        .replace(/\u2029/g, "\\u2029");
+      return escaparHtml(seguroJs);
     }
 
     function normalizarDigitos(valor) {
@@ -1195,25 +1227,25 @@
     }
 
     function salvarLevantamento() {
-      localStorage.setItem(CHAVE_LEVANTAMENTO, JSON.stringify(LEVANTAMENTO));
+      sessionStorage.setItem(CHAVE_LEVANTAMENTO, JSON.stringify(LEVANTAMENTO));
     }
 
     function carregarLevantamentoSalvo() {
       try {
-        LEVANTAMENTO = JSON.parse(localStorage.getItem(CHAVE_LEVANTAMENTO) || "{}") || {};
+        LEVANTAMENTO = JSON.parse(sessionStorage.getItem(CHAVE_LEVANTAMENTO) || "{}") || {};
       } catch (e) {
         LEVANTAMENTO = {};
       }
     }
 
     function salvarClienteSelecionado() {
-      if (CLIENTE_SELECIONADO) localStorage.setItem(CHAVE_CLIENTE, JSON.stringify(CLIENTE_SELECIONADO));
-      else localStorage.removeItem(CHAVE_CLIENTE);
+      if (CLIENTE_SELECIONADO) sessionStorage.setItem(CHAVE_CLIENTE, JSON.stringify(CLIENTE_SELECIONADO));
+      else sessionStorage.removeItem(CHAVE_CLIENTE);
     }
 
     function carregarClienteSalvo() {
       try {
-        CLIENTE_SELECIONADO = JSON.parse(localStorage.getItem(CHAVE_CLIENTE) || "null");
+        CLIENTE_SELECIONADO = JSON.parse(sessionStorage.getItem(CHAVE_CLIENTE) || "null");
       } catch (e) {
         CLIENTE_SELECIONADO = null;
       }
@@ -1488,7 +1520,7 @@
 
     function montarMensagemWhatsApp() {
       const { itens, totalUnidades, totalValor } = calcularTotaisLevantamento();
-      const nomePromotor = localStorage.getItem("hbn1_nome") || USUARIO_ATUAL || "-";
+      const nomePromotor = sessionStorage.getItem("hbn1_nome") || USUARIO_ATUAL || "-";
       const linhas = [];
 
       linhas.push("*LEVANTAMENTO HBN1 - PROMOTOR*");
@@ -1589,7 +1621,7 @@
           await compartilharViaCapacitor(blob, nomeArquivo, mensagem);
           return;
         } catch (e) {
-          console.warn("Falha ao compartilhar via Capacitor:", e);
+          logDiagnostico("warn", "Falha ao compartilhar via Capacitor:", e);
           alert("Nao foi possivel abrir o menu de compartilhamento nativo.\n\nDetalhe tecnico: " + (e && e.message ? e.message : e) + "\n\nTente novamente ou anexe manualmente o arquivo salvo.");
           return;
         }
@@ -1615,7 +1647,7 @@
         });
       } catch (e) {
         if (e && e.name === "AbortError") return;
-        console.warn("Falha ao compartilhar arquivo em cache:", e);
+        logDiagnostico("warn", "Falha ao compartilhar arquivo em cache:", e);
         alert("Nao foi possivel abrir o menu de compartilhamento. O Excel ja esta na pasta Downloads — anexe-o manualmente na conversa do WhatsApp.");
       }
     }
@@ -1673,7 +1705,7 @@
             await compartilharViaCapacitor(arquivoExcel.blob, arquivoExcel.nomeArquivo, mensagem);
             return;
           } catch (e) {
-            console.warn("Falha ao compartilhar via Capacitor, tentando alternativa:", e);
+            logDiagnostico("warn", "Falha ao compartilhar via Capacitor, tentando alternativa:", e);
           }
         }
 
@@ -1693,7 +1725,7 @@
               return;
             } catch (e) {
               if (e && e.name === "AbortError") return;
-              console.warn("Falha ao compartilhar arquivo diretamente, usando alternativa:", e);
+              logDiagnostico("warn", "Falha ao compartilhar arquivo diretamente, usando alternativa:", e);
             }
           }
         }
@@ -1719,7 +1751,7 @@
         }
       } catch (erro) {
         if (abaReservada && !abaReservada.closed) abaReservada.close();
-        console.error("Erro ao compartilhar:", erro);
+        logDiagnostico("error", "Erro ao compartilhar:", erro);
         alert("Nao foi possivel concluir o compartilhamento. Se voce abriu este catalogo por um atalho salvo, tente abrir o link direto no Chrome ou Safari e repetir.");
       } finally {
         btn.disabled = false;
@@ -1841,7 +1873,7 @@
         ["Grupo Unilever", CLIENTE_SELECIONADO.grupoUnilever || ""],
         ["Perfil Danone", CLIENTE_SELECIONADO.perfilDanone || ""],
         ["Painel Transfer", CLIENTE_SELECIONADO.painelTransfer || ""],
-        ["Promotor", localStorage.getItem("hbn1_nome") || USUARIO_ATUAL]
+        ["Promotor", sessionStorage.getItem("hbn1_nome") || USUARIO_ATUAL]
       ];
 
       dadosCliente.forEach((linha, idx) => {
@@ -1977,7 +2009,7 @@
     function criarCardCompacto(p, elId, idJs) {
       const estoque = Number(p.estoque || 0);
       const precoFabrica = converterPrecoValido(p.preco);
-      const imagem = String(p.imagens || "").trim();
+      const imagem = urlImagemSegura(p.imagens);
       const tag = String(p.tag || "").trim();
       const qtdLevantamento = Number(LEVANTAMENTO[p.id] || 0);
       const inputId = "qtd-" + idParaElemento(p.id);
@@ -2024,7 +2056,7 @@
     function criarCardExpandido(p, elId, idJs) {
       const estoque = Number(p.estoque || 0);
       const precoFabrica = converterPrecoValido(p.preco);
-      const imagem = String(p.imagens || "").trim();
+      const imagem = urlImagemSegura(p.imagens);
       const tag = String(p.tag || "").trim();
       const qtdLevantamento = Number(LEVANTAMENTO[p.id] || 0);
       const inputId = "qtd-" + idParaElemento(p.id);
@@ -2118,7 +2150,7 @@
         atualizarResumoLevantamento();
         atualizarTextoSincronizacao();
       } catch (erro) {
-        console.error("Erro ao carregar produtos:", erro);
+        logDiagnostico("error", "Erro ao carregar produtos:", erro);
         elContador.innerText = "Falha ao carregar produtos";
         elGrid.innerHTML = '<div class="erro">Erro ao conectar com os dados de produtos. Atualize a pagina e tente novamente.</div>';
       }
@@ -2138,7 +2170,7 @@
           }
         }
       } catch (e) {
-        console.error("Erro ao carregar clientes:", e);
+        logDiagnostico("error", "Erro ao carregar clientes:", e);
       }
     }
 
@@ -2181,16 +2213,28 @@
       } catch (e) { /* silencioso */ }
     }
 
-    if (validarAcesso()) {
-      carregarLevantamentoSalvo();
-      carregarClienteSalvo();
-      atualizarResumoLevantamento();
-      verificarCompatibilidadeAtalho();
-      carregarProdutos();
-      carregarClientes();
-      setInterval(carregarProdutos, 180000);
-      setInterval(carregarClientes, 300000);
+    async function inicializarCatalogoPromotores() {
+      if (!validarAcesso()) return;
+
+      try {
+        const sessao = await chamarApi("heartbeat", {});
+        if (!sessao || sessao.erro || sessao.bloqueado || sessao.ok !== true) {
+          throw new Error("Sessao invalida");
+        }
+
+        carregarLevantamentoSalvo();
+        carregarClienteSalvo();
+        atualizarResumoLevantamento();
+        verificarCompatibilidadeAtalho();
+        await Promise.all([carregarProdutos(), carregarClientes()]);
+        setInterval(carregarProdutos, 180000);
+        setInterval(carregarClientes, 300000);
+      } catch (_) {
+        elGrid.innerHTML = '<div class="erro">Nao foi possivel validar sua sessao. Entre novamente.</div>';
+      }
     }
+
+    inicializarCatalogoPromotores();
   </script>
 </body>
 </html>
