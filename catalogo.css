@@ -273,16 +273,16 @@ nav.sticky {
 
 /* Barra de busca dentro da faixa compacta do catálogo */
 #barraPesquisa {
-  background-color: var(--surface-secondary);
-  border: 1px solid var(--border-default);
+  background-color: transparent;
+  border: 0;
   color: var(--text-primary);
-  border-radius: var(--radius-lg);
-  transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+  border-radius: 0;
+  transition: none;
 }
 #barraPesquisa:focus {
-  background-color: var(--surface-card);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.16);
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
   outline: none;
 }
 #barraPesquisa::placeholder {
