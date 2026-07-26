@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carteira de Clientes — HBN1</title>
+  <meta name="referrer" content="no-referrer">
+<title>Carteira de Clientes â€” HBN1</title>
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -81,7 +82,7 @@
   .cart-dropdown-cliente-item .nome { font-size:12px; font-weight:700; }
   .cart-dropdown-cliente-item .meta { font-size:10px; color:var(--text-secondary); display:flex; justify-content:space-between; gap:10px; margin-top:2px; }
 
-  /* ── Grid de cards por fornecedor (Resumo — nível 1) ───────────────── */
+  /* â”€â”€ Grid de cards por fornecedor (Resumo â€” nÃ­vel 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .cart-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:14px; }
 
   .cart-card { border:1px solid var(--border-subtle); border-radius:16px; overflow:hidden; background:var(--surface-card); box-shadow: var(--shadow-sm); }
@@ -103,7 +104,7 @@
   .cart-card-footer { padding:12px 16px; border-top:1px solid var(--border-subtle); }
   .cart-card-footer .cart-btn { width:100%; justify-content:center; }
 
-  /* ── Nível 2 — tabela de clientes por fornecedor ───────────────────── */
+  /* â”€â”€ NÃ­vel 2 â€” tabela de clientes por fornecedor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .cart-detail-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
   .cart-detail-title-wrap { display:flex; align-items:center; gap:10px; }
   .cart-detail-logo { background:#fff; border-radius:10px; padding:6px 10px; display:flex; align-items:center; justify-content:center; }
@@ -125,7 +126,7 @@
   .cart-badge-ok { background: var(--success-soft); color: var(--success); border:1px solid var(--success-border); }
   .cart-badge-nao { background: var(--surface-tertiary); color: var(--text-muted); border:1px solid var(--border-subtle); }
 
-  /* ── Badge de Variação YoY (Fat. Mês Atual vs Fat. Ano Anterior) ─────── */
+  /* â”€â”€ Badge de VariaÃ§Ã£o YoY (Fat. MÃªs Atual vs Fat. Ano Anterior) â”€â”€â”€â”€â”€â”€â”€ */
   .cart-var-badge { font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:999px; white-space:nowrap; display:inline-flex; align-items:center; gap:3px; }
   .cart-var-up     { background: var(--success-soft); color: var(--success); border:1px solid var(--success-border); }
   .cart-var-down   { background: rgba(220,38,38,0.10); color: var(--danger, #dc2626); border:1px solid var(--danger, #dc2626); }
@@ -133,7 +134,7 @@
 
   .cart-loading { text-align:center; padding:40px 20px; color:var(--text-secondary); font-size:13px; font-weight:600; }
 
-  /* ── Pills de UF (filtro da carteira por rede) ─────────────────────── */
+  /* â”€â”€ Pills de UF (filtro da carteira por rede) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .cart-uf-pills { display:flex; flex-wrap:wrap; gap:8px; }
   .cart-uf-pill {
     font-family:inherit; font-size:12px; font-weight:700; border-radius:999px; padding:6px 14px;
@@ -143,7 +144,7 @@
   .cart-uf-pill:hover { border-color: var(--accent); }
   .cart-uf-pill-ativa { background: var(--accent); color:#fff; border-color:var(--accent); }
 
-  /* ── Nova hierarquia visual dos indicadores ───────────────────────── */
+  /* â”€â”€ Nova hierarquia visual dos indicadores â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .cart-kpi-strip {
     display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
     gap:12px; margin-bottom:16px;
@@ -187,7 +188,7 @@
   }
   .cart-faltam strong { color:var(--text-primary); }
 
-  /* ── Top 20 produtos do último trimestre ───────────────────────────── */
+  /* â”€â”€ Top 20 produtos do Ãºltimo trimestre â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
   .cart-top-btn {
     border:1px solid var(--border-default); background:var(--surface-secondary);
     color:var(--text-primary); border-radius:8px; padding:6px 9px;
@@ -252,7 +253,7 @@
     <div style="display:flex; align-items:center; gap:12px;">
       <a href="catalogo.html" id="cartBotaoVoltar" class="cart-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-        <span id="cartBotaoVoltarTexto">Voltar ao Catálogo</span>
+        <span id="cartBotaoVoltarTexto">Voltar ao CatÃ¡logo</span>
       </a>
       <div>
         <div class="disp" style="font-size:17px; font-weight:700; line-height:1.1;">Carteira de Clientes</div>
@@ -270,14 +271,14 @@
     <div class="cart-filtros-row">
       <div class="cart-panel" style="position:relative;">
         <div class="cart-panel-title">Buscar cliente diretamente</div>
-        <input id="cartBuscaClienteTopo" class="cart-select" style="max-width:100%;" placeholder="🔍 Nome, CNPJ ou código do cliente..." oninput="cartFiltrarClientesTopo()" autocomplete="off">
+        <input id="cartBuscaClienteTopo" class="cart-select" style="max-width:100%;" placeholder="ðŸ” Nome, CNPJ ou cÃ³digo do cliente..." oninput="cartFiltrarClientesTopo()" autocomplete="off">
         <div id="cartDropdownClientesTopo" class="cart-dropdown-cliente" style="display:none;"></div>
       </div>
 
       <div class="cart-panel" style="position:relative;">
         <div class="cart-panel-title">Ver por vendedor</div>
         <input id="cartBuscaVendedor" class="cart-select" style="max-width:100%;"
-               placeholder="🔍 Digite o nome do vendedor..." oninput="cartFiltrarVendedores()"
+               placeholder="ðŸ” Digite o nome do vendedor..." oninput="cartFiltrarVendedores()"
                onfocus="cartFiltrarVendedores()" autocomplete="off">
         <div id="cartDropdownVendedores" class="cart-dropdown-cliente" style="display:none;"></div>
       </div>
@@ -285,7 +286,7 @@
       <div class="cart-panel" style="position:relative;">
         <div class="cart-panel-title">Ver por rede</div>
         <input id="cartBuscaRede" class="cart-select" style="max-width:100%;"
-               placeholder="🔍 Digite o nome da rede..." oninput="cartFiltrarRedes()"
+               placeholder="ðŸ” Digite o nome da rede..." oninput="cartFiltrarRedes()"
                onfocus="cartFiltrarRedes()" autocomplete="off">
         <div id="cartDropdownRedes" class="cart-dropdown-cliente" style="display:none;"></div>
       </div>
@@ -298,16 +299,16 @@
   </div>
 
 <script>
-  if (!localStorage.getItem('hbn1_usuario')) {
+  if (!sessionStorage.getItem('hbn1_usuario')) {
     window.location.href = 'index.html';
   }
 
-  // Aplica o mesmo tema salvo pelo catálogo (light/dark)
+  // Aplica o mesmo tema salvo pelo catÃ¡logo (light/dark)
   (function() {
     const tema = localStorage.getItem('hbn1_tema') || 'light';
     document.documentElement.setAttribute('data-theme', tema);
   })();
-  // Ajusta o botão "Voltar" conforme a origem da navegação (?origem=negociacao)
+  // Ajusta o botÃ£o "Voltar" conforme a origem da navegaÃ§Ã£o (?origem=negociacao)
   (function() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('origem') === 'negociacao') {
@@ -315,15 +316,15 @@
       const txt = document.getElementById('cartBotaoVoltarTexto');
       if (btn && txt) {
         btn.setAttribute('href', 'negociacao.html');
-        txt.innerText = 'Voltar à Central de Investimento';
+        txt.innerText = 'Voltar Ã  Central de Investimento';
       }
     }
   })();
 
-  const UF_USUARIO = (localStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
+  const UF_USUARIO = (sessionStorage.getItem('hbn1_uf') || 'PI').toUpperCase();
 
-  // Mesma config visual de fornecedores usada no catálogo — cores/logos.
-  // getConfigFornecedor faz match parcial, então "UNILEVER PC" / "UNILEVER BW"
+  // Mesma config visual de fornecedores usada no catÃ¡logo â€” cores/logos.
+  // getConfigFornecedor faz match parcial, entÃ£o "UNILEVER PC" / "UNILEVER BW"
   // caem automaticamente na config da UNILEVER.
   const CART_CONFIG_FORNECEDORES = {
     'DANONE'   : { cor1: '#3B82C4', cor2: '#1E5FA0', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f4/DANONE_LOGO_HORIZONTAL.png' },
@@ -346,30 +347,30 @@
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
-  // ── Média Mensal ─────────────────────────────────────────────────────
-  // ATENÇÃO: aqui assumimos que "faturadoTri" vindo da API já é a soma
-  // dos 3 meses ANTERIORES ao mês atual (ou seja, NÃO inclui o mês corrente).
-  // Se a API ainda estiver somando o mês atual dentro desse total, o ajuste
-  // precisa ser feito na origem (api.js / backend), não aqui no front.
+  // â”€â”€ MÃ©dia Mensal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ATENÃ‡ÃƒO: aqui assumimos que "faturadoTri" vindo da API jÃ¡ Ã© a soma
+  // dos 3 meses ANTERIORES ao mÃªs atual (ou seja, NÃƒO inclui o mÃªs corrente).
+  // Se a API ainda estiver somando o mÃªs atual dentro desse total, o ajuste
+  // precisa ser feito na origem (api.js / backend), nÃ£o aqui no front.
  function cartMediaMensal(faturadoTri, meses) {
   const divisor = (Number(meses) > 0) ? Number(meses) : 3;
   return (Number(faturadoTri) || 0) / divisor;
 }
 
-  // ── Variação YoY: Fat. Mês Atual vs Fat. Ano Anterior ────────────────
+  // â”€â”€ VariaÃ§Ã£o YoY: Fat. MÃªs Atual vs Fat. Ano Anterior â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartCalcVariacaoYoY(anoAnterior, mesAtual) {
     anoAnterior = Number(anoAnterior) || 0;
     mesAtual = Number(mesAtual) || 0;
 
     if (anoAnterior <= 0) {
-      if (mesAtual > 0) return { label: '▲ Novo', classe: 'cart-var-up' };
-      return { label: '—', classe: 'cart-var-neutro' };
+      if (mesAtual > 0) return { label: 'â–² Novo', classe: 'cart-var-up' };
+      return { label: 'â€”', classe: 'cart-var-neutro' };
     }
 
     const pct = ((mesAtual - anoAnterior) / anoAnterior) * 100;
-    if (pct > 0.05) return { label: '▲ ' + pct.toFixed(1) + '%', classe: 'cart-var-up' };
-    if (pct < -0.05) return { label: '▼ ' + Math.abs(pct).toFixed(1) + '%', classe: 'cart-var-down' };
-    return { label: '— 0,0%', classe: 'cart-var-neutro' };
+    if (pct > 0.05) return { label: 'â–² ' + pct.toFixed(1) + '%', classe: 'cart-var-up' };
+    if (pct < -0.05) return { label: 'â–¼ ' + Math.abs(pct).toFixed(1) + '%', classe: 'cart-var-down' };
+    return { label: 'â€” 0,0%', classe: 'cart-var-neutro' };
   }
 
   function cartBadgeVariacaoHtml(anoAnterior, mesAtual) {
@@ -392,6 +393,18 @@
     return String(valor || '').replace(/[^a-zA-Z0-9_-]/g, '_');
   }
 
+  function cartEscJs(valor) {
+    return String(valor == null ? '' : valor)
+      .replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+      .replace(/</g, '\\x3C').replace(/>/g, '\\x3E')
+      .replace(/\r/g, '\\r').replace(/\n/g, '\\n');
+  }
+
+  function cartUrlImagem(valor) {
+    const url = String(valor || '').trim();
+    return /^https:\/\//i.test(url) ? cartEscHtml(url) : '';
+  }
+
   function cartFornecedorTopAtual() {
     if (CART_KIMBERLY_CATEGORIA_ATUAL) return CART_KIMBERLY_CATEGORIA_ATUAL;
     if (CART_UNILEVER_CATEGORIA_ATUAL) return CART_UNILEVER_CATEGORIA_ATUAL;
@@ -401,35 +414,35 @@
   function cartRenderTopProdutos(resposta) {
     if (!resposta || resposta.erro) {
       return `<div class="cart-top-vazio">${cartEscHtml(
-        (resposta && resposta.mensagem) || 'Não foi possível carregar os produtos.'
+        (resposta && resposta.mensagem) || 'NÃ£o foi possÃ­vel carregar os produtos.'
       )}</div>`;
     }
 
     const produtos = Array.isArray(resposta.produtos) ? resposta.produtos.slice(0, 20) : [];
     const periodo = Array.isArray(resposta.meses) && resposta.meses.length
-      ? resposta.meses.join(' · ')
-      : 'período indisponível';
+      ? resposta.meses.join(' Â· ')
+      : 'perÃ­odo indisponÃ­vel';
 
     if (produtos.length === 0) {
       return `
         <div class="cart-top-header">
-          <div><strong>Top produtos · último trimestre fechado</strong><span>${periodo}</span></div>
+          <div><strong>Top produtos Â· Ãºltimo trimestre fechado</strong><span>${cartEscHtml(periodo)}</span></div>
         </div>
-        <div class="cart-top-vazio">Nenhum produto encontrado para este cliente e fornecedor no período.</div>`;
+        <div class="cart-top-vazio">Nenhum produto encontrado para este cliente e fornecedor no perÃ­odo.</div>`;
     }
 
     const itens = produtos.map((produto, indice) => {
       const meta = [
-        produto.codigo ? 'Cód. ' + cartEscHtml(produto.codigo) : '',
+        produto.codigo ? 'CÃ³d. ' + cartEscHtml(produto.codigo) : '',
         produto.ean ? 'EAN ' + cartEscHtml(produto.ean) : ''
-      ].filter(Boolean).join(' · ');
+      ].filter(Boolean).join(' Â· ');
 
       return `
         <div class="cart-top-produto">
           <span class="cart-top-posicao">${produto.posicao || (indice + 1)}</span>
           <div class="cart-top-nome">
             <strong title="${cartEscHtml(produto.descricao)}">${cartEscHtml(produto.descricao)}</strong>
-            <small>${meta || 'Produto sem código cadastrado'}</small>
+            <small>${meta || 'Produto sem cÃ³digo cadastrado'}</small>
           </div>
           <span class="cart-top-valor mono">${cartFormatBRL(produto.valor)}</span>
           <span class="cart-top-participacao">${Number(produto.participacao || 0).toFixed(1)}%</span>
@@ -439,10 +452,10 @@
     return `
       <div class="cart-top-header">
         <div>
-          <strong>Top ${produtos.length} produtos · último trimestre fechado</strong>
-          <span>${periodo} · ordenado por faturamento</span>
+          <strong>Top ${produtos.length} produtos Â· Ãºltimo trimestre fechado</strong>
+          <span>${cartEscHtml(periodo)} Â· ordenado por faturamento</span>
         </div>
-        <span class="cart-top-total">Total do período: ${cartFormatBRL(resposta.totalFaturamento)}</span>
+        <span class="cart-top-total">Total do perÃ­odo: ${cartFormatBRL(resposta.totalFaturamento)}</span>
       </div>
       <div class="cart-top-list">${itens}</div>`;
   }
@@ -464,7 +477,7 @@
       return;
     }
 
-    alvo.innerHTML = '<div class="cart-top-loading">Carregando os produtos do último trimestre...</div>';
+    alvo.innerHTML = '<div class="cart-top-loading">Carregando os produtos do Ãºltimo trimestre...</div>';
     chamarApi('topProdutosCliente', {
       codCliente: codCliente,
       fornecedor: fornecedor
@@ -472,34 +485,34 @@
       CART_TOP_PRODUTOS_CACHE[chaveCache] = resposta;
       if (alvo.style.display !== 'none') alvo.innerHTML = cartRenderTopProdutos(resposta);
     }).catch(() => {
-      alvo.innerHTML = '<div class="cart-top-vazio">Não foi possível carregar os produtos. Tente novamente.</div>';
+      alvo.innerHTML = '<div class="cart-top-vazio">NÃ£o foi possÃ­vel carregar os produtos. Tente novamente.</div>';
     });
   }
 
-  // ── ESTADO GLOBAL ─────────────────────────────────────────────────────
+  // â”€â”€ ESTADO GLOBAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let CART_VENDEDOR_ATUAL = null;
   let CART_REDE_ATUAL = null;
   let CART_DADOS          = null; // { vendedor, totalClientesCarteira, fornecedores, clientesPorFornecedor }
-  let CART_FORNECEDOR_ATUAL = null; // null = nível 1 (resumo); string = nível 2 (detalhe)
+  let CART_FORNECEDOR_ATUAL = null; // null = nÃ­vel 1 (resumo); string = nÃ­vel 2 (detalhe)
 
   let CART_CLIENTES        = []; // lista completa p/ a busca direta de cliente
   let CART_CLIENTE_ATUAL   = null; // cliente escolhido na busca direta (independe de vendedor)
   let CART_CLIENTE_RESUMO  = null; // resposta de resumoCliente para CART_CLIENTE_ATUAL
 
-  let CART_LISTA_VENDEDORES = []; // lista completa p/ a busca digitável de vendedor
-  let CART_LISTA_REDES      = []; // lista completa p/ a busca digitável de rede
+  let CART_LISTA_VENDEDORES = []; // lista completa p/ a busca digitÃ¡vel de vendedor
+  let CART_LISTA_REDES      = []; // lista completa p/ a busca digitÃ¡vel de rede
 
   let CART_REDE_UFS_TODAS  = []; // todas as UFs onde a rede selecionada tem clientes
-  let CART_REDE_UFS_ATIVAS = new Set(); // UFs atualmente marcadas (pills) — afetam a busca
+  let CART_REDE_UFS_ATIVAS = new Set(); // UFs atualmente marcadas (pills) â€” afetam a busca
 
-  // ── Kimberly (INFANTIL/ADULTO/FEMININO) — tela "Ver por categoria" ────
-  let CART_KIMBERLY_MODO_CATEGORIA  = false; // true = está na tela de categorias
-  let CART_KIMBERLY_CATEGORIA_ATUAL = null;  // ex: 'KIMBERLY INFANTIL', quando uma categoria específica está aberta
-// ── Unilever (PC/BW) — tela "Ver por categoria" ────────────────────────
-  let CART_UNILEVER_MODO_CATEGORIA  = false; // true = está na tela de categorias
-  let CART_UNILEVER_CATEGORIA_ATUAL = null;  // ex: 'UNILEVER PC', quando uma categoria específica está aberta
-  // ── AGRUPAMENTO KIMBERLY — consolida INFANTIL/ADULTO/FEMININO num único
-  // card "KIMBERLY" no resumo, mantendo as categorias originais disponíveis
+  // â”€â”€ Kimberly (INFANTIL/ADULTO/FEMININO) â€” tela "Ver por categoria" â”€â”€â”€â”€
+  let CART_KIMBERLY_MODO_CATEGORIA  = false; // true = estÃ¡ na tela de categorias
+  let CART_KIMBERLY_CATEGORIA_ATUAL = null;  // ex: 'KIMBERLY INFANTIL', quando uma categoria especÃ­fica estÃ¡ aberta
+// â”€â”€ Unilever (PC/BW) â€” tela "Ver por categoria" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  let CART_UNILEVER_MODO_CATEGORIA  = false; // true = estÃ¡ na tela de categorias
+  let CART_UNILEVER_CATEGORIA_ATUAL = null;  // ex: 'UNILEVER PC', quando uma categoria especÃ­fica estÃ¡ aberta
+  // â”€â”€ AGRUPAMENTO KIMBERLY â€” consolida INFANTIL/ADULTO/FEMININO num Ãºnico
+  // card "KIMBERLY" no resumo, mantendo as categorias originais disponÃ­veis
   // pra tela "Ver por categoria" (cartRenderKimberlyCategorias).
   function cartAgruparKimberly(dados) {
     if (!dados || !Array.isArray(dados.fornecedores)) return dados;
@@ -565,8 +578,8 @@
     return dados;
   }
 
-  // ── AGRUPAMENTO UNILEVER — consolida PC/BW num único card "UNILEVER"
-  // no resumo, mantendo as categorias originais disponíveis pra tela
+  // â”€â”€ AGRUPAMENTO UNILEVER â€” consolida PC/BW num Ãºnico card "UNILEVER"
+  // no resumo, mantendo as categorias originais disponÃ­veis pra tela
   // "Ver por categoria" (cartRenderUnileverCategorias).
   function cartAgruparUnilever(dados) {
     if (!dados || !Array.isArray(dados.fornecedores)) return dados;
@@ -632,7 +645,7 @@
     return dados;
   }
 
-  // Versão simplificada usada no modo "cliente direto" (resumoCliente).
+  // VersÃ£o simplificada usada no modo "cliente direto" (resumoCliente).
   function cartAgruparUnileverClienteDireto(resp) {
     if (!resp || !Array.isArray(resp.fornecedores)) return resp;
     const categorias = resp.fornecedores.filter(f => String(f.fornecedor || '').toUpperCase().indexOf('UNILEVER ') === 0);
@@ -662,8 +675,8 @@
     return resp;
   }
 
-  // Versão simplificada usada no modo "cliente direto" (resumoCliente), onde
-  // não existe clientesPorFornecedor — é sempre 1 cliente só.
+  // VersÃ£o simplificada usada no modo "cliente direto" (resumoCliente), onde
+  // nÃ£o existe clientesPorFornecedor â€” Ã© sempre 1 cliente sÃ³.
   function cartAgruparKimberlyClienteDireto(resp) {
     if (!resp || !Array.isArray(resp.fornecedores)) return resp;
     const categorias = resp.fornecedores.filter(f => String(f.fornecedor || '').toUpperCase().indexOf('KIMBERLY ') === 0);
@@ -717,9 +730,9 @@
     }
 
     dropdown.innerHTML = filtrados.map(c => `
-      <div class="cart-dropdown-cliente-item" onclick="cartSelecionarClienteTopo('${String(c.id).replace(/'/g, "\\'")}')">
-        <div class="nome">${(c.razao || '').toUpperCase()}</div>
-        <div class="meta"><span>ID: ${c.id}</span><span>${c.cnpj || ''}</span></div>
+      <div class="cart-dropdown-cliente-item" onclick="cartSelecionarClienteTopo('${cartEscJs(c.id)}')">
+        <div class="nome">${cartEscHtml((c.razao || '').toUpperCase())}</div>
+        <div class="meta"><span>ID: ${cartEscHtml(c.id)}</span><span>${cartEscHtml(c.cnpj || '')}</span></div>
       </div>`).join('');
     dropdown.style.display = 'block';
   }
@@ -728,8 +741,8 @@
     const cliente = CART_CLIENTES.find(c => String(c.id) === String(id));
     if (!cliente) return;
 
-    // Modo "cliente direto" é independente do modo "por vendedor"/"por rede" — zera os outros
-    // pra não misturar as visões na tela.
+    // Modo "cliente direto" Ã© independente do modo "por vendedor"/"por rede" â€” zera os outros
+    // pra nÃ£o misturar as visÃµes na tela.
     CART_VENDEDOR_ATUAL = null;
     CART_REDE_ATUAL = null;
     CART_DADOS = null;
@@ -749,7 +762,7 @@
 
     document.getElementById('cartResumoTopo').style.display = 'block';
     document.getElementById('cartTopoVendedor').innerText = cliente.razao || cliente.id;
-    document.getElementById('cartTopoTotalClientes').innerText = 'CNPJ: ' + (cliente.cnpj || '—');
+    document.getElementById('cartTopoTotalClientes').innerText = 'CNPJ: ' + (cliente.cnpj || 'â€”');
 
     document.getElementById('cartConteudo').innerHTML =
       '<div class="cart-panel"><div class="cart-loading">Buscando faturamento de ' + (cliente.razao || cliente.id) + '...</div></div>';
@@ -761,7 +774,7 @@
       })
       .catch(() => {
         document.getElementById('cartConteudo').innerHTML =
-          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexão</div><div>Não foi possível buscar os dados. Tente novamente.</div></div></div>';
+          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexÃ£o</div><div>NÃ£o foi possÃ­vel buscar os dados. Tente novamente.</div></div></div>';
       });
   }
 
@@ -793,7 +806,7 @@
     }
   });
 
-  // ── CARREGAMENTO DAS LISTAS (vendedores e redes) ─────────────────────
+  // â”€â”€ CARREGAMENTO DAS LISTAS (vendedores e redes) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartCarregarVendedores() {
     chamarApi('vendedores', { uf: UF_USUARIO })
       .then(lista => { CART_LISTA_VENDEDORES = lista || []; })
@@ -806,7 +819,7 @@
       .catch(() => { CART_LISTA_REDES = []; });
   }
 
-  // ── BUSCA DIGITÁVEL — VENDEDOR ────────────────────────────────────────
+  // â”€â”€ BUSCA DIGITÃVEL â€” VENDEDOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartFiltrarVendedores() {
     const termo = document.getElementById('cartBuscaVendedor').value.trim().toLowerCase();
     const dropdown = document.getElementById('cartDropdownVendedores');
@@ -818,8 +831,8 @@
       dropdown.innerHTML = '<div class="cart-dropdown-cliente-item" style="cursor:default; color:var(--text-secondary);">Nenhum vendedor encontrado</div>';
     } else {
       dropdown.innerHTML = filtrados.slice(0, 20).map(v => `
-        <div class="cart-dropdown-cliente-item" onclick="cartSelecionarVendedorDropdown('${v.replace(/'/g, "\\'")}')">
-          <div class="nome">${v}</div>
+        <div class="cart-dropdown-cliente-item" onclick="cartSelecionarVendedorDropdown('${cartEscJs(v)}')">
+          <div class="nome">${cartEscHtml(v)}</div>
         </div>`).join('');
     }
     dropdown.style.display = 'block';
@@ -840,7 +853,7 @@
     document.getElementById('cartBuscaClienteTopo').value = '';
     document.getElementById('cartDropdownClientesTopo').style.display = 'none';
 
-    // Zera o filtro de rede (e as pills de UF, que só existem no modo rede) pra não misturar as visões
+    // Zera o filtro de rede (e as pills de UF, que sÃ³ existem no modo rede) pra nÃ£o misturar as visÃµes
     CART_REDE_ATUAL = null;
     CART_REDE_UFS_TODAS = [];
     CART_REDE_UFS_ATIVAS = new Set();
@@ -856,14 +869,14 @@
 
     CART_VENDEDOR_ATUAL = nome;
     document.getElementById('cartConteudo').innerHTML =
-      '<div class="cart-panel"><div class="cart-loading">Calculando carteira de ' + nome + '...</div></div>';
+      '<div class="cart-panel"><div class="cart-loading">Calculando carteira de ' + cartEscHtml(nome) + '...</div></div>';
 
     chamarApi('carteiraVendedor', { uf: UF_USUARIO, vendedor: nome })
       .then(resp => {
         if (!resp || resp.erro) {
           document.getElementById('cartConteudo').innerHTML =
-            '<div class="cart-panel"><div class="cart-empty"><div class="disp">Não foi possível carregar</div><div>' +
-            (resp && resp.mensagem ? resp.mensagem : 'Tente novamente em instantes.') + '</div></div></div>';
+            '<div class="cart-panel"><div class="cart-empty"><div class="disp">NÃ£o foi possÃ­vel carregar</div><div>' +
+            cartEscHtml(resp && resp.mensagem ? resp.mensagem : 'Tente novamente em instantes.') + '</div></div></div>';
           return;
         }
        CART_DADOS = cartAgruparUnilever(cartAgruparKimberly(resp));
@@ -875,11 +888,11 @@
       })
       .catch(() => {
         document.getElementById('cartConteudo').innerHTML =
-          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexão</div><div>Não foi possível buscar os dados. Tente novamente.</div></div></div>';
+          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexÃ£o</div><div>NÃ£o foi possÃ­vel buscar os dados. Tente novamente.</div></div></div>';
       });
   }
 
-  // ── BUSCA DIGITÁVEL — REDE ────────────────────────────────────────────
+  // â”€â”€ BUSCA DIGITÃVEL â€” REDE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartFiltrarRedes() {
     const termo = document.getElementById('cartBuscaRede').value.trim().toLowerCase();
     const dropdown = document.getElementById('cartDropdownRedes');
@@ -891,8 +904,8 @@
       dropdown.innerHTML = '<div class="cart-dropdown-cliente-item" style="cursor:default; color:var(--text-secondary);">Nenhuma rede encontrada</div>';
     } else {
       dropdown.innerHTML = filtrados.slice(0, 20).map(r => `
-        <div class="cart-dropdown-cliente-item" onclick="cartSelecionarRedeDropdown('${r.replace(/'/g, "\\'")}')">
-          <div class="nome">${r}</div>
+        <div class="cart-dropdown-cliente-item" onclick="cartSelecionarRedeDropdown('${cartEscJs(r)}')">
+          <div class="nome">${cartEscHtml(r)}</div>
         </div>`).join('');
     }
     dropdown.style.display = 'block';
@@ -913,7 +926,7 @@
     document.getElementById('cartBuscaClienteTopo').value = '';
     document.getElementById('cartDropdownClientesTopo').style.display = 'none';
 
-    // Zera o filtro de vendedor pra não misturar as duas visões
+    // Zera o filtro de vendedor pra nÃ£o misturar as duas visÃµes
     CART_VENDEDOR_ATUAL = null;
     document.getElementById('cartBuscaVendedor').value = '';
 
@@ -933,14 +946,14 @@
     CART_REDE_UFS_TODAS = [];
     CART_REDE_UFS_ATIVAS = new Set();
     cartRenderFiltroUfsRede();
-    document.getElementById('cartConteudo').innerHTML = '<div class="cart-panel"><div class="cart-loading">Buscando UFs da rede ' + nome + '...</div></div>';
+    document.getElementById('cartConteudo').innerHTML = '<div class="cart-panel"><div class="cart-loading">Buscando UFs da rede ' + cartEscHtml(nome) + '...</div></div>';
 
-    // Primeiro descobre em quais UFs essa rede tem clientes — as pills começam
-    // todas marcadas, e é a partir delas que a carteira é buscada (abaixo).
+    // Primeiro descobre em quais UFs essa rede tem clientes â€” as pills comeÃ§am
+    // todas marcadas, e Ã© a partir delas que a carteira Ã© buscada (abaixo).
     chamarApi('ufsPorRede', { rede: nome })
       .then(ufs => {
-        // Se a rede não trouxer UFs (ou a chamada retornar vazio), a carteira
-        // segue sem restringir por UF — mesmo comportamento de antes.
+        // Se a rede nÃ£o trouxer UFs (ou a chamada retornar vazio), a carteira
+        // segue sem restringir por UF â€” mesmo comportamento de antes.
         CART_REDE_UFS_TODAS = ufs || [];
         CART_REDE_UFS_ATIVAS = new Set(CART_REDE_UFS_TODAS);
         cartRenderFiltroUfsRede();
@@ -965,8 +978,8 @@
     cartBuscarCarteiraRede();
   }
 
-  // Renderiza as pills de UF acima do conteúdo — só aparece no modo "rede"
-  // e quando existe mais de uma UF disponível pra filtrar.
+  // Renderiza as pills de UF acima do conteÃºdo â€” sÃ³ aparece no modo "rede"
+  // e quando existe mais de uma UF disponÃ­vel pra filtrar.
   function cartRenderFiltroUfsRede() {
     const wrap = document.getElementById('cartFiltroUfsRede');
     if (!CART_REDE_ATUAL || CART_REDE_UFS_TODAS.length === 0) {
@@ -977,7 +990,7 @@
 
     const pillsHtml = CART_REDE_UFS_TODAS.map(uf => {
       const ativa = CART_REDE_UFS_ATIVAS.has(uf);
-      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartToggleUfRede('${uf.replace(/'/g, "\\'")}')">${ativa ? '✓ ' : ''}${uf}</button>`;
+      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartToggleUfRede('${uf.replace(/'/g, "\\'")}')">${ativa ? 'âœ“ ' : ''}${uf}</button>`;
     }).join('');
 
     wrap.style.display = 'block';
@@ -988,9 +1001,9 @@
       </div>`;
   }
 
-  // Busca a carteira da rede atual, restringindo às UFs marcadas nas pills
-  // (quando há mais de uma UF disponível). Se nenhuma UF estiver marcada,
-  // nem chama a API — mostra direto o estado vazio.
+  // Busca a carteira da rede atual, restringindo Ã s UFs marcadas nas pills
+  // (quando hÃ¡ mais de uma UF disponÃ­vel). Se nenhuma UF estiver marcada,
+  // nem chama a API â€” mostra direto o estado vazio.
   function cartBuscarCarteiraRede() {
     const nome = CART_REDE_ATUAL;
     if (!nome) return;
@@ -1015,7 +1028,7 @@
       .then(resp => {
         if (!resp || resp.erro) {
           document.getElementById('cartConteudo').innerHTML =
-            '<div class="cart-panel"><div class="cart-empty"><div class="disp">Não foi possível carregar</div><div>' +
+            '<div class="cart-panel"><div class="cart-empty"><div class="disp">NÃ£o foi possÃ­vel carregar</div><div>' +
             (resp && resp.mensagem ? resp.mensagem : 'Tente novamente em instantes.') + '</div></div></div>';
           return;
         }
@@ -1027,7 +1040,7 @@
       })
       .catch(() => {
         document.getElementById('cartConteudo').innerHTML =
-          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexão</div><div>Não foi possível buscar os dados. Tente novamente.</div></div></div>';
+          '<div class="cart-panel"><div class="cart-empty"><div class="disp">Erro de conexÃ£o</div><div>NÃ£o foi possÃ­vel buscar os dados. Tente novamente.</div></div></div>';
       });
   }
 
@@ -1056,17 +1069,17 @@
     }
   }
 
-  // ── MODO "CLIENTE DIRETO" — resumo de faturamento de um único cliente ──
+  // â”€â”€ MODO "CLIENTE DIRETO" â€” resumo de faturamento de um Ãºnico cliente â”€â”€
   function cartRenderClienteDireto() {
     const wrap = document.getElementById('cartConteudo');
     const resp = CART_CLIENTE_RESUMO;
     const cliente = CART_CLIENTE_ATUAL;
 
-    if (!resp) return; // ainda carregando (o loading já foi colocado em cartSelecionarClienteTopo)
+    if (!resp) return; // ainda carregando (o loading jÃ¡ foi colocado em cartSelecionarClienteTopo)
 
     if (resp.erro) {
-      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Não foi possível carregar</div><div>' +
-        (resp.mensagem || 'Tente novamente em instantes.') + '</div></div></div>';
+      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">NÃ£o foi possÃ­vel carregar</div><div>' +
+        cartEscHtml(resp.mensagem || 'Tente novamente em instantes.') + '</div></div></div>';
       return;
     }
 
@@ -1077,21 +1090,21 @@
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
             Limpar
           </button>
-          <span class="disp" style="font-size:15px; font-weight:700;">${(cliente.razao || '').toUpperCase()}</span>
+          <span class="disp" style="font-size:15px; font-weight:700;">${cartEscHtml((cliente.razao || '').toUpperCase())}</span>
         </div>
       </div>`;
 
     const fornecedores = resp.fornecedores || [];
     if (fornecedores.length === 0) {
-      wrap.innerHTML = `<div class="cart-panel">${headerHtml}<div class="cart-empty" style="margin-top:14px;"><div class="disp">Sem movimentação</div><div>Nenhum faturamento encontrado para este cliente.</div></div></div>`;
+      wrap.innerHTML = `<div class="cart-panel">${headerHtml}<div class="cart-empty" style="margin-top:14px;"><div class="disp">Sem movimentaÃ§Ã£o</div><div>Nenhum faturamento encontrado para este cliente.</div></div></div>`;
       return;
     }
 
     const cardsHtml = fornecedores.map(f => {
       const cfg = cartGetConfigFornecedor(f.fornecedor);
       const logoHtml = cfg.logo
-        ? `<img src="${cfg.logo}" alt="${f.fornecedor}" onerror="this.parentElement.innerHTML='<span style=\\'font-weight:800;font-size:11px;color:${cfg.cor2}\\'>${f.fornecedor}</span>'">`
-        : `<span style="font-weight:800; font-size:11px; color:${cfg.cor2}">${f.fornecedor}</span>`;
+        ? `<img src="${cartUrlImagem(cfg.logo)}" alt="${cartEscHtml(f.fornecedor)}" onerror="this.hidden=true">`
+        : `<span style="font-weight:800; font-size:11px; color:${cfg.cor2}">${cartEscHtml(f.fornecedor)}</span>`;
       const topId = 'cartTopDireto_' + cartIdSeguro(cliente.id || cliente.codCliente) + '_' + cartIdSeguro(f.fornecedor);
       const codClienteTop = encodeURIComponent(cliente.id || cliente.codCliente || '');
       const fornecedorTop = encodeURIComponent(f.fornecedor);
@@ -1099,7 +1112,7 @@
       return `
         <div class="cart-card">
           <div class="cart-card-header" style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
-            <span class="cart-card-header-nome">${f.fornecedor}</span>
+            <span class="cart-card-header-nome">${cartEscHtml(f.fornecedor)}</span>
             <div class="cart-card-header-logo">${logoHtml}</div>
           </div>
           <div class="cart-card-body">
@@ -1108,21 +1121,21 @@
               <span class="cart-metric-value mono">${cartFormatBRL(f.faturadoAnoAnterior)}</span>
             </div>
             <div class="cart-metric-row">
-              <span class="cart-metric-label">Média Mensal (3 meses ant.)</span>
+              <span class="cart-metric-label">MÃ©dia Mensal (3 meses ant.)</span>
               <span class="cart-metric-value mono">${cartFormatBRL(cartMediaMensal(f.faturadoTri))}</span>
             </div>
             <div class="cart-metric-row">
-              <span class="cart-metric-label">Fat. Mês Atual</span>
+              <span class="cart-metric-label">Fat. MÃªs Atual</span>
               <span class="cart-metric-value mono" style="color:var(--accent)">${cartFormatBRL(f.faturadoMesAtual)}</span>
             </div>
             <div class="cart-metric-row">
-              <span class="cart-metric-label">Variação YoY</span>
+              <span class="cart-metric-label">VariaÃ§Ã£o YoY</span>
               ${cartBadgeVariacaoHtml(f.faturadoAnoAnterior, f.faturadoMesAtual)}
             </div>
             <div style="margin-top:2px;">
               ${f.positivado
-                ? '<span class="cart-badge cart-badge-ok">✓ Positivado</span>'
-                : '<span class="cart-badge cart-badge-nao">— Não comprou no mês</span>'}
+                ? '<span class="cart-badge cart-badge-ok">âœ“ Positivado</span>'
+                : '<span class="cart-badge cart-badge-nao">â€” NÃ£o comprou no mÃªs</span>'}
             </div>
           </div>
           <div class="cart-card-footer">
@@ -1141,13 +1154,13 @@
   }
 
 
-  // ── NÍVEL 1 — RESUMO POR FORNECEDOR ──────────────────────────────────
+  // â”€â”€ NÃVEL 1 â€” RESUMO POR FORNECEDOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartRenderResumo() {
     const wrap = document.getElementById('cartConteudo');
     const fornecedores = CART_DADOS.fornecedores || [];
 
     if (fornecedores.length === 0) {
-      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem movimentação</div><div>Nenhum faturamento encontrado para os clientes desta carteira.</div></div></div>';
+      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem movimentaÃ§Ã£o</div><div>Nenhum faturamento encontrado para os clientes desta carteira.</div></div></div>';
       return;
     }
 
@@ -1169,23 +1182,23 @@
     const kpisHtml = `
       <div class="cart-kpi-strip">
         <div class="cart-kpi cart-kpi-principal">
-          <span class="cart-kpi-label">Faturamento do mês</span>
+          <span class="cart-kpi-label">Faturamento do mÃªs</span>
           <strong class="cart-kpi-valor">${cartFormatBRL(totalMes)}</strong>
-          <span class="cart-kpi-sub">Resultado atual da seleção</span>
+          <span class="cart-kpi-sub">Resultado atual da seleÃ§Ã£o</span>
         </div>
         <div class="cart-kpi">
-          <span class="cart-kpi-label">Média mensal · trimestre</span>
+          <span class="cart-kpi-label">MÃ©dia mensal Â· trimestre</span>
           <strong class="cart-kpi-valor">${cartFormatBRL(cartMediaMensal(totalTri))}</strong>
-          <span class="cart-kpi-sub">Média dos três meses fechados anteriores</span>
+          <span class="cart-kpi-sub">MÃ©dia dos trÃªs meses fechados anteriores</span>
         </div>
         <div class="cart-kpi">
-          <span class="cart-kpi-label">Fornecedor líder</span>
-          <strong class="cart-kpi-valor" style="font-family:inherit;">${fornecedorLider ? fornecedorLider.fornecedor : '—'}</strong>
+          <span class="cart-kpi-label">Fornecedor lÃ­der</span>
+          <strong class="cart-kpi-valor" style="font-family:inherit;">${fornecedorLider ? cartEscHtml(fornecedorLider.fornecedor) : 'â€”'}</strong>
           <span class="cart-kpi-sub">${fornecedorLider ? cartFormatBRL(fornecedorLider.faturadoMesAtual) : 'Sem faturamento'}</span>
         </div>
         <div class="cart-kpi">
           <span class="cart-kpi-label">Maior oportunidade</span>
-          <strong class="cart-kpi-valor" style="font-family:inherit;">${maiorOportunidade ? maiorOportunidade.fornecedor : '—'}</strong>
+          <strong class="cart-kpi-valor" style="font-family:inherit;">${maiorOportunidade ? cartEscHtml(maiorOportunidade.fornecedor) : 'â€”'}</strong>
           <span class="cart-kpi-sub">Faltam ${faltamMaiorOportunidade} clientes para positivar</span>
         </div>
       </div>`;
@@ -1193,8 +1206,8 @@
     const cardsHtml = fornecedores.map(f => {
       const cfg = cartGetConfigFornecedor(f.fornecedor);
       const logoHtml = cfg.logo
-        ? `<img src="${cfg.logo}" alt="${f.fornecedor}" onerror="this.parentElement.innerHTML='<span style=\\'font-weight:800;font-size:11px;color:${cfg.cor2}\\'>${f.fornecedor}</span>'">`
-        : `<span style="font-weight:800; font-size:11px; color:${cfg.cor2}">${f.fornecedor}</span>`;
+        ? `<img src="${cartUrlImagem(cfg.logo)}" alt="${cartEscHtml(f.fornecedor)}" onerror="this.hidden=true">`
+        : `<span style="font-weight:800; font-size:11px; color:${cfg.cor2}">${cartEscHtml(f.fornecedor)}</span>`;
 
       const pct = f.percentualPositivacao || 0;
       const corBarra = pct >= 70 ? 'var(--success)' : pct >= 40 ? '#f59e0b' : 'var(--danger)';
@@ -1202,19 +1215,19 @@
       return `
         <div class="cart-card">
           <div class="cart-card-header" style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">
-            <span class="cart-card-header-nome">${f.fornecedor}</span>
+            <span class="cart-card-header-nome">${cartEscHtml(f.fornecedor)}</span>
             <div class="cart-card-header-logo">${logoHtml}</div>
           </div>
           <div class="cart-card-body cart-card-destaque">
-            <span class="cart-metric-label">Faturamento do mês</span>
+            <span class="cart-metric-label">Faturamento do mÃªs</span>
             <strong class="cart-card-valor-principal">${cartFormatBRL(f.faturadoMesAtual)}</strong>
             <div class="cart-metric-row">
-              <span class="cart-metric-label">Variação vs. ano anterior</span>
+              <span class="cart-metric-label">VariaÃ§Ã£o vs. ano anterior</span>
               ${cartBadgeVariacaoHtml(f.faturadoAnoAnterior, f.faturadoMesAtual)}
             </div>
             <div class="cart-card-contexto">
               <div>
-                <span>Média mensal · trimestre</span>
+                <span>MÃ©dia mensal Â· trimestre</span>
                 <strong class="mono">${cartFormatBRL(cartMediaMensal(f.faturadoTri))}</strong>
               </div>
               <div>
@@ -1234,8 +1247,8 @@
             <div class="cart-faltam">Faltam <strong>${Math.max(0, f.totalClientesCarteira - f.clientesPositivados)}</strong> clientes para positivar</div>
           </div>
           <div class="cart-card-footer" style="display:flex; flex-direction:column; gap:6px;">
-            <button type="button" class="cart-btn cart-btn-gold" onclick="cartVerDetalheFornecedor('${f.fornecedor.replace(/'/g, "\\'")}')">
-              Ver carteira de clientes →
+            <button type="button" class="cart-btn cart-btn-gold" onclick="cartVerDetalheFornecedor('${cartEscJs(f.fornecedor)}')">
+              Ver carteira de clientes â†’
             </button>
             ${f._kimberlyConsolidado ? `
             <button type="button" class="cart-btn" style="width:100%; justify-content:center;" onclick="cartVerCategoriasKimberly()">
@@ -1252,7 +1265,7 @@
     wrap.innerHTML = `${kpisHtml}<div class="cart-grid">${cardsHtml}</div>`;
   }
 
-  // ── NÍVEL 2 — CARTEIRA DE CLIENTES DE UM FORNECEDOR ──────────────────
+  // â”€â”€ NÃVEL 2 â€” CARTEIRA DE CLIENTES DE UM FORNECEDOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartVerDetalheFornecedor(fornecedor) {
     CART_FORNECEDOR_ATUAL = fornecedor;
     cartRenderConteudo();
@@ -1269,8 +1282,8 @@
     const clientes = (CART_DADOS.clientesPorFornecedor && CART_DADOS.clientesPorFornecedor[fornecedor]) || [];
     const cfg = cartGetConfigFornecedor(fornecedor);
     const logoHtml = cfg.logo
-      ? `<img src="${cfg.logo}" alt="${fornecedor}" onerror="this.parentElement.innerHTML='<span style=\\'font-weight:800;font-size:12px;color:${cfg.cor2}\\'>${fornecedor}</span>'">`
-      : `<span style="font-weight:800; font-size:12px; color:${cfg.cor2}">${fornecedor}</span>`;
+      ? `<img src="${cartUrlImagem(cfg.logo)}" alt="${cartEscHtml(fornecedor)}" onerror="this.hidden=true">`
+      : `<span style="font-weight:800; font-size:12px; color:${cfg.cor2}">${cartEscHtml(fornecedor)}</span>`;
 
     wrap.innerHTML = `
       <div class="cart-panel">
@@ -1281,7 +1294,7 @@
               Voltar ao resumo
             </button>
             <div class="cart-detail-logo" style="background: linear-gradient(135deg, ${cfg.cor1} 0%, ${cfg.cor2} 100%);">${logoHtml}</div>
-            <span class="disp" style="font-size:15px; font-weight:700;">Carteira — ${fornecedor}</span>
+            <span class="disp" style="font-size:15px; font-weight:700;">Carteira â€” ${fornecedor}</span>
           </div>
           <input id="cartBuscaClienteDetalhe" class="cart-input" placeholder="Buscar cliente ou CNPJ..." oninput="cartFiltrarTabelaDetalhe()">
         </div>
@@ -1318,8 +1331,8 @@
       return `
       <tr>
         <td>
-          <div style="font-weight:700;">${(c.razao || '').toUpperCase()}</div>
-          <div class="mono" style="font-size:10.5px; color:var(--text-secondary);">${c.cnpj || '—'}</div>
+          <div style="font-weight:700;">${cartEscHtml((c.razao || '').toUpperCase())}</div>
+          <div class="mono" style="font-size:10.5px; color:var(--text-secondary);">${cartEscHtml(c.cnpj || 'â€”')}</div>
         </td>
         <td class="cart-num mono">${cartFormatBRL(c.faturadoAnoAnterior)}</td>
         <td class="cart-num mono">${cartFormatBRL(cartMediaMensal(c.faturadoTri))}</td>
@@ -1327,8 +1340,8 @@
         <td class="cart-num">${cartBadgeVariacaoHtml(c.faturadoAnoAnterior, c.faturadoMesAtual)}</td>
         <td class="cart-num">
           ${c.positivado
-            ? '<span class="cart-badge cart-badge-ok">✓ Positivado</span>'
-            : '<span class="cart-badge cart-badge-nao">— Não comprou</span>'}
+            ? '<span class="cart-badge cart-badge-ok">âœ“ Positivado</span>'
+            : '<span class="cart-badge cart-badge-nao">â€” NÃ£o comprou</span>'}
         </td>
         <td class="cart-num">
           <button type="button" class="cart-top-btn"
@@ -1351,8 +1364,8 @@
             <tr>
               <th>Cliente</th>
               <th class="cart-num">Fat. Ano Anterior</th>
-              <th class="cart-num">Média Mensal</th>
-              <th class="cart-num">Fat. Mês Atual</th>
+              <th class="cart-num">MÃ©dia Mensal</th>
+              <th class="cart-num">Fat. MÃªs Atual</th>
               <th class="cart-num">Var. YoY</th>
               <th class="cart-num">Status</th>
               <th class="cart-num">Produtos</th>
@@ -1363,7 +1376,7 @@
       </div>`;
   }
 
-  // ── KIMBERLY — TELA "VER POR CATEGORIA" ──────────────────────────────
+  // â”€â”€ KIMBERLY â€” TELA "VER POR CATEGORIA" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartVerCategoriasKimberly() {
     CART_KIMBERLY_MODO_CATEGORIA = true;
     CART_KIMBERLY_CATEGORIA_ATUAL = null;
@@ -1388,7 +1401,7 @@
     const categorias = (CART_DADOS && CART_DADOS._kimberlyCategorias) || [];
 
     if (categorias.length === 0) {
-      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem categorias Kimberly</div><div>Não há dados quebrados por categoria para esta seleção.</div></div></div>';
+      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem categorias Kimberly</div><div>NÃ£o hÃ¡ dados quebrados por categoria para esta seleÃ§Ã£o.</div></div></div>';
       return;
     }
 
@@ -1402,7 +1415,7 @@
         return `
           <div class="cart-card">
             <div class="cart-card-header" style="background: linear-gradient(135deg, ${cfgKimberly.cor1} 0%, ${cfgKimberly.cor2} 100%);">
-              <span class="cart-card-header-nome">KIMBERLY — ${rotulo}</span>
+              <span class="cart-card-header-nome">KIMBERLY â€” ${rotulo}</span>
             </div>
            <div class="cart-card-body">
               <div class="cart-metric-row">
@@ -1410,11 +1423,11 @@
                 <span class="cart-metric-value mono">${cartFormatBRL(c.faturadoAnoAnterior)}</span>
               </div>
               <div class="cart-metric-row">
-                <span class="cart-metric-label">Média Mensal (3 meses ant.)</span>
+                <span class="cart-metric-label">MÃ©dia Mensal (3 meses ant.)</span>
                 <span class="cart-metric-value mono">${cartFormatBRL(cartMediaMensal(c.faturadoTri))}</span>
               </div>
               <div class="cart-metric-row">
-                <span class="cart-metric-label">Fat. Mês Atual</span>
+                <span class="cart-metric-label">Fat. MÃªs Atual</span>
                 <span class="cart-metric-value mono" style="color:var(--accent)">${cartFormatBRL(c.faturadoMesAtual)}</span>
               </div>
               <div class="cart-progress-wrap">
@@ -1428,8 +1441,8 @@
               </div>
             </div>
             <div class="cart-card-footer">
-              <button type="button" class="cart-btn cart-btn-gold" onclick="cartSelecionarCategoriaKimberly('${c.fornecedor.replace(/'/g, "\\'")}')">
-                Ver carteira de clientes →
+              <button type="button" class="cart-btn cart-btn-gold" onclick="cartSelecionarCategoriaKimberly('${cartEscJs(c.fornecedor)}')">
+                Ver carteira de clientes â†’
               </button>
             </div>
           </div>`;
@@ -1443,7 +1456,7 @@
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 Voltar ao resumo
               </button>
-              <span class="disp" style="font-size:15px; font-weight:700;">Kimberly — por categoria</span>
+              <span class="disp" style="font-size:15px; font-weight:700;">Kimberly â€” por categoria</span>
             </div>
           </div>
         </div>
@@ -1458,7 +1471,7 @@
     const pillsHtml = categorias.map(c => {
       const rotulo = c.fornecedor.replace('KIMBERLY ', '');
       const ativa = c.fornecedor === categoriaAtual;
-      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartSelecionarCategoriaKimberly('${c.fornecedor.replace(/'/g, "\\'")}')">${ativa ? '✓ ' : ''}${rotulo}</button>`;
+      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartSelecionarCategoriaKimberly('${cartEscJs(c.fornecedor)}')">${ativa ? 'âœ“ ' : ''}${cartEscHtml(rotulo)}</button>`;
     }).join('');
 
     wrap.innerHTML = `
@@ -1467,9 +1480,9 @@
           <div class="cart-detail-title-wrap">
             <button type="button" class="cart-btn" onclick="cartVerCategoriasKimberly()">
               <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-              Voltar às categorias
+              Voltar Ã s categorias
             </button>
-            <span class="disp" style="font-size:15px; font-weight:700;">Kimberly — ${rotuloAtual}</span>
+            <span class="disp" style="font-size:15px; font-weight:700;">Kimberly â€” ${rotuloAtual}</span>
           </div>
           <input id="cartBuscaClienteDetalheKimberly" class="cart-input" placeholder="Buscar cliente ou CNPJ..." oninput="cartFiltrarTabelaKimberly()">
         </div>
@@ -1491,7 +1504,7 @@
     );
     cartRenderizarTabelaClientes(filtrados);
   }
-  // ── UNILEVER — TELA "VER POR CATEGORIA" ──────────────────────────────
+  // â”€â”€ UNILEVER â€” TELA "VER POR CATEGORIA" â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function cartVerCategoriasUnilever() {
     CART_UNILEVER_MODO_CATEGORIA = true;
     CART_UNILEVER_CATEGORIA_ATUAL = null;
@@ -1514,7 +1527,7 @@
     const categorias = (CART_DADOS && CART_DADOS._unileverCategorias) || [];
 
     if (categorias.length === 0) {
-      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem categorias Unilever</div><div>Não há dados quebrados por categoria para esta seleção.</div></div></div>';
+      wrap.innerHTML = '<div class="cart-panel"><div class="cart-empty"><div class="disp">Sem categorias Unilever</div><div>NÃ£o hÃ¡ dados quebrados por categoria para esta seleÃ§Ã£o.</div></div></div>';
       return;
     }
 
@@ -1528,7 +1541,7 @@
         return `
           <div class="cart-card">
             <div class="cart-card-header" style="background: linear-gradient(135deg, ${cfgUnilever.cor1} 0%, ${cfgUnilever.cor2} 100%);">
-              <span class="cart-card-header-nome">UNILEVER — ${rotulo}</span>
+              <span class="cart-card-header-nome">UNILEVER â€” ${rotulo}</span>
             </div>
             <div class="cart-card-body">
               <div class="cart-metric-row">
@@ -1536,11 +1549,11 @@
                 <span class="cart-metric-value mono">${cartFormatBRL(c.faturadoAnoAnterior)}</span>
               </div>
               <div class="cart-metric-row">
-                <span class="cart-metric-label">Média Mensal (3 meses ant.)</span>
+                <span class="cart-metric-label">MÃ©dia Mensal (3 meses ant.)</span>
                 <span class="cart-metric-value mono">${cartFormatBRL(cartMediaMensal(c.faturadoTri))}</span>
               </div>
               <div class="cart-metric-row">
-                <span class="cart-metric-label">Fat. Mês Atual</span>
+                <span class="cart-metric-label">Fat. MÃªs Atual</span>
                 <span class="cart-metric-value mono" style="color:var(--accent)">${cartFormatBRL(c.faturadoMesAtual)}</span>
               </div>
               <div class="cart-progress-wrap">
@@ -1554,8 +1567,8 @@
               </div>
             </div>
             <div class="cart-card-footer">
-              <button type="button" class="cart-btn cart-btn-gold" onclick="cartSelecionarCategoriaUnilever('${c.fornecedor.replace(/'/g, "\\'")}')">
-                Ver carteira de clientes →
+              <button type="button" class="cart-btn cart-btn-gold" onclick="cartSelecionarCategoriaUnilever('${cartEscJs(c.fornecedor)}')">
+                Ver carteira de clientes â†’
               </button>
             </div>
           </div>`;
@@ -1569,7 +1582,7 @@
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
                 Voltar ao resumo
               </button>
-              <span class="disp" style="font-size:15px; font-weight:700;">Unilever — por categoria</span>
+              <span class="disp" style="font-size:15px; font-weight:700;">Unilever â€” por categoria</span>
             </div>
           </div>
         </div>
@@ -1584,7 +1597,7 @@
     const pillsHtml = categorias.map(c => {
       const rotulo = c.fornecedor.replace('UNILEVER ', '');
       const ativa = c.fornecedor === categoriaAtual;
-      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartSelecionarCategoriaUnilever('${c.fornecedor.replace(/'/g, "\\'")}')">${ativa ? '✓ ' : ''}${rotulo}</button>`;
+      return `<button type="button" class="cart-uf-pill ${ativa ? 'cart-uf-pill-ativa' : ''}" onclick="cartSelecionarCategoriaUnilever('${cartEscJs(c.fornecedor)}')">${ativa ? 'âœ“ ' : ''}${cartEscHtml(rotulo)}</button>`;
     }).join('');
 
     wrap.innerHTML = `
@@ -1593,9 +1606,9 @@
           <div class="cart-detail-title-wrap">
             <button type="button" class="cart-btn" onclick="cartVerCategoriasUnilever()">
               <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-              Voltar às categorias
+              Voltar Ã s categorias
             </button>
-            <span class="disp" style="font-size:15px; font-weight:700;">Unilever — ${rotuloAtual}</span>
+            <span class="disp" style="font-size:15px; font-weight:700;">Unilever â€” ${rotuloAtual}</span>
           </div>
           <input id="cartBuscaClienteDetalheUnilever" class="cart-input" placeholder="Buscar cliente ou CNPJ..." oninput="cartFiltrarTabelaUnilever()">
         </div>
@@ -1618,7 +1631,7 @@
     cartRenderizarTabelaClientes(filtrados);
   }
 
-  // ── INIT ──────────────────────────────────────────────────────────────
+  // â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.addEventListener('DOMContentLoaded', () => {
     cartCarregarVendedores();
     cartCarregarRedes();
@@ -1628,3 +1641,5 @@
 </script>
 </body>
 </html>
+
+
